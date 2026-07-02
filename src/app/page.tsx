@@ -1,6 +1,6 @@
-"use client";
+﻿"use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { 
   Search, Sun, Moon, Globe, Shield, Bell, Droplet, 
   AlertTriangle, Home, Briefcase, ShoppingCart, Calendar, 
@@ -72,13 +72,19 @@ export default function HomePage() {
   const [isPrayerExpanded, setIsPrayerExpanded] = useState(false);
   const [heroAnnouncement, setHeroAnnouncement] = useState<{ title: string; category: string } | null>(null);
 
-  // pointer hold state variables
+  // SOS hold state
   const [showSosConfirmModal, setShowSosConfirmModal] = useState(false);
   const [showSosHoldOverlay, setShowSosHoldOverlay] = useState(false);
   const [sosHoldProgress, setSosHoldProgress] = useState(0);
   const [sosHoldTimeLeft, setSosHoldTimeLeft] = useState(5);
   const [isHoldingSos, setIsHoldingSos] = useState(false);
   const [sosSuccess, setSosSuccess] = useState(false);
+
+  // Refs for reliable hold tracking (avoids stale closures on mobile)
+  const holdingRef = useRef(false);
+  const holdTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const holdStartRef = useRef(0);
+  const sosBtnRef = useRef<HTMLDivElement>(null);
 
   // Update current time clock
   useEffect(() => {
@@ -88,38 +94,75 @@ export default function HomePage() {
     return () => clearInterval(timer);
   }, []);
 
-  // SOS Pointer Hold Timer
-  useEffect(() => {
-    let intervalId: any = null;
-    if (isHoldingSos && !sosSuccess) {
-      const startTime = Date.now();
-      const duration = 5000; // 5 seconds
-      intervalId = setInterval(() => {
-        const elapsed = Date.now() - startTime;
-        const progress = Math.min((elapsed / duration) * 100, 100);
-        const secondsLeft = Math.max(5 - Math.floor(elapsed / 1000), 0);
-        
-        setSosHoldProgress(progress);
-        setSosHoldTimeLeft(secondsLeft);
-        
-        if (elapsed >= duration) {
-          clearInterval(intervalId);
-          setIsHoldingSos(false);
-          setSosSuccess(true);
-          setSosActive(true);
-        }
-      }, 50); // check progress every 50ms for smooth circle offset
-    } else {
-      if (!sosSuccess) {
-        setSosHoldProgress(0);
-        setSosHoldTimeLeft(5);
+  // Start hold
+  const startHold = useCallback(() => {
+    if (holdingRef.current) return;
+    holdingRef.current = true;
+    holdStartRef.current = Date.now();
+    setIsHoldingSos(true);
+
+    holdTimerRef.current = setInterval(() => {
+      const elapsed = Date.now() - holdStartRef.current;
+      const progress = Math.min((elapsed / 5000) * 100, 100);
+      const secondsLeft = Math.max(5 - Math.floor(elapsed / 1000), 0);
+      setSosHoldProgress(progress);
+      setSosHoldTimeLeft(secondsLeft);
+
+      if (elapsed >= 5000) {
+        if (holdTimerRef.current) clearInterval(holdTimerRef.current);
+        holdTimerRef.current = null;
+        holdingRef.current = false;
+        setIsHoldingSos(false);
+        setSosSuccess(true);
+        setSosActive(true);
       }
+    }, 30);
+  }, []);
+
+  // Stop hold
+  const stopHold = useCallback(() => {
+    if (!holdingRef.current) return;
+    holdingRef.current = false;
+    if (holdTimerRef.current) {
+      clearInterval(holdTimerRef.current);
+      holdTimerRef.current = null;
     }
-    
+    setIsHoldingSos(false);
+    setSosHoldProgress(0);
+    setSosHoldTimeLeft(5);
+  }, []);
+
+  // Attach native touch/mouse listeners to SOS button for reliable mobile hold
+  useEffect(() => {
+    const el = sosBtnRef.current;
+    if (!el) return;
+
+    const onTouchStart = (e: TouchEvent) => { e.preventDefault(); e.stopPropagation(); startHold(); };
+    const onTouchEnd = (e: TouchEvent) => { e.preventDefault(); stopHold(); };
+    const onMouseDown = (e: MouseEvent) => { e.preventDefault(); startHold(); };
+    const onMouseUp = () => stopHold();
+    const onMouseLeave = () => stopHold();
+    const onCtx = (e: Event) => e.preventDefault();
+
+    el.addEventListener("touchstart", onTouchStart, { passive: false });
+    el.addEventListener("touchend", onTouchEnd, { passive: false });
+    el.addEventListener("touchcancel", onTouchEnd, { passive: false });
+    el.addEventListener("mousedown", onMouseDown);
+    el.addEventListener("mouseup", onMouseUp);
+    el.addEventListener("mouseleave", onMouseLeave);
+    el.addEventListener("contextmenu", onCtx);
+
     return () => {
-      if (intervalId) clearInterval(intervalId);
+      el.removeEventListener("touchstart", onTouchStart);
+      el.removeEventListener("touchend", onTouchEnd);
+      el.removeEventListener("touchcancel", onTouchEnd);
+      el.removeEventListener("mousedown", onMouseDown);
+      el.removeEventListener("mouseup", onMouseUp);
+      el.removeEventListener("mouseleave", onMouseLeave);
+      el.removeEventListener("contextmenu", onCtx);
+      if (holdTimerRef.current) clearInterval(holdTimerRef.current);
     };
-  }, [isHoldingSos, sosSuccess]);
+  }, [showSosHoldOverlay, sosSuccess, startHold, stopHold]);
 
   const triggerSOS = () => {
     setShowSosConfirmModal(true);
@@ -310,7 +353,7 @@ export default function HomePage() {
               onClick={() => setLanguage(language === "en" ? "bn" : "en")}
               className="p-1 rounded-lg hover:bg-slate-105 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 text-xs font-black font-mono tracking-tight"
             >
-              {language === "en" ? "বাংলা" : "EN"}
+              {language === "en" ? "à¦¬à¦¾à¦‚à¦²à¦¾" : "EN"}
             </button>
 
             {/* Menu icon with green indicator dot */}
@@ -348,7 +391,7 @@ export default function HomePage() {
                 <span className="flex items-center gap-2">
                   <Globe className="w-4 h-4 text-[#0CA671]" /> Language
                 </span>
-                <span className="text-[#0CA671]">{language === "en" ? "বাংলা" : "English"}</span>
+                <span className="text-[#0CA671]">{language === "en" ? "à¦¬à¦¾à¦‚à¦²à¦¾" : "English"}</span>
               </button>
               <div className="grid grid-cols-2 gap-2">
                 <button 
@@ -549,7 +592,7 @@ export default function HomePage() {
                     <span className="block text-base font-black tracking-tight leading-none text-slate-900 dark:text-white">{stat.value}</span>
                     <span className="block text-[8px] text-slate-500 dark:text-[#859798] font-extrabold mt-1.5 leading-snug">{stat.title}</span>
                   </div>
-                  <span className="block text-[7.5px] font-black text-emerald-600 dark:text-[#0CA671] mt-2.5 leading-none">↑ {stat.percent}</span>
+                  <span className="block text-[7.5px] font-black text-emerald-600 dark:text-[#0CA671] mt-2.5 leading-none">â†‘ {stat.percent}</span>
                 </div>
               );
             })}
@@ -564,7 +607,7 @@ export default function HomePage() {
             className="flex flex-col items-center gap-0.5 text-[#0CA671] dark:text-[#0CA671]"
           >
             <Home className="w-5.5 h-5.5" />
-            <span className="text-[9px] font-black">{language === "en" ? "Home" : "মূল পাতা"}</span>
+            <span className="text-[9px] font-black">{language === "en" ? "Home" : "à¦®à§‚à¦² à¦ªà¦¾à¦¤à¦¾"}</span>
           </button>
 
           <button 
@@ -575,7 +618,7 @@ export default function HomePage() {
             className="flex flex-col items-center gap-0.5 hover:text-slate-800 dark:hover:text-white"
           >
             <LayoutGrid className="w-5.5 h-5.5" />
-            <span className="text-[9px] font-black">{language === "en" ? "Services" : "সেবা"}</span>
+            <span className="text-[9px] font-black">{language === "en" ? "Services" : "à¦¸à§‡à¦¬à¦¾"}</span>
           </button>
 
           {/* SOS button */}
@@ -601,7 +644,7 @@ export default function HomePage() {
             className="flex flex-col items-center gap-0.5 hover:text-slate-800 dark:hover:text-white"
           >
             <MosqueIcon className="w-5.5 h-5.5 text-slate-500 dark:text-slate-400" />
-            <span className="text-[9px] font-black">{language === "en" ? "Mosque" : "মসজিদ"}</span>
+            <span className="text-[9px] font-black">{language === "en" ? "Mosque" : "à¦®à¦¸à¦œà¦¿à¦¦"}</span>
           </button>
 
           <button 
@@ -609,7 +652,7 @@ export default function HomePage() {
             className="flex flex-col items-center gap-0.5 hover:text-slate-800 dark:hover:text-white"
           >
             <User className="w-5.5 h-5.5" />
-            <span className="text-[9px] font-black">{language === "en" ? "Profile" : "প্রোফাইল"}</span>
+            <span className="text-[9px] font-black">{language === "en" ? "Profile" : "à¦ªà§à¦°à§‹à¦«à¦¾à¦‡à¦²"}</span>
           </button>
         </div>
 
@@ -678,7 +721,7 @@ export default function HomePage() {
                 className="px-2 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 flex items-center gap-1.5 text-xs font-semibold transition-all border border-transparent hover:border-slate-200 dark:hover:border-slate-805"
               >
                 <Globe className="w-4 h-4 text-emerald-500" />
-                <span>{language === "en" ? "বাংলা" : "English"}</span>
+                <span>{language === "en" ? "à¦¬à¦¾à¦‚à¦²à¦¾" : "English"}</span>
               </button>
 
               {/* Theme Switch */}
@@ -806,7 +849,7 @@ export default function HomePage() {
                   <span className="flex items-center gap-2">
                     <Globe className="w-4 h-4 text-emerald-500" /> Language
                   </span>
-                  <span>{language === "en" ? "বাংলা" : "English"}</span>
+                  <span>{language === "en" ? "à¦¬à¦¾à¦‚à¦²à¦¾" : "English"}</span>
                 </button>
 
                 {/* Login/Register Buttons */}
@@ -874,8 +917,8 @@ export default function HomePage() {
                   {t("heroTitle")}
                 </span>
                 <span className="inline-flex gap-2">
-                  <span className="text-emerald-500 dark:text-[#0CA671] font-black">{language === "en" ? "Safer" : "নিরাপদ"}</span>
-                  <span className="text-blue-600 dark:text-[#4A89DA] font-black">{language === "en" ? "Bakalia" : "বাকলিয়া"}</span>
+                  <span className="text-emerald-500 dark:text-[#0CA671] font-black">{language === "en" ? "Safer" : "à¦¨à¦¿à¦°à¦¾à¦ªà¦¦"}</span>
+                  <span className="text-blue-600 dark:text-[#4A89DA] font-black">{language === "en" ? "Bakalia" : "à¦¬à¦¾à¦•à¦²à¦¿à¦¯à¦¼à¦¾"}</span>
                 </span>
               </h1>
 
@@ -901,9 +944,9 @@ export default function HomePage() {
                   <AlertTriangle className="w-4 h-4" />
                   <span>
                     {sosActive 
-                      ? (language === "en" ? "Cancel SOS" : "এসওএস বাতিল করুন")
+                      ? (language === "en" ? "Cancel SOS" : "à¦à¦¸à¦“à¦à¦¸ à¦¬à¦¾à¦¤à¦¿à¦² à¦•à¦°à§à¦¨")
                       : sosCountdown !== null
-                        ? `${language === "en" ? "Sending SOS in" : "এসওএস পাঠানো হচ্ছে"} ${sosCountdown}s`
+                        ? `${language === "en" ? "Sending SOS in" : "à¦à¦¸à¦“à¦à¦¸ à¦ªà¦¾à¦ à¦¾à¦¨à§‹ à¦¹à¦šà§à¦›à§‡"} ${sosCountdown}s`
                         : t("getHelpNow")
                     }
                   </span>
@@ -962,7 +1005,7 @@ export default function HomePage() {
                   <div className="flex items-center gap-2">
                     <span className="w-1.5 h-1.5 rounded-full bg-[#0CA671] animate-ping" />
                     <span className="text-[11px] font-bold">
-                      {language === "en" ? "Next Prayer:" : "পরবর্তী নামাজ:"} {t(nextPrayer.name.toLowerCase())}
+                      {language === "en" ? "Next Prayer:" : "à¦ªà¦°à¦¬à¦°à§à¦¤à§€ à¦¨à¦¾à¦®à¦¾à¦œ:"} {t(nextPrayer.name.toLowerCase())}
                     </span>
                   </div>
                   <span className="font-mono text-xs font-bold">{prayerTimes[nextPrayer.name as keyof PrayerTimes]}</span>
@@ -997,7 +1040,7 @@ export default function HomePage() {
                     onClick={() => setIsPrayerExpanded(!isPrayerExpanded)}
                     className="text-[10.5px] text-emerald-600 dark:text-[#0CA671] hover:text-emerald-500 dark:hover:text-emerald-300 font-bold inline-flex items-center gap-0.5 transition-all group md:hidden"
                   >
-                    <span>{isPrayerExpanded ? (language === "en" ? "Show Less" : "সংক্ষিপ্ত রূপ") : t("viewFullTimetable")}</span>
+                    <span>{isPrayerExpanded ? (language === "en" ? "Show Less" : "à¦¸à¦‚à¦•à§à¦·à¦¿à¦ªà§à¦¤ à¦°à§‚à¦ª") : t("viewFullTimetable")}</span>
                     <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isPrayerExpanded ? "rotate-180" : ""}`} />
                   </button>
                   <a 
@@ -1095,7 +1138,7 @@ export default function HomePage() {
               onClick={() => alert("All services list is under development.")}
               className="px-4 py-2 text-xs font-bold rounded-lg border border-slate-202 dark:border-slate-800 text-slate-600 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-900 bg-white dark:bg-[#01205B] transition-all flex items-center gap-1 shadow-sm select-none"
             >
-              <span>{language === "en" ? "View All Services" : "সকল সেবাসমূহ দেখুন"}</span>
+              <span>{language === "en" ? "View All Services" : "à¦¸à¦•à¦² à¦¸à§‡à¦¬à¦¾à¦¸à¦®à§‚à¦¹ à¦¦à§‡à¦–à§à¦¨"}</span>
               <ChevronRight className="w-3.5 h-3.5 text-slate-450" />
             </button>
           </div>
@@ -1188,19 +1231,19 @@ export default function HomePage() {
                   {
                     title: language === "en" 
                       ? "Youth coordination campaign to ensure purity in Bakalia Area"
-                      : "বাকলিয়ায় যুব সমাজের উদ্যোগে পরিচ্ছন্নতা অভিযান পরিচালনা",
-                    category: language === "en" ? "Civic Activity" : "নাগরিক উদ্যোগ",
+                      : "à¦¬à¦¾à¦•à¦²à¦¿à¦¯à¦¼à¦¾à§Ÿ à¦¯à§à¦¬ à¦¸à¦®à¦¾à¦œà§‡à¦° à¦‰à¦¦à§à¦¯à§‹à¦—à§‡ à¦ªà¦°à¦¿à¦šà§à¦›à¦¨à§à¦¨à¦¤à¦¾ à¦…à¦­à¦¿à¦¯à¦¾à¦¨ à¦ªà¦°à¦¿à¦šà¦¾à¦²à¦¨à¦¾",
+                    category: language === "en" ? "Civic Activity" : "à¦¨à¦¾à¦—à¦°à¦¿à¦• à¦‰à¦¦à§à¦¯à§‹à¦—",
                     categoryColor: "bg-emerald-50 text-emerald-600 dark:bg-[#22444B] dark:text-[#0CA671] border border-emerald-100 dark:border-[#0CA671]/20",
-                    time: language === "en" ? "2 hours ago" : "২ ঘণ্টা আগে",
+                    time: language === "en" ? "2 hours ago" : "à§¨ à¦˜à¦£à§à¦Ÿà¦¾ à¦†à¦—à§‡",
                     views: "1.2k views",
                   },
                   {
                     title: language === "en"
                       ? "Police Notice: Landlords urged to follow guidelines on traffic laws"
-                      : "ট্রাফিক আইন মেনে চলার আহ্বান পুলিশের: সংযোগ সড়কে সতর্কীকরণ নোটিশ",
-                    category: language === "en" ? "Police Notice" : "পুলিশ নোটিশ",
+                      : "à¦Ÿà§à¦°à¦¾à¦«à¦¿à¦• à¦†à¦‡à¦¨ à¦®à§‡à¦¨à§‡ à¦šà¦²à¦¾à¦° à¦†à¦¹à§à¦¬à¦¾à¦¨ à¦ªà§à¦²à¦¿à¦¶à§‡à¦°: à¦¸à¦‚à¦¯à§‹à¦— à¦¸à§œà¦•à§‡ à¦¸à¦¤à¦°à§à¦•à§€à¦•à¦°à¦£ à¦¨à§‹à¦Ÿà¦¿à¦¶",
+                    category: language === "en" ? "Police Notice" : "à¦ªà§à¦²à¦¿à¦¶ à¦¨à§‹à¦Ÿà¦¿à¦¶",
                     categoryColor: "bg-blue-50 text-blue-600 dark:bg-[#04142F] dark:text-[#4A89DA] border border-blue-105 dark:border-[#4A89DA]/20",
-                    time: language === "en" ? "5 hours ago" : "৫ ঘণ্টা আগে",
+                    time: language === "en" ? "5 hours ago" : "à§« à¦˜à¦£à§à¦Ÿà¦¾ à¦†à¦—à§‡",
                     views: "856 views",
                   }
                 ].map((news, idx) => (
@@ -1222,7 +1265,7 @@ export default function HomePage() {
                       </div>
                       <div className="mt-1 flex items-center gap-2 text-[9px] text-slate-455 dark:text-[#859798]">
                         <span>{news.time}</span>
-                        <span>•</span>
+                        <span>â€¢</span>
                         <span>{news.views}</span>
                       </div>
                     </div>
@@ -1394,14 +1437,14 @@ export default function HomePage() {
             <div className="text-center mb-5">
               <h3 className="text-lg font-black text-slate-900 dark:text-white">
                 {authMode === "login" 
-                  ? (language === "en" ? "Welcome Back" : "আপনাকে স্বাগতম") 
-                  : (language === "en" ? "Create Account" : "নতুন অ্যাকাউন্ট তৈরি")
+                  ? (language === "en" ? "Welcome Back" : "à¦†à¦ªà¦¨à¦¾à¦•à§‡ à¦¸à§à¦¬à¦¾à¦—à¦¤à¦®") 
+                  : (language === "en" ? "Create Account" : "à¦¨à¦¤à§à¦¨ à¦…à§à¦¯à¦¾à¦•à¦¾à¦‰à¦¨à§à¦Ÿ à¦¤à§ˆà¦°à¦¿")
                 }
               </h3>
               <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
                 {authMode === "login" 
-                  ? (language === "en" ? "Access your Bakalia portal account" : "আপনার বাকলিয়া পোর্টাল অ্যাকাউন্ট অ্যাক্সেস করুন")
-                  : (language === "en" ? "Sign up to join our smart community" : "আমাদের স্মার্ট সমাজে যোগ দিতে নিবন্ধন করুন")
+                  ? (language === "en" ? "Access your Bakalia portal account" : "à¦†à¦ªà¦¨à¦¾à¦° à¦¬à¦¾à¦•à¦²à¦¿à¦¯à¦¼à¦¾ à¦ªà§‹à¦°à§à¦Ÿà¦¾à¦² à¦…à§à¦¯à¦¾à¦•à¦¾à¦‰à¦¨à§à¦Ÿ à¦…à§à¦¯à¦¾à¦•à§à¦¸à§‡à¦¸ à¦•à¦°à§à¦¨")
+                  : (language === "en" ? "Sign up to join our smart community" : "à¦†à¦®à¦¾à¦¦à§‡à¦° à¦¸à§à¦®à¦¾à¦°à§à¦Ÿ à¦¸à¦®à¦¾à¦œà§‡ à¦¯à§‹à¦— à¦¦à¦¿à¦¤à§‡ à¦¨à¦¿à¦¬à¦¨à§à¦§à¦¨ à¦•à¦°à§à¦¨")
                 }
               </p>
             </div>
@@ -1415,7 +1458,7 @@ export default function HomePage() {
                 }`}
               >
                 <Phone className="w-3.5 h-3.5" />
-                <span>{language === "en" ? "Phone OTP" : "ফোন ওটিপি"}</span>
+                <span>{language === "en" ? "Phone OTP" : "à¦«à§‹à¦¨ à¦“à¦Ÿà¦¿à¦ªà¦¿"}</span>
               </button>
               <button 
                 onClick={() => setAuthMethod("email")}
@@ -1424,7 +1467,7 @@ export default function HomePage() {
                 }`}
               >
                 <Mail className="w-3.5 h-3.5" />
-                <span>{language === "en" ? "Email" : "ইমেইল"}</span>
+                <span>{language === "en" ? "Email" : "à¦‡à¦®à§‡à¦‡à¦²"}</span>
               </button>
             </div>
 
@@ -1434,7 +1477,7 @@ export default function HomePage() {
               {authMode === "register" && (
                 <div>
                   <label className="block text-[9.5px] font-bold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider">
-                    {language === "en" ? "Full Name" : "সম্পূর্ণ নাম"}
+                    {language === "en" ? "Full Name" : "à¦¸à¦®à§à¦ªà§‚à¦°à§à¦£ à¦¨à¦¾à¦®"}
                   </label>
                   <input 
                     type="text" 
@@ -1448,7 +1491,7 @@ export default function HomePage() {
               {authMethod === "phone" ? (
                 <div>
                   <label className="block text-[9.5px] font-bold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider">
-                    {language === "en" ? "Phone Number" : "মোবাইল নম্বর"}
+                    {language === "en" ? "Phone Number" : "à¦®à§‹à¦¬à¦¾à¦‡à¦² à¦¨à¦®à§à¦¬à¦°"}
                   </label>
                   <div className="relative">
                     <span className="absolute left-3 top-2.5 text-xs font-semibold text-slate-550 font-mono">+880</span>
@@ -1465,7 +1508,7 @@ export default function HomePage() {
                 <>
                   <div>
                     <label className="block text-[9.5px] font-bold text-slate-550 dark:text-slate-400 mb-1 uppercase tracking-wider">
-                      {language === "en" ? "Email Address" : "ইমেইল ঠিকানা"}
+                      {language === "en" ? "Email Address" : "à¦‡à¦®à§‡à¦‡à¦² à¦ à¦¿à¦•à¦¾à¦¨à¦¾"}
                     </label>
                     <input 
                       type="email" 
@@ -1476,12 +1519,12 @@ export default function HomePage() {
                   </div>
                   <div>
                     <label className="block text-[9.5px] font-bold text-slate-550 dark:text-slate-400 mb-1 uppercase tracking-wider">
-                      {language === "en" ? "Password" : "পাসওয়ার্ড"}
+                      {language === "en" ? "Password" : "à¦ªà¦¾à¦¸à¦“à¦¯à¦¼à¦¾à¦°à§à¦¡"}
                     </label>
                     <input 
                       type="password" 
                       required 
-                      placeholder="••••••••" 
+                      placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢" 
                       className="w-full px-3 py-2.5 rounded-lg bg-slate-50 dark:bg-[#010818] border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-white focus:border-blue-500/50 outline-none text-xs transition-all font-mono"
                     />
                   </div>
@@ -1493,8 +1536,8 @@ export default function HomePage() {
                 className="w-full py-2.5 rounded-lg bg-blue-600 dark:bg-[#0CA671] hover:bg-blue-500 dark:hover:bg-emerald-550 text-white text-xs font-bold transition-all shadow-md active:scale-[0.98] mt-4"
               >
                 {authMode === "login" 
-                  ? (language === "en" ? "Sign In" : "লগইন করুন") 
-                  : (language === "en" ? "Register Account" : "নিবন্ধন সম্পন্ন করুন")
+                  ? (language === "en" ? "Sign In" : "à¦²à¦—à¦‡à¦¨ à¦•à¦°à§à¦¨") 
+                  : (language === "en" ? "Register Account" : "à¦¨à¦¿à¦¬à¦¨à§à¦§à¦¨ à¦¸à¦®à§à¦ªà¦¨à§à¦¨ à¦•à¦°à§à¦¨")
                 }
               </button>
             </form>
@@ -1503,22 +1546,22 @@ export default function HomePage() {
             <div className="mt-5 text-center text-[10px] text-slate-500 dark:text-slate-455 pt-3.5 border-t border-slate-150 dark:border-slate-850">
               {authMode === "login" ? (
                 <>
-                  <span>{language === "en" ? "New to Bakalia?" : "বাকলিয়া কমিউনিটিতে নতুন?"}</span>{" "}
+                  <span>{language === "en" ? "New to Bakalia?" : "à¦¬à¦¾à¦•à¦²à¦¿à¦¯à¦¼à¦¾ à¦•à¦®à¦¿à¦‰à¦¨à¦¿à¦Ÿà¦¿à¦¤à§‡ à¦¨à¦¤à§à¦¨?"}</span>{" "}
                   <button 
                     onClick={() => setAuthMode("register")}
                     className="text-blue-600 dark:text-blue-400 hover:underline font-bold"
                   >
-                    {language === "en" ? "Create an account" : "নতুন অ্যাকাউন্ট খুলুন"}
+                    {language === "en" ? "Create an account" : "à¦¨à¦¤à§à¦¨ à¦…à§à¦¯à¦¾à¦•à¦¾à¦‰à¦¨à§à¦Ÿ à¦–à§à¦²à§à¦¨"}
                   </button>
                 </>
               ) : (
                 <>
-                  <span>{language === "en" ? "Already have an account?" : "ইতিমধ্যে অ্যাকাউন্ট আছে?"}</span>{" "}
+                  <span>{language === "en" ? "Already have an account?" : "à¦‡à¦¤à¦¿à¦®à¦§à§à¦¯à§‡ à¦…à§à¦¯à¦¾à¦•à¦¾à¦‰à¦¨à§à¦Ÿ à¦†à¦›à§‡?"}</span>{" "}
                   <button 
                     onClick={() => setAuthMode("login")}
                     className="text-blue-600 dark:text-blue-400 hover:underline font-bold"
                   >
-                    {language === "en" ? "Log in here" : "এখানে লগইন করুন"}
+                    {language === "en" ? "Log in here" : "à¦à¦–à¦¾à¦¨à§‡ à¦²à¦—à¦‡à¦¨ à¦•à¦°à§à¦¨"}
                   </button>
                 </>
               )}
@@ -1537,12 +1580,12 @@ export default function HomePage() {
                 <AlertTriangle className="w-6 h-6" />
               </div>
               <h3 className="text-base font-black leading-tight text-slate-900 dark:text-white">
-                {language === "en" ? "Do you really need help now?" : "আপনার কি সত্যিই জরুরি সাহায্য প্রয়োজন?"}
+                {language === "en" ? "Do you really need help now?" : "à¦†à¦ªà¦¨à¦¾à¦° à¦•à¦¿ à¦¸à¦¤à§à¦¯à¦¿à¦‡ à¦œà¦°à§à¦°à¦¿ à¦¸à¦¾à¦¹à¦¾à¦¯à§à¦¯ à¦ªà§à¦°à§Ÿà§‹à¦œà¦¨?"}
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 leading-relaxed">
                 {language === "en" 
                   ? "This will send an emergency SOS alert containing your GPS location to Thana Police and local citizen volunteers." 
-                  : "এটি আপনার জিপিএস লোকেশন সহ থানা পুলিশ এবং স্থানীয় স্বেচ্ছাসেবকদের কাছে একটি জরুরি এসওএস অ্যালার্ট পাঠাবে।"}
+                  : "à¦à¦Ÿà¦¿ à¦†à¦ªà¦¨à¦¾à¦° à¦œà¦¿à¦ªà¦¿à¦à¦¸ à¦²à§‹à¦•à§‡à¦¶à¦¨ à¦¸à¦¹ à¦¥à¦¾à¦¨à¦¾ à¦ªà§à¦²à¦¿à¦¶ à¦à¦¬à¦‚ à¦¸à§à¦¥à¦¾à¦¨à§€à¦¯à¦¼ à¦¸à§à¦¬à§‡à¦šà§à¦›à¦¾à¦¸à§‡à¦¬à¦•à¦¦à§‡à¦° à¦•à¦¾à¦›à§‡ à¦à¦•à¦Ÿà¦¿ à¦œà¦°à§à¦°à¦¿ à¦à¦¸à¦“à¦à¦¸ à¦…à§à¦¯à¦¾à¦²à¦¾à¦°à§à¦Ÿ à¦ªà¦¾à¦ à¦¾à¦¬à§‡à¥¤"}
               </p>
             </div>
             <div className="mt-5 grid grid-cols-2 gap-3">
@@ -1550,7 +1593,7 @@ export default function HomePage() {
                 onClick={() => setShowSosConfirmModal(false)}
                 className="w-full py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all active:scale-95"
               >
-                {language === "en" ? "Cancel" : "বাতিল"}
+                {language === "en" ? "Cancel" : "à¦¬à¦¾à¦¤à¦¿à¦²"}
               </button>
               <button
                 onClick={() => {
@@ -1562,7 +1605,7 @@ export default function HomePage() {
                 }}
                 className="w-full py-2.5 rounded-xl bg-red-650 hover:bg-red-500 text-white text-xs font-bold transition-all active:scale-95 shadow-md shadow-red-500/10"
               >
-                {language === "en" ? "Yes, I Need Help" : "হ্যাঁ, সাহায্য লাগবে"}
+                {language === "en" ? "Yes, I Need Help" : "à¦¹à§à¦¯à¦¾à¦, à¦¸à¦¾à¦¹à¦¾à¦¯à§à¦¯ à¦²à¦¾à¦—à¦¬à§‡"}
               </button>
             </div>
           </div>
@@ -1572,177 +1615,208 @@ export default function HomePage() {
       {/* ==================== SOS HOLD-TO-VERIFY OVERLAY ==================== */}
       {showSosHoldOverlay && (
         <div 
-          className="fixed inset-0 z-[120] bg-[#010818] flex flex-col items-center justify-center text-white p-6 text-center select-none animate-in fade-in duration-200"
-          style={{ touchAction: 'none', WebkitTouchCallout: 'none', WebkitUserSelect: 'none', userSelect: 'none' }}
+          className="fixed inset-0 z-[120] flex flex-col items-center justify-center text-white p-6 text-center select-none"
+          style={{ 
+            touchAction: 'none', 
+            WebkitTouchCallout: 'none', 
+            WebkitUserSelect: 'none', 
+            userSelect: 'none',
+            background: 'radial-gradient(ellipse at center, #0a1628 0%, #010818 70%)'
+          }}
+          onContextMenu={(e) => e.preventDefault()}
         >
           <style dangerouslySetInnerHTML={{ __html: `
-            @keyframes heartbeat {
-              0% { transform: scale(1); }
-              14% { transform: scale(1.08); }
-              28% { transform: scale(1); }
-              42% { transform: scale(1.08); }
-              70% { transform: scale(1); }
+            @keyframes sos-pulse {
+              0%, 100% { transform: scale(1); opacity: 1; }
+              50% { transform: scale(1.04); opacity: 0.9; }
             }
-            @keyframes vibrate {
-              0% { transform: translate(0, 0) rotate(0deg); }
-              20% { transform: translate(-2px, 2px) rotate(-1deg); }
-              40% { transform: translate(-2px, -2px) rotate(1deg); }
-              60% { transform: translate(2px, 2px) rotate(0deg); }
-              80% { transform: translate(2px, -2px) rotate(1deg); }
-              100% { transform: translate(0, 0) rotate(0deg); }
+            @keyframes sos-glow {
+              0%, 100% { box-shadow: 0 0 20px rgba(239,68,68,0.3), 0 0 60px rgba(239,68,68,0.1), inset 0 -8px 20px rgba(0,0,0,0.4), inset 0 4px 10px rgba(255,255,255,0.1); }
+              50% { box-shadow: 0 0 40px rgba(239,68,68,0.5), 0 0 80px rgba(239,68,68,0.2), inset 0 -8px 20px rgba(0,0,0,0.4), inset 0 4px 10px rgba(255,255,255,0.1); }
             }
-            @keyframes ripple {
-              0% { transform: scale(1); opacity: 0.85; }
-              100% { transform: scale(1.55); opacity: 0; }
+            @keyframes sos-glow-active {
+              0%, 100% { box-shadow: 0 0 50px rgba(239,68,68,0.7), 0 0 100px rgba(239,68,68,0.35), 0 0 150px rgba(239,68,68,0.15), inset 0 -6px 15px rgba(0,0,0,0.5), inset 0 2px 8px rgba(255,200,200,0.2); }
+              50% { box-shadow: 0 0 60px rgba(239,68,68,0.8), 0 0 120px rgba(239,68,68,0.4), 0 0 180px rgba(239,68,68,0.2), inset 0 -6px 15px rgba(0,0,0,0.5), inset 0 2px 8px rgba(255,200,200,0.2); }
             }
-            .animate-heartbeat {
-              animation: heartbeat 1.1s infinite ease-in-out;
+            @keyframes sos-shake {
+              0%, 100% { transform: translate(0,0) scale(0.92); }
+              10% { transform: translate(-1px, 1px) scale(0.92); }
+              20% { transform: translate(1px, -1px) scale(0.92); }
+              30% { transform: translate(-2px, 0px) scale(0.92); }
+              40% { transform: translate(2px, 1px) scale(0.92); }
+              50% { transform: translate(-1px, -1px) scale(0.92); }
+              60% { transform: translate(1px, 2px) scale(0.92); }
+              70% { transform: translate(-2px, -1px) scale(0.92); }
+              80% { transform: translate(2px, 0px) scale(0.92); }
+              90% { transform: translate(-1px, 1px) scale(0.92); }
             }
-            .animate-vibrate {
-              animation: vibrate 0.12s infinite linear;
+            @keyframes sos-ripple {
+              0% { transform: scale(0.8); opacity: 0.6; }
+              100% { transform: scale(2); opacity: 0; }
             }
-            .animate-ripple {
-              animation: ripple 1.4s infinite ease-out;
+            @keyframes sos-ring-pulse {
+              0%, 100% { opacity: 0.15; }
+              50% { opacity: 0.35; }
+            }
+            .sos-btn-idle {
+              animation: sos-glow 2s infinite ease-in-out, sos-pulse 2s infinite ease-in-out;
+            }
+            .sos-btn-active {
+              animation: sos-glow-active 0.8s infinite ease-in-out, sos-shake 0.15s infinite linear;
+            }
+            .sos-ripple-ring {
+              animation: sos-ripple 1.5s infinite ease-out;
+            }
+            .sos-outer-ring {
+              animation: sos-ring-pulse 2s infinite ease-in-out;
             }
           `}} />
           
           {!sosSuccess ? (
             <>
-              <div className="max-w-xs space-y-2 mb-8">
+              <div className="max-w-xs space-y-2 mb-10">
                 <h2 className="text-lg font-black tracking-tight uppercase text-red-500">
-                  {language === "en" ? "SOS Hold to Verify" : "এসওএস ভেরিফাই করতে টিপুন"}
+                  {language === "en" ? "Emergency SOS" : "\u099c\u09b0\u09c1\u09b0\u09bf \u098f\u09b8\u0993\u098f\u09b8"}
                 </h2>
-                <p className="text-xs text-slate-400 font-medium leading-relaxed">
+                <p className="text-[11px] text-slate-400 font-medium leading-relaxed">
                   {language === "en" 
-                    ? "Continuously press and hold the button below for 5 seconds to send the alert." 
-                    : "অ্যালার্টটি পাঠাতে নিচের বোতামটি টানা ৫ সেকেন্ড টিপে ধরে রাখুন।"}
+                    ? "Press and hold the button for 5 seconds to send alert" 
+                    : "\u0985\u09cd\u09af\u09be\u09b2\u09be\u09b0\u09cd\u099f \u09aa\u09be\u09a0\u09be\u09a4\u09c7 \u09ac\u09cb\u09a4\u09be\u09ae\u099f\u09bf \u09eb \u09b8\u09c7\u0995\u09c7\u09a8\u09cd\u09a1 \u099a\u09c7\u09aa\u09c7 \u09a7\u09b0\u09c1\u09a8"}
                 </p>
               </div>
 
               {/* Hold Button Container */}
-              <div className="relative w-48 h-48 flex items-center justify-center">
+              <div className="relative flex items-center justify-center" style={{ width: '220px', height: '220px' }}>
                 
-                {/* Glowing Concentric Ripple Waves while holding */}
+                {/* Outer decorative ring */}
+                <div 
+                  className="absolute rounded-full border-2 sos-outer-ring pointer-events-none"
+                  style={{ 
+                    width: '210px', height: '210px',
+                    borderColor: isHoldingSos ? 'rgba(239,68,68,0.4)' : 'rgba(255,255,255,0.08)'
+                  }}
+                />
+
+                {/* Expanding ripple rings while holding */}
                 {isHoldingSos && (
                   <>
-                    <div className="absolute w-36 h-36 rounded-full bg-red-500/30 animate-ripple pointer-events-none" style={{ animationDelay: '0s' }} />
-                    <div className="absolute w-36 h-36 rounded-full bg-red-500/20 animate-ripple pointer-events-none" style={{ animationDelay: '0.4s' }} />
-                    <div className="absolute w-36 h-36 rounded-full bg-red-500/10 animate-ripple pointer-events-none" style={{ animationDelay: '0.8s' }} />
+                    <div className="absolute rounded-full border-2 border-red-500/40 sos-ripple-ring pointer-events-none" style={{ width: '170px', height: '170px', animationDelay: '0s' }} />
+                    <div className="absolute rounded-full border-2 border-red-500/25 sos-ripple-ring pointer-events-none" style={{ width: '170px', height: '170px', animationDelay: '0.5s' }} />
+                    <div className="absolute rounded-full border-2 border-red-500/15 sos-ripple-ring pointer-events-none" style={{ width: '170px', height: '170px', animationDelay: '1.0s' }} />
                   </>
                 )}
 
                 {/* SVG Progress Ring */}
-                <svg className="absolute w-full h-full -rotate-90" viewBox="0 0 120 120">
-                  {/* Track Ring */}
+                <svg className="absolute -rotate-90 pointer-events-none" style={{ width: '190px', height: '190px' }} viewBox="0 0 120 120">
+                  <circle cx="60" cy="60" r="54" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="4" />
                   <circle 
-                    cx="60" 
-                    cy="60" 
-                    r="52" 
-                    fill="none" 
-                    stroke="rgba(255, 255, 255, 0.05)" 
-                    strokeWidth="5" 
-                  />
-                  {/* Progress Ring */}
-                  <circle 
-                    cx="60" 
-                    cy="60" 
-                    r="52" 
-                    fill="none" 
-                    stroke={sosHoldProgress > 80 ? "#EF4444" : "#F59E0B"} 
-                    strokeWidth="5" 
-                    strokeDasharray="326.7" 
-                    strokeDashoffset={326.7 - (326.7 * sosHoldProgress) / 100}
+                    cx="60" cy="60" r="54" fill="none" 
+                    stroke={sosHoldProgress > 80 ? "#EF4444" : sosHoldProgress > 40 ? "#F59E0B" : "#3B82F6"}
+                    strokeWidth="4" 
+                    strokeDasharray="339.3" 
+                    strokeDashoffset={339.3 - (339.3 * sosHoldProgress) / 100}
                     strokeLinecap="round"
-                    className="transition-all duration-75"
+                    style={{ transition: 'stroke-dashoffset 0.05s linear, stroke 0.3s ease' }}
                   />
                 </svg>
 
-                {/* Interactive Red Button with complete gesture control blocking iOS and Android triggers */}
-                <button
-                  onPointerDown={() => setIsHoldingSos(true)}
-                  onPointerUp={() => setIsHoldingSos(false)}
-                  onPointerLeave={() => setIsHoldingSos(false)}
-                  onPointerCancel={() => setIsHoldingSos(false)}
-                  className={`w-36 h-36 rounded-full bg-gradient-to-br from-red-500 to-red-700 flex flex-col items-center justify-center shadow-2xl transition-all duration-150 select-none ${
-                    isHoldingSos 
-                      ? "scale-90 animate-vibrate animate-heartbeat" 
-                      : "hover:scale-102 hover:shadow-red-500/20 active:scale-95"
+                {/* The realistic 3D SOS button - uses ref for native touch listeners */}
+                <div 
+                  ref={sosBtnRef}
+                  className={`relative rounded-full cursor-pointer select-none flex items-center justify-center ${
+                    isHoldingSos ? 'sos-btn-active' : 'sos-btn-idle'
                   }`}
                   style={{
+                    width: '160px', 
+                    height: '160px',
+                    background: isHoldingSos 
+                      ? 'radial-gradient(circle at 40% 35%, #ff6b6b 0%, #dc2626 40%, #991b1b 80%, #7f1d1d 100%)'
+                      : 'radial-gradient(circle at 40% 35%, #ef4444 0%, #dc2626 35%, #b91c1c 70%, #991b1b 100%)',
                     touchAction: 'none',
                     WebkitTouchCallout: 'none',
                     WebkitUserSelect: 'none',
                     userSelect: 'none',
-                    boxShadow: isHoldingSos ? '0 0 45px rgba(239, 68, 68, 0.75)' : 'none'
                   }}
                 >
-                  <div className="flex flex-col items-center pointer-events-none">
-                    <AlertTriangle className={`w-8 h-8 text-white mb-1.5 ${isHoldingSos ? "animate-bounce" : ""}`} />
-                    <span className="text-3xl font-black font-mono tracking-tighter leading-none text-white">
+                  {/* Inner highlight (3D convex effect) */}
+                  <div 
+                    className="absolute rounded-full pointer-events-none"
+                    style={{
+                      top: '8px', left: '12px', right: '12px', bottom: '40%',
+                      background: 'linear-gradient(180deg, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0) 100%)',
+                      borderRadius: '50%',
+                    }}
+                  />
+
+                  {/* Content */}
+                  <div className="flex flex-col items-center pointer-events-none z-10">
+                    <AlertTriangle className={`w-9 h-9 text-white mb-1 drop-shadow-lg ${isHoldingSos ? 'animate-bounce' : ''}`} />
+                    <span className="text-4xl font-black font-mono tracking-tighter leading-none text-white drop-shadow-lg">
                       {sosHoldTimeLeft}
                     </span>
-                    <span className="text-[9px] font-black tracking-wider uppercase text-white/95 mt-1.5">
-                      {isHoldingSos ? (language === "en" ? "HOLDING..." : "টিপে ধরে রাখুন...") : (language === "en" ? "HOLD BUTTON" : "চেপে ধরুন")}
+                    <span className="text-[8px] font-extrabold tracking-[0.2em] uppercase text-white/90 mt-1.5 drop-shadow">
+                      {isHoldingSos 
+                        ? (language === "en" ? "HOLDING..." : "\u099f\u09bf\u09aa\u09c7 \u09a7\u09b0\u09c7 \u09b0\u09be\u0996\u09c1\u09a8...") 
+                        : (language === "en" ? "HOLD" : "\u099a\u09c7\u09aa\u09c7 \u09a7\u09b0\u09c1\u09a8")}
                     </span>
                   </div>
-                </button>
+                </div>
               </div>
 
               {/* Progress text */}
-              <div className="mt-8 space-y-1">
-                <span className="text-xs font-bold text-slate-400 block font-mono">
-                  {Math.round(sosHoldProgress)}% completed
+              <div className="mt-8 space-y-1.5">
+                <span className="text-xs font-bold text-slate-500 block font-mono">
+                  {Math.round(sosHoldProgress)}%
                 </span>
                 {isHoldingSos && (
                   <span className="text-[10px] text-red-400 font-extrabold animate-pulse block">
-                    {language === "en" ? "🚨 Sending alert in progress..." : "🚨 অ্যালার্ট পাঠানোর প্রক্রিয়া চলছে..."}
+                    {language === "en" ? "\ud83d\udea8 Keep holding..." : "\ud83d\udea8 \u09a7\u09b0\u09c7 \u09b0\u09be\u0996\u09c1\u09a8..."}
                   </span>
                 )}
               </div>
 
-              {/* Cancel/Go Back Button */}
+              {/* Go Back */}
               {!isHoldingSos && (
                 <button
-                  onClick={() => setShowSosHoldOverlay(false)}
-                  className="mt-12 px-6 py-2.5 rounded-full border border-slate-800 text-xs font-bold text-slate-400 hover:text-white hover:border-slate-700 transition-all"
+                  onClick={() => { setShowSosHoldOverlay(false); setSosHoldProgress(0); setSosHoldTimeLeft(5); }}
+                  className="mt-10 px-6 py-2.5 rounded-full border border-slate-800 text-[11px] font-bold text-slate-500 hover:text-white hover:border-slate-600 transition-all active:scale-95"
                 >
-                  {language === "en" ? "Go Back" : "ফিরে যান"}
+                  {language === "en" ? "Go Back" : "\u09ab\u09bf\u09b0\u09c7 \u09af\u09be\u09a8"}
                 </button>
               )}
             </>
           ) : (
-            /* SOS Alert Success Screen */
-            <div className="max-w-xs space-y-5 animate-in zoom-in-95 duration-300">
-              <div className="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center mx-auto text-[#0CA671] animate-bounce">
-                <CheckCircle2 className="w-9 h-9" />
+            /* Success Screen */
+            <div className="max-w-xs space-y-5">
+              <div className="w-20 h-20 rounded-full bg-emerald-500/10 border-2 border-emerald-500/30 flex items-center justify-center mx-auto text-[#0CA671]" style={{ animation: 'sos-pulse 1.5s infinite ease-in-out' }}>
+                <CheckCircle2 className="w-10 h-10" />
               </div>
-              <div className="space-y-2">
-                <h3 className="text-lg font-black tracking-tight text-white leading-tight">
-                  {language === "en" ? "Emergency Alert Sent Successfully" : "জরুরি অ্যালার্ট সফলভাবে পাঠানো হয়েছে"}
+              <div className="space-y-3">
+                <h3 className="text-xl font-black tracking-tight text-white leading-tight">
+                  {language === "en" ? "Alert Sent!" : "\u0985\u09cd\u09af\u09be\u09b2\u09be\u09b0\u09cd\u099f \u09aa\u09be\u09a0\u09be\u09a8\u09cb \u09b9\u09af\u09bc\u09c7\u099b\u09c7!"}
                 </h3>
-                <p className="text-xs text-emerald-450 font-black animate-pulse">
-                  {language === "en" ? "Please stay calm." : "দয়া করে শান্ত থাকুন।"}
+                <p className="text-sm text-emerald-400 font-bold animate-pulse">
+                  {language === "en" ? "Please stay calm." : "\u09a6\u09af\u09bc\u09be \u0995\u09b0\u09c7 \u09b6\u09be\u09a8\u09cd\u09a4 \u09a5\u09be\u0995\u09c1\u09a8\u0964"}
                 </p>
-                <p className="text-[11px] text-slate-400 font-semibold leading-relaxed">
+                <p className="text-xs text-slate-400 font-medium leading-relaxed">
                   {language === "en" 
                     ? "Help is being notified. The Thana police and volunteers have received your details." 
-                    : "সাহায্যকারী দলকে জানানো হচ্ছে। থানা পুলিশ এবং স্বেচ্ছাসেবীরা আপনার বিবরণ পেয়েছেন।"}
+                    : "\u09b8\u09be\u09b9\u09be\u09af\u09cd\u09af\u0995\u09be\u09b0\u09c0 \u09a6\u09b2\u0995\u09c7 \u099c\u09be\u09a8\u09be\u09a8\u09cb \u09b9\u099a\u09cd\u099b\u09c7\u0964 \u09a5\u09be\u09a8\u09be \u09aa\u09c1\u09b2\u09bf\u09b6 \u098f\u09ac\u0982 \u09b8\u09cd\u09ac\u09c7\u099a\u09cd\u099b\u09be\u09b8\u09c7\u09ac\u09c0\u09b0\u09be \u0986\u09aa\u09a8\u09be\u09b0 \u09ac\u09bf\u09ac\u09b0\u09a3 \u09aa\u09c7\u09af\u09bc\u09c7\u099b\u09c7\u09a8\u0964"}
                 </p>
               </div>
               <button
-                onClick={() => {
-                  setShowSosHoldOverlay(false);
-                  setSosSuccess(false);
-                }}
-                className="mt-6 px-6 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold transition-all active:scale-95"
+                onClick={() => { setShowSosHoldOverlay(false); setSosSuccess(false); setSosHoldProgress(0); setSosHoldTimeLeft(5); }}
+                className="mt-4 px-8 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-bold transition-all active:scale-95"
               >
-                {language === "en" ? "Dismiss" : "বন্ধ করুন"}
+                {language === "en" ? "Dismiss" : "\u09ac\u09a8\u09cd\u09a7 \u0995\u09b0\u09c1\u09a8"}
               </button>
             </div>
           )}
         </div>
       )}
 
+
     </div>
   );
 }
+
