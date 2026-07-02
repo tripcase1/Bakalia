@@ -421,29 +421,8 @@ export default function HomePage() {
                   <div className="h-10" /> /* Empty hero banner state as requested */
                 )}
               </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <button 
-                    onClick={triggerSOS}
-                    className="px-3.5 py-2 rounded-xl bg-[#0CA671] text-white text-[10.5px] font-bold flex items-center gap-1 hover:bg-emerald-600 transition-all shadow-md active:scale-95"
-                  >
-                    <AlertTriangle className="w-3.5 h-3.5" />
-                    Get Help Now
-                  </button>
-                  <button 
-                    onClick={() => {
-                      const el = document.getElementById("mobile-services-grid");
-                      el?.scrollIntoView({ behavior: "smooth" });
-                    }}
-                    className="px-3.5 py-2 rounded-xl border border-white/80 text-white text-[10.5px] font-bold bg-transparent hover:bg-white/10 transition-all active:scale-95"
-                  >
-                    Explore Services
-                  </button>
-                </div>
-                <span className="text-[9.5px] font-extrabold text-slate-400 bg-black/45 px-2.5 py-0.5 rounded-full font-mono">
-                  1/4
-                </span>
-              </div>
+              {/* Bottom row: empty as requested since buttons and 1/4 badge are removed */}
+              <div />
             </div>
           </div>
         </div>
@@ -1592,7 +1571,10 @@ export default function HomePage() {
 
       {/* ==================== SOS HOLD-TO-VERIFY OVERLAY ==================== */}
       {showSosHoldOverlay && (
-        <div className="fixed inset-0 z-[120] bg-[#010818] flex flex-col items-center justify-center text-white p-6 text-center select-none animate-in fade-in duration-200">
+        <div 
+          className="fixed inset-0 z-[120] bg-[#010818] flex flex-col items-center justify-center text-white p-6 text-center select-none animate-in fade-in duration-200"
+          style={{ touchAction: 'none', WebkitTouchCallout: 'none', WebkitUserSelect: 'none', userSelect: 'none' }}
+        >
           <style dangerouslySetInnerHTML={{ __html: `
             @keyframes heartbeat {
               0% { transform: scale(1); }
@@ -1603,17 +1585,24 @@ export default function HomePage() {
             }
             @keyframes vibrate {
               0% { transform: translate(0, 0) rotate(0deg); }
-              20% { transform: translate(-1px, 1px) rotate(-0.5deg); }
-              40% { transform: translate(-1px, -1px) rotate(0.5deg); }
-              60% { transform: translate(1px, 1px) rotate(0deg); }
-              80% { transform: translate(1px, -1px) rotate(0.5deg); }
+              20% { transform: translate(-2px, 2px) rotate(-1deg); }
+              40% { transform: translate(-2px, -2px) rotate(1deg); }
+              60% { transform: translate(2px, 2px) rotate(0deg); }
+              80% { transform: translate(2px, -2px) rotate(1deg); }
               100% { transform: translate(0, 0) rotate(0deg); }
             }
+            @keyframes ripple {
+              0% { transform: scale(1); opacity: 0.85; }
+              100% { transform: scale(1.55); opacity: 0; }
+            }
             .animate-heartbeat {
-              animation: heartbeat 1.2s infinite ease-in-out;
+              animation: heartbeat 1.1s infinite ease-in-out;
             }
             .animate-vibrate {
-              animation: vibrate 0.1s infinite linear;
+              animation: vibrate 0.12s infinite linear;
+            }
+            .animate-ripple {
+              animation: ripple 1.4s infinite ease-out;
             }
           `}} />
           
@@ -1623,7 +1612,7 @@ export default function HomePage() {
                 <h2 className="text-lg font-black tracking-tight uppercase text-red-500">
                   {language === "en" ? "SOS Hold to Verify" : "এসওএস ভেরিফাই করতে টিপুন"}
                 </h2>
-                <p className="text-xs text-slate-455 font-medium leading-relaxed">
+                <p className="text-xs text-slate-400 font-medium leading-relaxed">
                   {language === "en" 
                     ? "Continuously press and hold the button below for 5 seconds to send the alert." 
                     : "অ্যালার্টটি পাঠাতে নিচের বোতামটি টানা ৫ সেকেন্ড টিপে ধরে রাখুন।"}
@@ -1631,7 +1620,17 @@ export default function HomePage() {
               </div>
 
               {/* Hold Button Container */}
-              <div className="relative w-44 h-44 flex items-center justify-center">
+              <div className="relative w-48 h-48 flex items-center justify-center">
+                
+                {/* Glowing Concentric Ripple Waves while holding */}
+                {isHoldingSos && (
+                  <>
+                    <div className="absolute w-36 h-36 rounded-full bg-red-500/30 animate-ripple pointer-events-none" style={{ animationDelay: '0s' }} />
+                    <div className="absolute w-36 h-36 rounded-full bg-red-500/20 animate-ripple pointer-events-none" style={{ animationDelay: '0.4s' }} />
+                    <div className="absolute w-36 h-36 rounded-full bg-red-500/10 animate-ripple pointer-events-none" style={{ animationDelay: '0.8s' }} />
+                  </>
+                )}
+
                 {/* SVG Progress Ring */}
                 <svg className="absolute w-full h-full -rotate-90" viewBox="0 0 120 120">
                   {/* Track Ring */}
@@ -1641,7 +1640,7 @@ export default function HomePage() {
                     r="52" 
                     fill="none" 
                     stroke="rgba(255, 255, 255, 0.05)" 
-                    strokeWidth="6" 
+                    strokeWidth="5" 
                   />
                   {/* Progress Ring */}
                   <circle 
@@ -1650,7 +1649,7 @@ export default function HomePage() {
                     r="52" 
                     fill="none" 
                     stroke={sosHoldProgress > 80 ? "#EF4444" : "#F59E0B"} 
-                    strokeWidth="6" 
+                    strokeWidth="5" 
                     strokeDasharray="326.7" 
                     strokeDashoffset={326.7 - (326.7 * sosHoldProgress) / 100}
                     strokeLinecap="round"
@@ -1658,20 +1657,23 @@ export default function HomePage() {
                   />
                 </svg>
 
-                {/* Interactive Red Button */}
+                {/* Interactive Red Button with complete gesture control blocking iOS and Android triggers */}
                 <button
                   onPointerDown={() => setIsHoldingSos(true)}
                   onPointerUp={() => setIsHoldingSos(false)}
                   onPointerLeave={() => setIsHoldingSos(false)}
-                  onTouchStart={(e) => { e.preventDefault(); setIsHoldingSos(true); }}
-                  onTouchEnd={() => setIsHoldingSos(false)}
+                  onPointerCancel={() => setIsHoldingSos(false)}
                   className={`w-36 h-36 rounded-full bg-gradient-to-br from-red-500 to-red-700 flex flex-col items-center justify-center shadow-2xl transition-all duration-150 select-none ${
                     isHoldingSos 
-                      ? "scale-90 shadow-red-500/40 animate-vibrate animate-heartbeat" 
+                      ? "scale-90 animate-vibrate animate-heartbeat" 
                       : "hover:scale-102 hover:shadow-red-500/20 active:scale-95"
                   }`}
                   style={{
-                    boxShadow: isHoldingSos ? '0 0 35px rgba(239, 68, 68, 0.6)' : 'none'
+                    touchAction: 'none',
+                    WebkitTouchCallout: 'none',
+                    WebkitUserSelect: 'none',
+                    userSelect: 'none',
+                    boxShadow: isHoldingSos ? '0 0 45px rgba(239, 68, 68, 0.75)' : 'none'
                   }}
                 >
                   <div className="flex flex-col items-center pointer-events-none">
@@ -1698,13 +1700,13 @@ export default function HomePage() {
                 )}
               </div>
 
-              {/* Cancel Button */}
+              {/* Cancel/Go Back Button */}
               {!isHoldingSos && (
                 <button
                   onClick={() => setShowSosHoldOverlay(false)}
-                  className="mt-12 px-5 py-2 rounded-full border border-slate-800 text-xs font-bold text-slate-450 hover:text-white transition-all"
+                  className="mt-12 px-6 py-2.5 rounded-full border border-slate-800 text-xs font-bold text-slate-400 hover:text-white hover:border-slate-700 transition-all"
                 >
-                  {language === "en" ? "Go Back" : "ফিয়ে যান"}
+                  {language === "en" ? "Go Back" : "ফিরে যান"}
                 </button>
               )}
             </>
