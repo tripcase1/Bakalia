@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { 
@@ -332,17 +332,14 @@ export default function HomePage() {
                 <span className="text-sm font-bold tracking-tight text-slate-900 dark:text-white">
                   Bakalia Community
                 </span>
-                <span className="inline-block px-1.5 py-0.5 rounded-full bg-emerald-500/10 border border-[#0CA671]/25 text-[#0CA671] text-[8px] font-black uppercase tracking-wider shrink-0 scale-90">
-                  United We Grow
-                </span>
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2">
             {/* Theme Switch */}
             <button 
               onClick={toggleTheme}
-              className="p-1.5 rounded-lg hover:bg-slate-105 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 transition-all"
+              className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 transition-all active:scale-95"
               aria-label="Toggle theme"
             >
               {isLight ? <Moon className="w-4.5 h-4.5" /> : <Sun className="w-4.5 h-4.5" />}
@@ -351,18 +348,28 @@ export default function HomePage() {
             {/* Language Switch */}
             <button 
               onClick={() => setLanguage(language === "en" ? "bn" : "en")}
-              className="p-1 rounded-lg hover:bg-slate-105 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 text-xs font-black font-mono tracking-tight"
+              className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 text-xs font-black font-mono tracking-tight active:scale-95"
             >
-              {language === "en" ? "à¦¬à¦¾à¦‚à¦²à¦¾" : "EN"}
+              {language === "en" ? "\u09ac\u09be\u0982\u09b2\u09be" : "EN"}
+            </button>
+
+            {/* Notification Button */}
+            <button
+              onClick={() => alert(language === "en" ? "Notifications are empty." : "\u0995\u09cb\u09a8\u09cb \u09a8\u09cb\u099f\u09bf\u09ab\u09bf\u0995\u09c7\u09b6\u09a8 \u09a8\u09c7\u0987\u0964")}
+              className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 transition-all active:scale-95 relative"
+              aria-label="Notifications"
+            >
+              <Bell className="w-4.5 h-4.5" />
+              <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-red-500 rounded-full" />
             </button>
 
             {/* Menu icon with green indicator dot */}
             <div 
-              className="relative cursor-pointer ml-1 p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-850" 
+              className="relative cursor-pointer ml-0.5 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-95" 
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
-              <Menu className="w-5.5 h-5.5 text-slate-800 dark:text-white" />
-              <span className="absolute top-1 right-1 w-2 h-2 bg-[#0CA671] rounded-full border border-white dark:border-[#010818]" />
+              <Menu className="w-5 h-5 text-slate-800 dark:text-white" />
+              <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-[#0CA671] rounded-full border border-white dark:border-[#010818]" />
             </div>
           </div>
         </header>
