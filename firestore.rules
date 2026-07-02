@@ -1,0 +1,101 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+    
+    function hasRole(role) {
+      return isAuthenticated() && getUserData().role == role;
+    }
+    
+    function isOwner(ownerField) {
+      return isAuthenticated() && request.auth.uid == ownerField;
+    }
+
+    // 1. Users collection
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && request.auth.uid == userId;
+      allow update: if isAuthenticated() && (request.auth.uid == userId || hasRole('super_admin'));
+      allow delete: if hasRole('super_admin');
+    }
+
+    // 2. Civic Reports
+    match /civic_reports/{reportId} {
+      allow read: if true;
+      allow create: if isAuthenticated() && hasRole('citizen');
+      allow update: if isAuthenticated() && (
+        isOwner(resource.data.reporterId) || 
+        hasRole('civic_admin') || 
+        hasRole('super_admin')
+      );
+      allow delete: if hasRole('super_admin');
+    }
+
+    // 3. Police Notices
+    match /notices/{noticeId} {
+      allow read: if true;
+      allow write: if hasRole('police_admin') || hasRole('super_admin');
+    }
+
+    // 4. Anonymous Tips
+    match /anonymous_tips/{tipId} {
+      allow create: if true; // Allowed anonymously without login
+      allow read, update, delete: if hasRole('police_admin') || hasRole('super_admin');
+    }
+
+    // 5. Tenant Forms
+    match /tenant_forms/{formId} {
+      allow create: if isAuthenticated();
+      allow read: if isAuthenticated() && (
+        isOwner(resource.data.submittedById) || 
+        hasRole('police_admin') || 
+        hasRole('super_admin')
+      );
+      allow update: if isAuthenticated() && (
+        (isOwner(resource.data.submittedById) && resource.data.status == 'submitted') || 
+        hasRole('police_admin') || 
+        hasRole('super_admin')
+      );
+      allow delete: if hasRole('super_admin');
+    }
+
+    // 6. Listings (To-Let)
+    match /listings/{listingId} {
+      allow read: if true;
+      allow create: if isAuthenticated() && hasRole('citizen');
+      allow update: if isAuthenticated() && (
+        isOwner(resource.data.ownerId) || 
+        hasRole('super_admin')
+      );
+      allow delete: if isAuthenticated() && (
+        isOwner(resource.data.ownerId) || 
+        hasRole('super_admin')
+      );
+    }
+
+    // 7. Lost & Found
+    match /lost_found/{itemId} {
+      allow read: if true;
+      allow create: if isAuthenticated() && hasRole('citizen');
+      allow update, delete: if isAuthenticated() && (
+        isOwner(resource.data.reporterId) || 
+        hasRole('super_admin')
+      );
+    }
+
+    // 8. Blood Donors
+    match /blood_donors/{donorId} {
+      allow read: if true;
+      allow create, update: if isAuthenticated() && request.auth.uid == donorId;
+      allow delete: if isAuthenticated() && (request.auth.uid == donorId || hasRole('super_admin'));
+    }
+  }
+}
