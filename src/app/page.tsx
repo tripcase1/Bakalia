@@ -257,11 +257,357 @@ export default function HomePage() {
   );
 
   return (
-    <div className="min-h-screen flex flex-col font-sans transition-colors duration-300 bg-[#F4F6F9] dark:bg-[#010818] pb-16 md:pb-0">
+    <div className="min-h-screen flex flex-col font-sans transition-colors duration-300 bg-[#F4F6F9] dark:bg-[#010818]">
       
-      {/* 1. TOP NAVBAR */}
-      <header className="sticky top-0 z-50 glass-nav border-b border-slate-200/85 dark:border-slate-800/60 bg-white/95 dark:bg-[#010818]/90">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* ==================== MOBILE HOMEPAGE (FROM SCRATCH) ==================== */}
+      <div className="md:hidden flex flex-col min-h-screen bg-[#010818] pb-20 relative text-white">
+        
+        {/* 1. Header */}
+        <header className="px-4 pt-4 pb-2 bg-[#010818] flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-emerald-500 flex items-center justify-center text-white shadow-md shadow-blue-500/15">
+              <Shield className="w-5.5 h-5.5 text-blue-100" />
+            </div>
+            <div className="leading-tight">
+              <span className="text-base font-bold tracking-tight text-white block">
+                Bakalia
+              </span>
+              <span className="block text-[9px] uppercase font-bold tracking-wider text-slate-400">
+                Community
+              </span>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <Search 
+              className="w-5.5 h-5.5 text-slate-300 cursor-pointer" 
+              onClick={() => alert("Search is active via the search capsule below.")}
+            />
+            <div 
+              className="relative cursor-pointer" 
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            >
+              <Menu className="w-6.5 h-6.5 text-white" />
+              <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-[#0CA671] rounded-full border-2 border-[#010818]" />
+            </div>
+          </div>
+        </header>
+
+        {/* Mobile Navigation Drawer */}
+        {isMobileMenuOpen && (
+          <div className="bg-[#04142F] border-b border-slate-800 animate-in fade-in slide-in-from-top-3 duration-150 p-4 space-y-4">
+            <div className="grid grid-cols-2 gap-2 text-xs font-semibold">
+              {[t("home"), t("news"), t("services"), t("police"), t("emergency"), t("mosque"), t("marketplace"), t("aboutUs")].map((label, idx) => (
+                <a
+                  key={idx}
+                  href="#"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="p-2.5 rounded-lg bg-[#01205B]/60 hover:bg-[#01205B] text-slate-300 hover:text-white transition-all flex items-center gap-2"
+                >
+                  <div className="w-1.5 h-1.5 rounded-full bg-[#0CA671]" />
+                  {label}
+                </a>
+              ))}
+            </div>
+            <div className="border-t border-slate-800/80 pt-3 flex flex-col gap-3">
+              <button
+                onClick={() => { setLanguage(language === "en" ? "bn" : "en"); setIsMobileMenuOpen(false); }}
+                className="w-full flex items-center justify-between p-2.5 rounded-lg bg-[#01205B]/60 text-xs font-semibold text-slate-300"
+              >
+                <span className="flex items-center gap-2">
+                  <Globe className="w-4 h-4 text-[#0CA671]" /> Language
+                </span>
+                <span className="text-[#0CA671]">{language === "en" ? "বাংলা" : "English"}</span>
+              </button>
+              <div className="grid grid-cols-2 gap-2">
+                <button 
+                  onClick={() => { setIsMobileMenuOpen(false); setAuthMode("login"); setShowAuthModal(true); }}
+                  className="w-full py-2 text-center text-xs font-bold rounded-lg border border-slate-800 text-slate-300 hover:bg-slate-800"
+                >
+                  {t("login")}
+                </button>
+                <button 
+                  onClick={() => { setIsMobileMenuOpen(false); setAuthMode("register"); setShowAuthModal(true); }}
+                  className="w-full py-2 text-center text-xs font-bold rounded-lg bg-[#0CA671] text-white hover:bg-emerald-500"
+                >
+                  {t("register")}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 2. Search Capsule */}
+        <div className="px-4 py-2 bg-[#010818]">
+          <div className="flex items-center bg-white rounded-full px-4.5 py-3 shadow-md border border-slate-100">
+            <Search className="w-5.5 h-5.5 text-[#0CA671] shrink-0" />
+            <input 
+              type="text" 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search services, news, people..." 
+              className="w-full bg-transparent border-none outline-none text-slate-800 placeholder-slate-400 text-xs ml-2.5 font-medium"
+            />
+            <button 
+              onClick={() => alert("Filters menu is currently under development.")}
+              className="w-8 h-8 rounded-full bg-[#0CA671] flex items-center justify-center text-white shrink-0 active:scale-95 transition-transform ml-2"
+            >
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="4" y1="21" x2="4" y2="14" />
+                <line x1="4" y1="10" x2="4" y2="3" />
+                <line x1="12" y1="21" x2="12" y2="12" />
+                <line x1="12" y1="8" x2="12" y2="3" />
+                <line x1="20" y1="21" x2="20" y2="16" />
+                <line x1="20" y1="12" x2="20" y2="3" />
+                <line x1="1" y1="14" x2="7" y2="14" />
+                <line x1="9" y1="8" x2="15" y2="8" />
+                <line x1="17" y1="16" x2="23" y2="16" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        {/* 3. Hero Banner Card */}
+        <div className="px-4 py-2 bg-[#010818]">
+          <div className="relative rounded-3xl overflow-hidden bg-[#04142F] border border-slate-800/80 shadow-2xl aspect-[1.8/1]">
+            <div 
+              className="absolute inset-0 bg-cover bg-center pointer-events-none opacity-55 mix-blend-lighten"
+              style={{ backgroundImage: "url('/chattogram_night_skyline_1782988025505.png')" }}
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent" />
+            <div className="absolute inset-0 p-4.5 flex flex-col justify-between z-10">
+              <div>
+                <span className="inline-block px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[#0CA671] text-[8px] font-extrabold uppercase tracking-wider">
+                  United We Grow
+                </span>
+                <h2 className="text-xl font-black tracking-tight text-white leading-tight mt-1.5">
+                  Stronger Community<br />
+                  Safer <span className="text-[#0CA671]">Bakalia</span>
+                </h2>
+                <p className="text-[10px] text-slate-300 leading-snug mt-1.5 max-w-[85%] font-medium">
+                  Connecting citizens, police and community services for a better tomorrow.
+                </p>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <button 
+                    onClick={triggerSOS}
+                    className="px-3.5 py-2 rounded-xl bg-[#0CA671] text-white text-[10.5px] font-bold flex items-center gap-1 hover:bg-emerald-600 transition-all shadow-md active:scale-95"
+                  >
+                    <AlertTriangle className="w-3.5 h-3.5" />
+                    Get Help Now
+                  </button>
+                  <button 
+                    onClick={() => {
+                      const el = document.getElementById("mobile-services-grid");
+                      el?.scrollIntoView({ behavior: "smooth" });
+                    }}
+                    className="px-3.5 py-2 rounded-xl border border-white/80 text-white text-[10.5px] font-bold bg-transparent hover:bg-white/10 transition-all active:scale-95"
+                  >
+                    Explore Services
+                  </button>
+                </div>
+                <span className="text-[9.5px] font-extrabold text-slate-400 bg-black/45 px-2.5 py-0.5 rounded-full font-mono">
+                  1/4
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 4. White Container Panel */}
+        <div className="bg-white rounded-t-[36px] mt-4 pt-7 px-4 pb-14 text-slate-800 flex flex-col space-y-5.5 shadow-2xl">
+          
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-black tracking-tight text-slate-900">Quick Services</h3>
+            <button 
+              onClick={() => alert("All services are displayed below.")}
+              className="text-xs font-black text-[#0CA671] flex items-center gap-0.5"
+            >
+              View All <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          <div id="mobile-services-grid" className="grid grid-cols-4 gap-3">
+            {[
+              { title: "Police Help", desc: "Report & Support", icon: Shield, color: "text-blue-500 bg-blue-50" },
+              { title: "Emergency", desc: "24/7 Services", icon: AlertTriangle, color: "text-red-500 bg-red-50" },
+              { title: "Mosques", desc: "Near You", icon: MosqueIcon, color: "text-emerald-500 bg-emerald-50" },
+              { title: "Marketplace", desc: "Buy & Sell", icon: ShoppingCart, color: "text-amber-500 bg-amber-50" },
+              { title: "Jobs", desc: "Find Opportunities", icon: Briefcase, color: "text-purple-500 bg-purple-50" },
+              { title: "Blood Donors", desc: "Save Lives", icon: Droplet, color: "text-rose-500 bg-rose-50" },
+              { title: "Documents", desc: "Forms & Info", icon: Newspaper, color: "text-teal-500 bg-teal-50" },
+              { title: "Community", desc: "Groups & Events", icon: Users, color: "text-blue-500 bg-blue-50" }
+            ].map((item, idx) => {
+              const ItemIcon = item.icon;
+              return (
+                <div 
+                  key={idx} 
+                  onClick={() => {
+                    if (item.title === "Emergency") {
+                      triggerSOS();
+                    } else if (item.title === "Police Help") {
+                      alert("Connecting to Thana Police Help desk...");
+                    } else {
+                      setAuthMode("login");
+                      setShowAuthModal(true);
+                    }
+                  }}
+                  className="flex flex-col items-center text-center p-2 rounded-2xl bg-white border border-slate-100 shadow-sm active:scale-95 transition-all cursor-pointer"
+                >
+                  <div className={`w-10 h-10 rounded-2xl flex items-center justify-center ${item.color} shadow-sm shrink-0`}>
+                    <ItemIcon className="w-5.5 h-5.5" />
+                  </div>
+                  <span className="text-[10px] font-black text-slate-800 leading-tight mt-2 truncate w-full">{item.title}</span>
+                  <span className="text-[8.5px] text-slate-400 font-bold mt-0.5 leading-none truncate w-full">{item.desc}</span>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Next Prayer Card */}
+          <div className="rounded-3xl bg-[#01122C] text-white p-4.5 shadow-xl border border-slate-800/10 relative overflow-hidden">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3.5">
+                <div className="w-11 h-11 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-[#0CA671]">
+                  <MosqueIcon className="w-6.5 h-6.5" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-white flex items-center gap-1.5">
+                    Next Prayer: <span className="text-[#0CA671]">{nextPrayer.name}</span>
+                  </h4>
+                  <span className="text-[9.5px] text-slate-400 flex items-center gap-1 mt-1 font-bold">
+                    <MapPin className="w-3.5 h-3.5 text-slate-400" /> Bakalia, Chattogram
+                  </span>
+                </div>
+              </div>
+              <div className="text-right">
+                <span className="block text-base font-black text-[#0CA671] leading-none">{nextPrayer.timeStr}</span>
+                <span className="block text-[9px] text-slate-400 font-bold mt-1.5 font-mono">{formatDate()}</span>
+              </div>
+            </div>
+            <div className="border-t border-slate-800/50 mt-4 pt-3 flex items-center justify-between text-[10px]">
+              <span className="text-slate-400 font-bold flex items-center gap-1">
+                <svg className="w-3.5 h-3.5 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <circle cx="12" cy="12" r="10" />
+                  <polyline points="12 6 12 12 16 14" />
+                </svg>
+                Fajr 3:48 AM
+              </span>
+              <button 
+                onClick={() => setIsPrayerExpanded(!isPrayerExpanded)}
+                className="text-[#0CA671] font-extrabold flex items-center gap-0.5 hover:underline"
+              >
+                View Full Timetable <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+
+            {isPrayerExpanded && (
+              <div className="mt-4 pt-3.5 border-t border-slate-800/60 grid grid-cols-5 gap-2 text-center text-[10px]">
+                {[
+                  { name: "Fajr", time: "3:48 AM" },
+                  { name: "Dhuhr", time: "12:02 PM" },
+                  { name: "Asr", time: "4:44 PM" },
+                  { name: "Maghrib", time: "6:44 PM" },
+                  { name: "Isha", time: "8:01 PM" }
+                ].map((p, idx) => (
+                  <div key={idx} className={`p-1.5 rounded-xl border ${p.name === nextPrayer.name ? "bg-emerald-500/10 border-emerald-500/35 text-white" : "border-slate-800/40 text-slate-450"}`}>
+                    <span className="block font-bold">{p.name}</span>
+                    <span className="block text-[8.5px] font-mono font-semibold mt-0.5">{p.time}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Stats/Metrics cards */}
+          <div className="grid grid-cols-3 gap-3">
+            {[
+              { title: "Registered Citizens", value: "125,430", percent: "12.4% this month", color: "bg-emerald-50/60 border-emerald-100/50 text-emerald-800 icon-emerald-500", icon: Users },
+              { title: "Resolved Complaints", value: "1,824", percent: "8.7% this month", color: "bg-blue-50/60 border-blue-100/50 text-blue-800 icon-blue-500", icon: ShieldCheck },
+              { title: "Active Volunteers", value: "320", percent: "15.2% this month", color: "bg-purple-50/60 border-purple-100/50 text-purple-800 icon-purple-500", icon: Award }
+            ].map((stat, idx) => {
+              const StatIcon = stat.icon;
+              return (
+                <div key={idx} className={`p-3 rounded-2xl border ${stat.color} flex flex-col justify-between shadow-sm`}>
+                  <div>
+                    <div className="w-8 h-8 rounded-xl bg-white shadow-sm flex items-center justify-center mb-2.5">
+                      <StatIcon className="w-5 h-5 text-slate-800" />
+                    </div>
+                    <span className="block text-base font-black tracking-tight leading-none text-slate-900">{stat.value}</span>
+                    <span className="block text-[8px] text-slate-500 font-extrabold mt-1.5 leading-snug">{stat.title}</span>
+                  </div>
+                  <span className="block text-[7.5px] font-black text-emerald-600 mt-2.5 leading-none">↑ {stat.percent}</span>
+                </div>
+              );
+            })}
+          </div>
+
+        </div>
+
+        {/* 5. Sticky Bottom Navigation Bar */}
+        <div className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-t border-slate-100 px-4 py-2.5 flex items-center justify-around shadow-2xl text-slate-500">
+          <button 
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            className="flex flex-col items-center gap-0.5 text-[#0CA671]"
+          >
+            <Home className="w-5.5 h-5.5" />
+            <span className="text-[9px] font-black">{language === "en" ? "Home" : "মূল পাতা"}</span>
+          </button>
+
+          <button 
+            onClick={() => {
+              const el = document.getElementById("mobile-services-grid");
+              el?.scrollIntoView({ behavior: "smooth" });
+            }}
+            className="flex flex-col items-center gap-0.5 hover:text-slate-800"
+          >
+            <LayoutGrid className="w-5.5 h-5.5" />
+            <span className="text-[9px] font-black">{language === "en" ? "Services" : "সেবা"}</span>
+          </button>
+
+          {/* SOS button */}
+          <button 
+            onClick={triggerSOS}
+            className={`flex flex-col items-center justify-center -mt-6.5 w-14 h-14 rounded-full text-white shadow-xl transition-all duration-200 active:scale-95 ${
+              sosActive 
+                ? "bg-rose-600 animate-pulse shadow-rose-500/50" 
+                : sosCountdown !== null 
+                  ? "bg-amber-600 animate-pulse shadow-amber-500/50"
+                  : "bg-[#EF4444] hover:bg-[#EF4444]/95 shadow-[#EF4444]/30"
+            }`}
+          >
+            <AlertTriangle className="w-5 h-5 text-white" />
+            <span className="text-[8px] font-black mt-0.5 tracking-wider text-white">SOS</span>
+          </button>
+
+          <button 
+            onClick={() => {
+              setIsPrayerExpanded(true);
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            className="flex flex-col items-center gap-0.5 hover:text-slate-800"
+          >
+            <MosqueIcon className="w-5.5 h-5.5 text-slate-500" />
+            <span className="text-[9px] font-black">{language === "en" ? "Mosque" : "মসজিদ"}</span>
+          </button>
+
+          <button 
+            onClick={() => { setAuthMode("login"); setShowAuthModal(true); }}
+            className="flex flex-col items-center gap-0.5 hover:text-slate-800"
+          >
+            <User className="w-5.5 h-5.5" />
+            <span className="text-[9px] font-black">{language === "en" ? "Profile" : "প্রোফাইল"}</span>
+          </button>
+        </div>
+
+      </div>
+
+      {/* ==================== DESKTOP/TABLET VIEWPORT ==================== */}
+      <div className="hidden md:block">
+        
+        {/* 1. TOP NAVBAR */}
+        <header className="sticky top-0 z-50 glass-nav border-b border-slate-200/85 dark:border-slate-800/60 bg-white/95 dark:bg-[#010818]/90">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           
           {/* Row 1: Logo, Location, Search, Action buttons */}
           <div className="flex items-center justify-between h-14 sm:h-16">
@@ -1015,6 +1361,8 @@ export default function HomePage() {
         </div>
       </footer>
 
+      </div>
+
       {/* 8. HIGH-FIDELITY AUTH MODAL */}
       {showAuthModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-250">
@@ -1166,60 +1514,6 @@ export default function HomePage() {
           </div>
         </div>
       )}
-      {/* 9. STICKY BOTTOM NAVIGATION BAR FOR SMART MOBILE PORTAL */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-white/95 dark:bg-[#04142F]/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800/80 px-4 py-2 flex items-center justify-around shadow-xl text-slate-500 dark:text-slate-400">
-        <button 
-          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-          className="flex flex-col items-center gap-0.5 text-blue-600 dark:text-[#0CA671]"
-        >
-          <Home className="w-5 h-5" />
-          <span className="text-[9px] font-bold">{language === "en" ? "Home" : "মূল পাতা"}</span>
-        </button>
-
-        <button 
-          onClick={() => {
-            const el = document.getElementById("quick-access");
-            el?.scrollIntoView({ behavior: "smooth" });
-          }}
-          className="flex flex-col items-center gap-0.5 hover:text-slate-800 dark:hover:text-white"
-        >
-          <LayoutGrid className="w-5 h-5" />
-          <span className="text-[9px] font-bold">{language === "en" ? "Services" : "সেবা"}</span>
-        </button>
-
-        {/* SOS Emergency button in the center (larger and glowing!) */}
-        <button 
-          onClick={triggerSOS}
-          className={`flex flex-col items-center justify-center -mt-5 w-12 h-12 rounded-full text-white shadow-lg transition-transform duration-200 active:scale-95 ${
-            sosActive 
-              ? "bg-rose-600 animate-pulse shadow-rose-500/30" 
-              : sosCountdown !== null 
-                ? "bg-amber-600 animate-pulse shadow-amber-500/30"
-                : "bg-red-600 hover:bg-red-500 shadow-red-500/35"
-          }`}
-        >
-          <AlertTriangle className="w-6 h-6" />
-        </button>
-
-        <button 
-          onClick={() => {
-            setIsPrayerExpanded(true);
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-          }}
-          className="flex flex-col items-center gap-0.5 hover:text-slate-800 dark:hover:text-white"
-        >
-          <MosqueIcon className="w-5 h-5 text-amber-500 dark:text-amber-400" />
-          <span className="text-[9px] font-bold">{language === "en" ? "Mosque" : "মসজিদ"}</span>
-        </button>
-
-        <button 
-          onClick={() => { setAuthMode("login"); setShowAuthModal(true); }}
-          className="flex flex-col items-center gap-0.5 hover:text-slate-800 dark:hover:text-white"
-        >
-          <User className="w-5 h-5" />
-          <span className="text-[9px] font-bold">{language === "en" ? "Account" : "অ্যাকাউন্ট"}</span>
-        </button>
-      </div>
 
     </div>
   );
