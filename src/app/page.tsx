@@ -70,6 +70,15 @@ export default function HomePage() {
   const [sosActive, setSosActive] = useState(false);
   const [activeMobileTab, setActiveMobileTab] = useState<"news" | "nearby" | "highlights">("news");
   const [isPrayerExpanded, setIsPrayerExpanded] = useState(false);
+  const [heroAnnouncement, setHeroAnnouncement] = useState<{ title: string; category: string } | null>(null);
+
+  // pointer hold state variables
+  const [showSosConfirmModal, setShowSosConfirmModal] = useState(false);
+  const [showSosHoldOverlay, setShowSosHoldOverlay] = useState(false);
+  const [sosHoldProgress, setSosHoldProgress] = useState(0);
+  const [sosHoldTimeLeft, setSosHoldTimeLeft] = useState(5);
+  const [isHoldingSos, setIsHoldingSos] = useState(false);
+  const [sosSuccess, setSosSuccess] = useState(false);
 
   // Update current time clock
   useEffect(() => {
@@ -79,34 +88,41 @@ export default function HomePage() {
     return () => clearInterval(timer);
   }, []);
 
-  // SOS Countdown handler
+  // SOS Pointer Hold Timer
   useEffect(() => {
-    if (sosCountdown === null) return;
-    if (sosCountdown === 0) {
-      setSosCountdown(null);
-      setSosActive(true);
-      alert(language === "en" 
-        ? "🚨 SOS ALERT SENT! Thana Police and local volunteers have been notified with your GPS coordinates." 
-        : "🚨 এসওএস অ্যালার্ট পাঠানো হয়েছে! আপনার জিপিএস লোকেশন সহ থানা পুলিশ এবং স্থানীয় স্বেচ্ছাসেবকদের অবহিত করা হয়েছে।"
-      );
-      return;
+    let intervalId: any = null;
+    if (isHoldingSos && !sosSuccess) {
+      const startTime = Date.now();
+      const duration = 5000; // 5 seconds
+      intervalId = setInterval(() => {
+        const elapsed = Date.now() - startTime;
+        const progress = Math.min((elapsed / duration) * 100, 100);
+        const secondsLeft = Math.max(5 - Math.floor(elapsed / 1000), 0);
+        
+        setSosHoldProgress(progress);
+        setSosHoldTimeLeft(secondsLeft);
+        
+        if (elapsed >= duration) {
+          clearInterval(intervalId);
+          setIsHoldingSos(false);
+          setSosSuccess(true);
+          setSosActive(true);
+        }
+      }, 50); // check progress every 50ms for smooth circle offset
+    } else {
+      if (!sosSuccess) {
+        setSosHoldProgress(0);
+        setSosHoldTimeLeft(5);
+      }
     }
-    const timer = setTimeout(() => {
-      setSosCountdown(sosCountdown - 1);
-    }, 1000);
-    return () => clearTimeout(timer);
-  }, [sosCountdown, language]);
+    
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [isHoldingSos, sosSuccess]);
 
   const triggerSOS = () => {
-    if (sosActive) {
-      setSosActive(false);
-      return;
-    }
-    if (sosCountdown !== null) {
-      setSosCountdown(null);
-      return;
-    }
-    setSosCountdown(3);
+    setShowSosConfirmModal(true);
   };
 
   // Get Prayer Times for current date
@@ -260,58 +276,74 @@ export default function HomePage() {
     <div className="min-h-screen flex flex-col font-sans transition-colors duration-300 bg-[#F4F6F9] dark:bg-[#010818]">
       
       {/* ==================== MOBILE HOMEPAGE (FROM SCRATCH) ==================== */}
-      <div className="md:hidden flex flex-col min-h-screen bg-[#010818] pb-20 relative text-white">
+      <div className="md:hidden flex flex-col min-h-screen bg-[#F4F6F9] dark:bg-[#010818] pb-20 relative text-slate-900 dark:text-white transition-colors duration-300">
         
         {/* 1. Header */}
-        <header className="px-4 pt-4 pb-2 bg-[#010818] flex items-center justify-between">
+        <header className="px-4 pt-4 pb-2 bg-white dark:bg-[#010818] border-b border-slate-200/60 dark:border-slate-800/80 flex items-center justify-between transition-colors">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-emerald-500 flex items-center justify-center text-white shadow-md shadow-blue-500/15">
-              <Shield className="w-5.5 h-5.5 text-blue-100" />
+            <div className="w-8.5 h-8.5 rounded-lg bg-gradient-to-tr from-blue-600 to-emerald-500 flex items-center justify-center text-white shadow-md shadow-blue-500/15 shrink-0">
+              <Shield className="w-5 h-5 text-blue-100" />
             </div>
             <div className="leading-tight">
-              <span className="text-base font-bold tracking-tight text-white block">
-                Bakalia
-              </span>
-              <span className="block text-[9px] uppercase font-bold tracking-wider text-slate-400">
-                Community
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-bold tracking-tight text-slate-900 dark:text-white">
+                  Bakalia Community
+                </span>
+                <span className="inline-block px-1.5 py-0.5 rounded-full bg-emerald-500/10 border border-[#0CA671]/25 text-[#0CA671] text-[8px] font-black uppercase tracking-wider shrink-0 scale-90">
+                  United We Grow
+                </span>
+              </div>
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            <Search 
-              className="w-5.5 h-5.5 text-slate-300 cursor-pointer" 
-              onClick={() => alert("Search is active via the search capsule below.")}
-            />
+          <div className="flex items-center gap-2.5">
+            {/* Theme Switch */}
+            <button 
+              onClick={toggleTheme}
+              className="p-1.5 rounded-lg hover:bg-slate-105 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 transition-all"
+              aria-label="Toggle theme"
+            >
+              {isLight ? <Moon className="w-4.5 h-4.5" /> : <Sun className="w-4.5 h-4.5" />}
+            </button>
+
+            {/* Language Switch */}
+            <button 
+              onClick={() => setLanguage(language === "en" ? "bn" : "en")}
+              className="p-1 rounded-lg hover:bg-slate-105 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 text-xs font-black font-mono tracking-tight"
+            >
+              {language === "en" ? "বাংলা" : "EN"}
+            </button>
+
+            {/* Menu icon with green indicator dot */}
             <div 
-              className="relative cursor-pointer" 
+              className="relative cursor-pointer ml-1 p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-850" 
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
-              <Menu className="w-6.5 h-6.5 text-white" />
-              <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-[#0CA671] rounded-full border-2 border-[#010818]" />
+              <Menu className="w-5.5 h-5.5 text-slate-800 dark:text-white" />
+              <span className="absolute top-1 right-1 w-2 h-2 bg-[#0CA671] rounded-full border border-white dark:border-[#010818]" />
             </div>
           </div>
         </header>
 
         {/* Mobile Navigation Drawer */}
         {isMobileMenuOpen && (
-          <div className="bg-[#04142F] border-b border-slate-800 animate-in fade-in slide-in-from-top-3 duration-150 p-4 space-y-4">
+          <div className="bg-white dark:bg-[#04142F] border-b border-slate-200 dark:border-slate-800 animate-in fade-in slide-in-from-top-3 duration-150 p-4 space-y-4">
             <div className="grid grid-cols-2 gap-2 text-xs font-semibold">
               {[t("home"), t("news"), t("services"), t("police"), t("emergency"), t("mosque"), t("marketplace"), t("aboutUs")].map((label, idx) => (
                 <a
                   key={idx}
                   href="#"
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="p-2.5 rounded-lg bg-[#01205B]/60 hover:bg-[#01205B] text-slate-300 hover:text-white transition-all flex items-center gap-2"
+                  className="p-2.5 rounded-lg bg-slate-50 dark:bg-[#01205B]/60 hover:bg-slate-100 dark:hover:bg-[#01205B] text-slate-700 dark:text-slate-300 hover:text-slate-900 hover:text-white transition-all flex items-center gap-2"
                 >
                   <div className="w-1.5 h-1.5 rounded-full bg-[#0CA671]" />
                   {label}
                 </a>
               ))}
             </div>
-            <div className="border-t border-slate-800/80 pt-3 flex flex-col gap-3">
+            <div className="border-t border-slate-200 dark:border-slate-800/80 pt-3 flex flex-col gap-3">
               <button
                 onClick={() => { setLanguage(language === "en" ? "bn" : "en"); setIsMobileMenuOpen(false); }}
-                className="w-full flex items-center justify-between p-2.5 rounded-lg bg-[#01205B]/60 text-xs font-semibold text-slate-300"
+                className="w-full flex items-center justify-between p-2.5 rounded-lg bg-slate-105 dark:bg-[#01205B]/60 text-xs font-semibold text-slate-700 dark:text-slate-300"
               >
                 <span className="flex items-center gap-2">
                   <Globe className="w-4 h-4 text-[#0CA671]" /> Language
@@ -321,13 +353,13 @@ export default function HomePage() {
               <div className="grid grid-cols-2 gap-2">
                 <button 
                   onClick={() => { setIsMobileMenuOpen(false); setAuthMode("login"); setShowAuthModal(true); }}
-                  className="w-full py-2 text-center text-xs font-bold rounded-lg border border-slate-800 text-slate-300 hover:bg-slate-800"
+                  className="w-full py-2 text-center text-xs font-bold rounded-lg border border-slate-200 dark:border-slate-800 text-slate-705 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
                 >
                   {t("login")}
                 </button>
                 <button 
                   onClick={() => { setIsMobileMenuOpen(false); setAuthMode("register"); setShowAuthModal(true); }}
-                  className="w-full py-2 text-center text-xs font-bold rounded-lg bg-[#0CA671] text-white hover:bg-emerald-500"
+                  className="w-full py-2 text-center text-xs font-bold rounded-lg bg-[#0CA671] text-white hover:bg-[#0CA671]/90"
                 >
                   {t("register")}
                 </button>
@@ -337,21 +369,21 @@ export default function HomePage() {
         )}
 
         {/* 2. Search Capsule */}
-        <div className="px-4 py-2 bg-[#010818]">
-          <div className="flex items-center bg-white rounded-full px-4.5 py-3 shadow-md border border-slate-100">
-            <Search className="w-5.5 h-5.5 text-[#0CA671] shrink-0" />
+        <div className="px-4 py-1.5 bg-slate-50/50 dark:bg-[#010818] transition-colors">
+          <div className="flex items-center bg-white dark:bg-[#04142F] rounded-full px-3.5 py-1.5 shadow-sm border border-slate-200/50 dark:border-slate-800">
+            <Search className="w-4.5 h-4.5 text-[#0CA671] shrink-0" />
             <input 
               type="text" 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search services, news, people..." 
-              className="w-full bg-transparent border-none outline-none text-slate-800 placeholder-slate-400 text-xs ml-2.5 font-medium"
+              className="w-full bg-transparent border-none outline-none text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 text-[11px] ml-2 font-medium"
             />
             <button 
               onClick={() => alert("Filters menu is currently under development.")}
-              className="w-8 h-8 rounded-full bg-[#0CA671] flex items-center justify-center text-white shrink-0 active:scale-95 transition-transform ml-2"
+              className="w-6.5 h-6.5 rounded-full bg-[#0CA671] flex items-center justify-center text-white shrink-0 active:scale-95 transition-transform ml-1.5"
             >
-              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="4" y1="21" x2="4" y2="14" />
                 <line x1="4" y1="10" x2="4" y2="3" />
                 <line x1="12" y1="21" x2="12" y2="12" />
@@ -367,8 +399,8 @@ export default function HomePage() {
         </div>
 
         {/* 3. Hero Banner Card */}
-        <div className="px-4 py-2 bg-[#010818]">
-          <div className="relative rounded-3xl overflow-hidden bg-[#04142F] border border-slate-800/80 shadow-2xl aspect-[1.8/1]">
+        <div className="px-4 py-2 bg-slate-50/50 dark:bg-[#010818] transition-colors">
+          <div className="relative rounded-3xl overflow-hidden bg-[#04142F] border border-slate-200/50 dark:border-slate-800/80 shadow-lg aspect-[1.8/1]">
             <div 
               className="absolute inset-0 bg-cover bg-center pointer-events-none opacity-55 mix-blend-lighten"
               style={{ backgroundImage: "url('/chattogram_night_skyline_1782988025505.png')" }}
@@ -376,16 +408,18 @@ export default function HomePage() {
             <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent" />
             <div className="absolute inset-0 p-4.5 flex flex-col justify-between z-10">
               <div>
-                <span className="inline-block px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[#0CA671] text-[8px] font-extrabold uppercase tracking-wider">
-                  United We Grow
-                </span>
-                <h2 className="text-xl font-black tracking-tight text-white leading-tight mt-1.5">
-                  Stronger Community<br />
-                  Safer <span className="text-[#0CA671]">Bakalia</span>
-                </h2>
-                <p className="text-[10px] text-slate-300 leading-snug mt-1.5 max-w-[85%] font-medium">
-                  Connecting citizens, police and community services for a better tomorrow.
-                </p>
+                {heroAnnouncement ? (
+                  <>
+                    <span className="inline-block px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[#0CA671] text-[8px] font-extrabold uppercase tracking-wider">
+                      {heroAnnouncement.category}
+                    </span>
+                    <h2 className="text-xl font-black tracking-tight text-white leading-tight mt-1.5">
+                      {heroAnnouncement.title}
+                    </h2>
+                  </>
+                ) : (
+                  <div className="h-10" /> /* Empty hero banner state as requested */
+                )}
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -414,11 +448,11 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* 4. White Container Panel */}
-        <div className="bg-white rounded-t-[36px] mt-4 pt-7 px-4 pb-14 text-slate-800 flex flex-col space-y-5.5 shadow-2xl">
+        {/* 4. Content Panel */}
+        <div className="bg-white dark:bg-[#010818] rounded-t-[36px] mt-4 pt-7 px-4 pb-14 text-slate-805 dark:text-slate-200 flex flex-col space-y-5.5 shadow-2xl transition-colors">
           
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-black tracking-tight text-slate-900">Quick Services</h3>
+            <h3 className="text-sm font-black tracking-tight text-slate-900 dark:text-white">Quick Services</h3>
             <button 
               onClick={() => alert("All services are displayed below.")}
               className="text-xs font-black text-[#0CA671] flex items-center gap-0.5"
@@ -429,14 +463,14 @@ export default function HomePage() {
 
           <div id="mobile-services-grid" className="grid grid-cols-4 gap-3">
             {[
-              { title: "Police Help", desc: "Report & Support", icon: Shield, color: "text-blue-500 bg-blue-50" },
-              { title: "Emergency", desc: "24/7 Services", icon: AlertTriangle, color: "text-red-500 bg-red-50" },
-              { title: "Mosques", desc: "Near You", icon: MosqueIcon, color: "text-emerald-500 bg-emerald-50" },
-              { title: "Marketplace", desc: "Buy & Sell", icon: ShoppingCart, color: "text-amber-500 bg-amber-50" },
-              { title: "Jobs", desc: "Find Opportunities", icon: Briefcase, color: "text-purple-500 bg-purple-50" },
-              { title: "Blood Donors", desc: "Save Lives", icon: Droplet, color: "text-rose-500 bg-rose-50" },
-              { title: "Documents", desc: "Forms & Info", icon: Newspaper, color: "text-teal-500 bg-teal-50" },
-              { title: "Community", desc: "Groups & Events", icon: Users, color: "text-blue-500 bg-blue-50" }
+              { title: "Police Help", desc: "Report & Support", icon: Shield, color: "text-blue-500 bg-blue-50 dark:text-[#4A89DA] dark:bg-[#04142F]" },
+              { title: "Emergency", desc: "24/7 Services", icon: AlertTriangle, color: "text-red-500 bg-red-50 dark:text-rose-500 dark:bg-[#481C21]" },
+              { title: "Mosques", desc: "Near You", icon: MosqueIcon, color: "text-emerald-500 bg-emerald-50 dark:text-[#0CA671] dark:bg-[#22444B]" },
+              { title: "Marketplace", desc: "Buy & Sell", icon: ShoppingCart, color: "text-amber-500 bg-amber-50 dark:text-amber-550 dark:bg-[#01205B]" },
+              { title: "Jobs", desc: "Find Opportunities", icon: Briefcase, color: "text-purple-500 bg-purple-50 dark:text-[#4A89DA] dark:bg-[#01205B]" },
+              { title: "Blood Donors", desc: "Save Lives", icon: Droplet, color: "text-rose-500 bg-rose-50 dark:text-rose-500 dark:bg-[#481C21]" },
+              { title: "Documents", desc: "Forms & Info", icon: Newspaper, color: "text-teal-500 bg-teal-50 dark:text-teal-400 dark:bg-[#22444B]" },
+              { title: "Community", desc: "Groups & Events", icon: Users, color: "text-blue-500 bg-blue-50 dark:text-[#4A89DA] dark:bg-[#04142F]" }
             ].map((item, idx) => {
               const ItemIcon = item.icon;
               return (
@@ -452,13 +486,13 @@ export default function HomePage() {
                       setShowAuthModal(true);
                     }
                   }}
-                  className="flex flex-col items-center text-center p-2 rounded-2xl bg-white border border-slate-100 shadow-sm active:scale-95 transition-all cursor-pointer"
+                  className="flex flex-col items-center text-center p-2 rounded-2xl bg-white dark:bg-[#01205B] border border-slate-100 dark:border-slate-800/40 shadow-sm active:scale-95 transition-all cursor-pointer"
                 >
                   <div className={`w-10 h-10 rounded-2xl flex items-center justify-center ${item.color} shadow-sm shrink-0`}>
                     <ItemIcon className="w-5.5 h-5.5" />
                   </div>
-                  <span className="text-[10px] font-black text-slate-800 leading-tight mt-2 truncate w-full">{item.title}</span>
-                  <span className="text-[8.5px] text-slate-400 font-bold mt-0.5 leading-none truncate w-full">{item.desc}</span>
+                  <span className="text-[10px] font-black text-slate-800 dark:text-slate-200 leading-tight mt-2 truncate w-full">{item.title}</span>
+                  <span className="text-[8.5px] text-slate-400 dark:text-[#859798] font-bold mt-0.5 leading-none truncate w-full">{item.desc}</span>
                 </div>
               );
             })}
@@ -522,21 +556,21 @@ export default function HomePage() {
           {/* Stats/Metrics cards */}
           <div className="grid grid-cols-3 gap-3">
             {[
-              { title: "Registered Citizens", value: "125,430", percent: "12.4% this month", color: "bg-emerald-50/60 border-emerald-100/50 text-emerald-800 icon-emerald-500", icon: Users },
-              { title: "Resolved Complaints", value: "1,824", percent: "8.7% this month", color: "bg-blue-50/60 border-blue-100/50 text-blue-800 icon-blue-500", icon: ShieldCheck },
-              { title: "Active Volunteers", value: "320", percent: "15.2% this month", color: "bg-purple-50/60 border-purple-100/50 text-purple-800 icon-purple-500", icon: Award }
+              { title: "Registered Citizens", value: "125,430", percent: "12.4% this month", color: "bg-emerald-50/60 dark:bg-[#01205B] border-emerald-100/50 dark:border-slate-800/40 text-emerald-800 dark:text-slate-200 icon-emerald-500", icon: Users },
+              { title: "Resolved Complaints", value: "1,824", percent: "8.7% this month", color: "bg-blue-50/60 dark:bg-[#01205B] border-blue-100/50 dark:border-slate-800/40 text-blue-800 dark:text-slate-200 icon-blue-500", icon: ShieldCheck },
+              { title: "Active Volunteers", value: "320", percent: "15.2% this month", color: "bg-purple-50/60 dark:bg-[#01205B] border-purple-100/50 dark:border-slate-800/40 text-purple-800 dark:text-slate-200 icon-purple-550", icon: Award }
             ].map((stat, idx) => {
               const StatIcon = stat.icon;
               return (
                 <div key={idx} className={`p-3 rounded-2xl border ${stat.color} flex flex-col justify-between shadow-sm`}>
                   <div>
-                    <div className="w-8 h-8 rounded-xl bg-white shadow-sm flex items-center justify-center mb-2.5">
-                      <StatIcon className="w-5 h-5 text-slate-800" />
+                    <div className="w-8 h-8 rounded-xl bg-white dark:bg-[#04142F] shadow-sm flex items-center justify-center mb-2.5">
+                      <StatIcon className="w-5 h-5 text-slate-800 dark:text-[#4A89DA]" />
                     </div>
-                    <span className="block text-base font-black tracking-tight leading-none text-slate-900">{stat.value}</span>
-                    <span className="block text-[8px] text-slate-500 font-extrabold mt-1.5 leading-snug">{stat.title}</span>
+                    <span className="block text-base font-black tracking-tight leading-none text-slate-900 dark:text-white">{stat.value}</span>
+                    <span className="block text-[8px] text-slate-500 dark:text-[#859798] font-extrabold mt-1.5 leading-snug">{stat.title}</span>
                   </div>
-                  <span className="block text-[7.5px] font-black text-emerald-600 mt-2.5 leading-none">↑ {stat.percent}</span>
+                  <span className="block text-[7.5px] font-black text-emerald-600 dark:text-[#0CA671] mt-2.5 leading-none">↑ {stat.percent}</span>
                 </div>
               );
             })}
@@ -545,10 +579,10 @@ export default function HomePage() {
         </div>
 
         {/* 5. Sticky Bottom Navigation Bar */}
-        <div className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-t border-slate-100 px-4 py-2.5 flex items-center justify-around shadow-2xl text-slate-500">
+        <div className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 dark:bg-[#04142F]/95 backdrop-blur-md border-t border-slate-100 dark:border-slate-850 px-4 py-2.5 flex items-center justify-around shadow-2xl text-slate-500 dark:text-slate-400 transition-colors">
           <button 
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-            className="flex flex-col items-center gap-0.5 text-[#0CA671]"
+            className="flex flex-col items-center gap-0.5 text-[#0CA671] dark:text-[#0CA671]"
           >
             <Home className="w-5.5 h-5.5" />
             <span className="text-[9px] font-black">{language === "en" ? "Home" : "মূল পাতা"}</span>
@@ -559,7 +593,7 @@ export default function HomePage() {
               const el = document.getElementById("mobile-services-grid");
               el?.scrollIntoView({ behavior: "smooth" });
             }}
-            className="flex flex-col items-center gap-0.5 hover:text-slate-800"
+            className="flex flex-col items-center gap-0.5 hover:text-slate-800 dark:hover:text-white"
           >
             <LayoutGrid className="w-5.5 h-5.5" />
             <span className="text-[9px] font-black">{language === "en" ? "Services" : "সেবা"}</span>
@@ -585,15 +619,15 @@ export default function HomePage() {
               setIsPrayerExpanded(true);
               window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
-            className="flex flex-col items-center gap-0.5 hover:text-slate-800"
+            className="flex flex-col items-center gap-0.5 hover:text-slate-800 dark:hover:text-white"
           >
-            <MosqueIcon className="w-5.5 h-5.5 text-slate-500" />
+            <MosqueIcon className="w-5.5 h-5.5 text-slate-500 dark:text-slate-400" />
             <span className="text-[9px] font-black">{language === "en" ? "Mosque" : "মসজিদ"}</span>
           </button>
 
           <button 
             onClick={() => { setAuthMode("login"); setShowAuthModal(true); }}
-            className="flex flex-col items-center gap-0.5 hover:text-slate-800"
+            className="flex flex-col items-center gap-0.5 hover:text-slate-800 dark:hover:text-white"
           >
             <User className="w-5.5 h-5.5" />
             <span className="text-[9px] font-black">{language === "en" ? "Profile" : "প্রোফাইল"}</span>
@@ -1512,6 +1546,198 @@ export default function HomePage() {
             </div>
 
           </div>
+        </div>
+      )}
+
+      {/* ==================== SOS CONFIRMATION MODAL ==================== */}
+      {showSosConfirmModal && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center px-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-250">
+          <div className="w-full max-w-sm bg-white dark:bg-[#0D1B2A] text-slate-800 dark:text-white rounded-2xl p-6 shadow-2xl animate-in zoom-in-95 duration-150 border border-slate-200 dark:border-slate-800">
+            <div className="text-center">
+              <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-[#481C21] text-[#EF4444] flex items-center justify-center mx-auto mb-4 animate-bounce">
+                <AlertTriangle className="w-6 h-6" />
+              </div>
+              <h3 className="text-base font-black leading-tight text-slate-900 dark:text-white">
+                {language === "en" ? "Do you really need help now?" : "আপনার কি সত্যিই জরুরি সাহায্য প্রয়োজন?"}
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 leading-relaxed">
+                {language === "en" 
+                  ? "This will send an emergency SOS alert containing your GPS location to Thana Police and local citizen volunteers." 
+                  : "এটি আপনার জিপিএস লোকেশন সহ থানা পুলিশ এবং স্থানীয় স্বেচ্ছাসেবকদের কাছে একটি জরুরি এসওএস অ্যালার্ট পাঠাবে।"}
+              </p>
+            </div>
+            <div className="mt-5 grid grid-cols-2 gap-3">
+              <button
+                onClick={() => setShowSosConfirmModal(false)}
+                className="w-full py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all active:scale-95"
+              >
+                {language === "en" ? "Cancel" : "বাতিল"}
+              </button>
+              <button
+                onClick={() => {
+                  setShowSosConfirmModal(false);
+                  setShowSosHoldOverlay(true);
+                  setSosHoldProgress(0);
+                  setSosHoldTimeLeft(5);
+                  setSosSuccess(false);
+                }}
+                className="w-full py-2.5 rounded-xl bg-red-650 hover:bg-red-500 text-white text-xs font-bold transition-all active:scale-95 shadow-md shadow-red-500/10"
+              >
+                {language === "en" ? "Yes, I Need Help" : "হ্যাঁ, সাহায্য লাগবে"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ==================== SOS HOLD-TO-VERIFY OVERLAY ==================== */}
+      {showSosHoldOverlay && (
+        <div className="fixed inset-0 z-[120] bg-[#010818] flex flex-col items-center justify-center text-white p-6 text-center select-none animate-in fade-in duration-200">
+          <style dangerouslySetInnerHTML={{ __html: `
+            @keyframes heartbeat {
+              0% { transform: scale(1); }
+              14% { transform: scale(1.08); }
+              28% { transform: scale(1); }
+              42% { transform: scale(1.08); }
+              70% { transform: scale(1); }
+            }
+            @keyframes vibrate {
+              0% { transform: translate(0, 0) rotate(0deg); }
+              20% { transform: translate(-1px, 1px) rotate(-0.5deg); }
+              40% { transform: translate(-1px, -1px) rotate(0.5deg); }
+              60% { transform: translate(1px, 1px) rotate(0deg); }
+              80% { transform: translate(1px, -1px) rotate(0.5deg); }
+              100% { transform: translate(0, 0) rotate(0deg); }
+            }
+            .animate-heartbeat {
+              animation: heartbeat 1.2s infinite ease-in-out;
+            }
+            .animate-vibrate {
+              animation: vibrate 0.1s infinite linear;
+            }
+          `}} />
+          
+          {!sosSuccess ? (
+            <>
+              <div className="max-w-xs space-y-2 mb-8">
+                <h2 className="text-lg font-black tracking-tight uppercase text-red-500">
+                  {language === "en" ? "SOS Hold to Verify" : "এসওএস ভেরিফাই করতে টিপুন"}
+                </h2>
+                <p className="text-xs text-slate-455 font-medium leading-relaxed">
+                  {language === "en" 
+                    ? "Continuously press and hold the button below for 5 seconds to send the alert." 
+                    : "অ্যালার্টটি পাঠাতে নিচের বোতামটি টানা ৫ সেকেন্ড টিপে ধরে রাখুন।"}
+                </p>
+              </div>
+
+              {/* Hold Button Container */}
+              <div className="relative w-44 h-44 flex items-center justify-center">
+                {/* SVG Progress Ring */}
+                <svg className="absolute w-full h-full -rotate-90" viewBox="0 0 120 120">
+                  {/* Track Ring */}
+                  <circle 
+                    cx="60" 
+                    cy="60" 
+                    r="52" 
+                    fill="none" 
+                    stroke="rgba(255, 255, 255, 0.05)" 
+                    strokeWidth="6" 
+                  />
+                  {/* Progress Ring */}
+                  <circle 
+                    cx="60" 
+                    cy="60" 
+                    r="52" 
+                    fill="none" 
+                    stroke={sosHoldProgress > 80 ? "#EF4444" : "#F59E0B"} 
+                    strokeWidth="6" 
+                    strokeDasharray="326.7" 
+                    strokeDashoffset={326.7 - (326.7 * sosHoldProgress) / 100}
+                    strokeLinecap="round"
+                    className="transition-all duration-75"
+                  />
+                </svg>
+
+                {/* Interactive Red Button */}
+                <button
+                  onPointerDown={() => setIsHoldingSos(true)}
+                  onPointerUp={() => setIsHoldingSos(false)}
+                  onPointerLeave={() => setIsHoldingSos(false)}
+                  onTouchStart={(e) => { e.preventDefault(); setIsHoldingSos(true); }}
+                  onTouchEnd={() => setIsHoldingSos(false)}
+                  className={`w-36 h-36 rounded-full bg-gradient-to-br from-red-500 to-red-700 flex flex-col items-center justify-center shadow-2xl transition-all duration-150 select-none ${
+                    isHoldingSos 
+                      ? "scale-90 shadow-red-500/40 animate-vibrate animate-heartbeat" 
+                      : "hover:scale-102 hover:shadow-red-500/20 active:scale-95"
+                  }`}
+                  style={{
+                    boxShadow: isHoldingSos ? '0 0 35px rgba(239, 68, 68, 0.6)' : 'none'
+                  }}
+                >
+                  <div className="flex flex-col items-center pointer-events-none">
+                    <AlertTriangle className={`w-8 h-8 text-white mb-1.5 ${isHoldingSos ? "animate-bounce" : ""}`} />
+                    <span className="text-3xl font-black font-mono tracking-tighter leading-none text-white">
+                      {sosHoldTimeLeft}
+                    </span>
+                    <span className="text-[9px] font-black tracking-wider uppercase text-white/95 mt-1.5">
+                      {isHoldingSos ? (language === "en" ? "HOLDING..." : "টিপে ধরে রাখুন...") : (language === "en" ? "HOLD BUTTON" : "চেপে ধরুন")}
+                    </span>
+                  </div>
+                </button>
+              </div>
+
+              {/* Progress text */}
+              <div className="mt-8 space-y-1">
+                <span className="text-xs font-bold text-slate-400 block font-mono">
+                  {Math.round(sosHoldProgress)}% completed
+                </span>
+                {isHoldingSos && (
+                  <span className="text-[10px] text-red-400 font-extrabold animate-pulse block">
+                    {language === "en" ? "🚨 Sending alert in progress..." : "🚨 অ্যালার্ট পাঠানোর প্রক্রিয়া চলছে..."}
+                  </span>
+                )}
+              </div>
+
+              {/* Cancel Button */}
+              {!isHoldingSos && (
+                <button
+                  onClick={() => setShowSosHoldOverlay(false)}
+                  className="mt-12 px-5 py-2 rounded-full border border-slate-800 text-xs font-bold text-slate-450 hover:text-white transition-all"
+                >
+                  {language === "en" ? "Go Back" : "ফিয়ে যান"}
+                </button>
+              )}
+            </>
+          ) : (
+            /* SOS Alert Success Screen */
+            <div className="max-w-xs space-y-5 animate-in zoom-in-95 duration-300">
+              <div className="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center mx-auto text-[#0CA671] animate-bounce">
+                <CheckCircle2 className="w-9 h-9" />
+              </div>
+              <div className="space-y-2">
+                <h3 className="text-lg font-black tracking-tight text-white leading-tight">
+                  {language === "en" ? "Emergency Alert Sent Successfully" : "জরুরি অ্যালার্ট সফলভাবে পাঠানো হয়েছে"}
+                </h3>
+                <p className="text-xs text-emerald-450 font-black animate-pulse">
+                  {language === "en" ? "Please stay calm." : "দয়া করে শান্ত থাকুন।"}
+                </p>
+                <p className="text-[11px] text-slate-400 font-semibold leading-relaxed">
+                  {language === "en" 
+                    ? "Help is being notified. The Thana police and volunteers have received your details." 
+                    : "সাহায্যকারী দলকে জানানো হচ্ছে। থানা পুলিশ এবং স্বেচ্ছাসেবীরা আপনার বিবরণ পেয়েছেন।"}
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  setShowSosHoldOverlay(false);
+                  setSosSuccess(false);
+                }}
+                className="mt-6 px-6 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold transition-all active:scale-95"
+              >
+                {language === "en" ? "Dismiss" : "বন্ধ করুন"}
+              </button>
+            </div>
+          )}
         </div>
       )}
 
