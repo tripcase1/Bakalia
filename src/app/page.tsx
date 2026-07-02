@@ -61,6 +61,7 @@ const TrophyVector = () => (
 export default function HomePage() {
   const { theme, language, toggleTheme, setLanguage, t } = useAppContext();
   const [searchQuery, setSearchQuery] = useState("");
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -71,6 +72,30 @@ export default function HomePage() {
   const [activeMobileTab, setActiveMobileTab] = useState<"news" | "nearby" | "highlights">("news");
   const [isPrayerExpanded, setIsPrayerExpanded] = useState(false);
   const [heroAnnouncement, setHeroAnnouncement] = useState<{ title: string; category: string } | null>(null);
+
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (isSearchOpen) {
+      setTimeout(() => {
+        searchInputRef.current?.focus();
+      }, 100);
+    }
+  }, [isSearchOpen]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "k") {
+        e.preventDefault();
+        setIsSearchOpen(true);
+      }
+      if (e.key === "Escape") {
+        setIsSearchOpen(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   // SOS hold state
   const [showSosConfirmModal, setShowSosConfirmModal] = useState(false);
@@ -184,6 +209,32 @@ export default function HomePage() {
   };
 
   const isLight = theme === "light";
+
+  const newsItems = [
+    {
+      title: language === "en" 
+        ? "Youth coordination campaign to ensure purity in Bakalia Area"
+        : "বাকলিয়ায় যুব সমাজের উদ্যোগে পরিচ্ছন্নতা অভিযান পরিচালনা",
+      category: language === "en" ? "Civic Activity" : "নাগরিক উদ্যোগ",
+      categoryColor: "bg-emerald-50 text-emerald-600 dark:bg-[#22444B] dark:text-[#0CA671] border border-emerald-100 dark:border-[#0CA671]/20",
+      time: language === "en" ? "2 hours ago" : "২ ঘণ্টা আগে",
+      views: language === "en" ? "1.2k views" : "১.২ হাজার ভিউ",
+    },
+    {
+      title: language === "en"
+        ? "Police Notice: Landlords urged to follow guidelines on traffic laws"
+        : "ট্রাফিক আইন মেনে চলার আহ্বান পুলিশের: সংযোগ সড়কে সতর্কীকরণ নোটিশ",
+      category: language === "en" ? "Police Notice" : "পুলিশ নোটিশ",
+      categoryColor: "bg-blue-50 text-blue-600 dark:bg-[#04142F] dark:text-[#4A89DA] border border-blue-105 dark:border-[#4A89DA]/20",
+      time: language === "en" ? "5 hours ago" : "৫ ঘণ্টা আগে",
+      views: language === "en" ? "856 views" : "৮৫৬ ভিউ",
+    }
+  ];
+
+  const filteredNews = newsItems.filter(news =>
+    news.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    news.category.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   // Quick Access items with dynamic colors depending on theme
   const quickAccessServices = [
@@ -330,7 +381,7 @@ export default function HomePage() {
             <div className="leading-tight">
               <div className="flex items-center gap-2">
                 <span className="text-sm font-bold tracking-tight text-slate-900 dark:text-white">
-                  Bakalia Community
+                  {language === "en" ? "Bakalia Community" : "বাকলিয়া কমিউনিটি"}
                 </span>
               </div>
             </div>
@@ -350,12 +401,12 @@ export default function HomePage() {
               onClick={() => setLanguage(language === "en" ? "bn" : "en")}
               className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 text-xs font-black font-mono tracking-tight active:scale-95"
             >
-              {language === "en" ? "\u09ac\u09be\u0982\u09b2\u09be" : "EN"}
+              {language === "en" ? "বাংলা" : "EN"}
             </button>
 
             {/* Notification Button */}
             <button
-              onClick={() => alert(language === "en" ? "Notifications are empty." : "\u0995\u09cb\u09a8\u09cb \u09a8\u09cb\u099f\u09bf\u09ab\u09bf\u0995\u09c7\u09b6\u09a8 \u09a8\u09c7\u0987\u0964")}
+              onClick={() => alert(language === "en" ? "Notifications are empty." : "কোনো নোটিফিকেশন নেই।")}
               className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 transition-all active:scale-95 relative"
               aria-label="Notifications"
             >
@@ -373,6 +424,21 @@ export default function HomePage() {
             </div>
           </div>
         </header>
+
+        {/* Date Month Year Bar on Mobile */}
+        <div className="px-4 py-1.5 bg-slate-100 dark:bg-[#04142F]/40 border-b border-slate-200/40 dark:border-slate-800/40 flex items-center justify-between text-[10px] text-slate-550 dark:text-slate-400 font-semibold transition-colors">
+          <div className="flex items-center gap-1.5">
+            <Calendar className="w-3.5 h-3.5 text-[#0CA671]" />
+            <span>{formatDate()}</span>
+          </div>
+          <span className="font-mono text-emerald-600 dark:text-[#0CA671]">
+            {currentTime.toLocaleTimeString(language === "en" ? "en-US" : "bn-BD", { 
+              hour: '2-digit', 
+              minute: '2-digit',
+              hour12: true 
+            })}
+          </span>
+        </div>
 
         {/* Mobile Navigation Drawer */}
         {isMobileMenuOpen && (
@@ -393,12 +459,12 @@ export default function HomePage() {
             <div className="border-t border-slate-200 dark:border-slate-800/80 pt-3 flex flex-col gap-3">
               <button
                 onClick={() => { setLanguage(language === "en" ? "bn" : "en"); setIsMobileMenuOpen(false); }}
-                className="w-full flex items-center justify-between p-2.5 rounded-lg bg-slate-105 dark:bg-[#01205B]/60 text-xs font-semibold text-slate-700 dark:text-slate-300"
+                className="w-full flex items-center justify-between p-2.5 rounded-lg bg-slate-100 dark:bg-[#01205B]/60 text-xs font-semibold text-slate-700 dark:text-slate-300"
               >
                 <span className="flex items-center gap-2">
-                  <Globe className="w-4 h-4 text-[#0CA671]" /> Language
+                  <Globe className="w-4 h-4 text-[#0CA671]" /> {t("languageLabel")}
                 </span>
-                <span className="text-[#0CA671]">{language === "en" ? "à¦¬à¦¾à¦‚à¦²à¦¾" : "English"}</span>
+                <span className="text-[#0CA671]">{language === "en" ? "বাংলা" : "English"}</span>
               </button>
               <div className="grid grid-cols-2 gap-2">
                 <button 
@@ -418,21 +484,17 @@ export default function HomePage() {
           </div>
         )}
 
-        {/* 2. Search Capsule */}
+        {/* 2. Search Capsule (Redesigned as Trigger) */}
         <div className="px-4 py-1.5 bg-slate-50/50 dark:bg-[#010818] transition-colors">
-          <div className="flex items-center bg-white dark:bg-[#04142F] rounded-full px-3.5 py-1.5 shadow-sm border border-slate-200/50 dark:border-slate-800">
+          <button 
+            onClick={() => setIsSearchOpen(true)}
+            className="w-full flex items-center bg-white dark:bg-[#04142F] rounded-full px-3.5 py-1.5 shadow-sm border border-slate-200/50 dark:border-slate-800 text-left active:scale-[0.98] transition-transform"
+          >
             <Search className="w-4.5 h-4.5 text-[#0CA671] shrink-0" />
-            <input 
-              type="text" 
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search services, news, people..." 
-              className="w-full bg-transparent border-none outline-none text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 text-[11px] ml-2 font-medium"
-            />
-            <button 
-              onClick={() => alert("Filters menu is currently under development.")}
-              className="w-6.5 h-6.5 rounded-full bg-[#0CA671] flex items-center justify-center text-white shrink-0 active:scale-95 transition-transform ml-1.5"
-            >
+            <span className="w-full text-slate-400 dark:text-slate-500 text-[11px] ml-2 font-medium">
+              {t("searchPlaceholder")}
+            </span>
+            <div className="w-6.5 h-6.5 rounded-full bg-[#0CA671] flex items-center justify-center text-white shrink-0 active:scale-95 transition-transform ml-1.5">
               <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="4" y1="21" x2="4" y2="14" />
                 <line x1="4" y1="10" x2="4" y2="3" />
@@ -444,8 +506,8 @@ export default function HomePage() {
                 <line x1="9" y1="8" x2="15" y2="8" />
                 <line x1="17" y1="16" x2="23" y2="16" />
               </svg>
-            </button>
-          </div>
+            </div>
+          </button>
         </div>
 
         {/* 3. Hero Banner Card */}
@@ -471,45 +533,45 @@ export default function HomePage() {
                   <div className="h-10" /> /* Empty hero banner state as requested */
                 )}
               </div>
-              {/* Bottom row: empty as requested since buttons and 1/4 badge are removed */}
               <div />
             </div>
           </div>
         </div>
-
-        {/* 4. Content Panel */}
         <div className="bg-white dark:bg-[#010818] rounded-t-[36px] mt-4 pt-7 px-4 pb-14 text-slate-805 dark:text-slate-200 flex flex-col space-y-5.5 shadow-2xl transition-colors">
           
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-black tracking-tight text-slate-900 dark:text-white">Quick Services</h3>
+            <h3 className="text-sm font-black tracking-tight text-slate-900 dark:text-white">{t("quickServices")}</h3>
             <button 
-              onClick={() => alert("All services are displayed below.")}
+              onClick={() => {
+                const el = document.getElementById("quick-access");
+                el?.scrollIntoView({ behavior: "smooth" });
+              }}
               className="text-xs font-black text-[#0CA671] flex items-center gap-0.5"
             >
-              View All <ChevronRight className="w-3.5 h-3.5" />
+              {t("viewAll")} <ChevronRight className="w-3.5 h-3.5" />
             </button>
           </div>
 
           <div id="mobile-services-grid" className="grid grid-cols-4 gap-3">
             {[
-              { title: "Police Help", desc: "Report & Support", icon: Shield, color: "text-blue-500 bg-blue-50 dark:text-[#4A89DA] dark:bg-[#04142F]" },
-              { title: "Emergency", desc: "24/7 Services", icon: AlertTriangle, color: "text-red-500 bg-red-50 dark:text-rose-500 dark:bg-[#481C21]" },
-              { title: "Mosques", desc: "Near You", icon: MosqueIcon, color: "text-emerald-500 bg-emerald-50 dark:text-[#0CA671] dark:bg-[#22444B]" },
-              { title: "Marketplace", desc: "Buy & Sell", icon: ShoppingCart, color: "text-amber-500 bg-amber-50 dark:text-amber-550 dark:bg-[#01205B]" },
-              { title: "Jobs", desc: "Find Opportunities", icon: Briefcase, color: "text-purple-500 bg-purple-50 dark:text-[#4A89DA] dark:bg-[#01205B]" },
-              { title: "Blood Donors", desc: "Save Lives", icon: Droplet, color: "text-rose-500 bg-rose-50 dark:text-rose-500 dark:bg-[#481C21]" },
-              { title: "Documents", desc: "Forms & Info", icon: Newspaper, color: "text-teal-500 bg-teal-50 dark:text-teal-400 dark:bg-[#22444B]" },
-              { title: "Community", desc: "Groups & Events", icon: Users, color: "text-blue-500 bg-blue-50 dark:text-[#4A89DA] dark:bg-[#04142F]" }
+              { key: "policeHelp", title: t("policeHelp"), desc: t("policeHelpDesc"), icon: Shield, color: "text-blue-500 bg-blue-50 dark:text-[#4A89DA] dark:bg-[#04142F]" },
+              { key: "emergencyServices", title: t("emergencyServices"), desc: t("emergencyServicesDesc"), icon: AlertTriangle, color: "text-red-500 bg-red-50 dark:text-rose-500 dark:bg-[#481C21]" },
+              { key: "mosquesNearYou", title: t("mosquesNearYou"), desc: t("mosquesNearYouDesc"), icon: MosqueIcon, color: "text-emerald-500 bg-emerald-50 dark:text-[#0CA671] dark:bg-[#22444B]" },
+              { key: "marketplaceBuySell", title: t("marketplaceBuySell"), desc: t("marketplaceBuySellDesc"), icon: ShoppingCart, color: "text-amber-500 bg-amber-50 dark:text-amber-550 dark:bg-[#01205B]" },
+              { key: "jobsFind", title: t("jobsFind"), desc: t("jobsFindDesc"), icon: Briefcase, color: "text-purple-500 bg-purple-50 dark:text-[#4A89DA] dark:bg-[#01205B]" },
+              { key: "bloodDonors", title: t("bloodDonors"), desc: t("bloodDonorsDesc"), icon: Droplet, color: "text-rose-500 bg-rose-50 dark:text-rose-500 dark:bg-[#481C21]" },
+              { key: "documents", title: t("documents"), desc: t("documentsDesc"), icon: Newspaper, color: "text-teal-500 bg-teal-50 dark:text-teal-400 dark:bg-[#22444B]" },
+              { key: "community", title: t("community"), desc: t("communityDesc"), icon: Users, color: "text-blue-500 bg-blue-50 dark:text-[#4A89DA] dark:bg-[#04142F]" }
             ].map((item, idx) => {
               const ItemIcon = item.icon;
               return (
                 <div 
                   key={idx} 
                   onClick={() => {
-                    if (item.title === "Emergency") {
+                    if (item.key === "emergencyServices") {
                       triggerSOS();
-                    } else if (item.title === "Police Help") {
-                      alert("Connecting to Thana Police Help desk...");
+                    } else if (item.key === "policeHelp") {
+                      alert(language === "en" ? "Connecting to Thana Police Help desk..." : "থানা পুলিশ হেল্প ডেস্কে সংযোগ করা হচ্ছে...");
                     } else {
                       setAuthMode("login");
                       setShowAuthModal(true);
@@ -536,10 +598,10 @@ export default function HomePage() {
                 </div>
                 <div>
                   <h4 className="text-xs font-bold text-white flex items-center gap-1.5">
-                    Next Prayer: <span className="text-[#0CA671]">{nextPrayer.name}</span>
+                    {t("nextPrayer")}: <span className="text-[#0CA671]">{t(nextPrayer.name.toLowerCase())}</span>
                   </h4>
                   <span className="text-[9.5px] text-slate-400 flex items-center gap-1 mt-1 font-bold">
-                    <MapPin className="w-3.5 h-3.5 text-slate-400" /> Bakalia, Chattogram
+                    <MapPin className="w-3.5 h-3.5 text-slate-400" /> {t("prayerTimesLoc")}
                   </span>
                 </div>
               </div>
@@ -554,13 +616,13 @@ export default function HomePage() {
                   <circle cx="12" cy="12" r="10" />
                   <polyline points="12 6 12 12 16 14" />
                 </svg>
-                Fajr 3:48 AM
+                {t("fajr")} 3:48 AM
               </span>
               <button 
                 onClick={() => setIsPrayerExpanded(!isPrayerExpanded)}
                 className="text-[#0CA671] font-extrabold flex items-center gap-0.5 hover:underline"
               >
-                View Full Timetable <ChevronRight className="w-3.5 h-3.5" />
+                {t("viewFullTimetable")} <ChevronRight className="w-3.5 h-3.5" />
               </button>
             </div>
 
@@ -573,8 +635,8 @@ export default function HomePage() {
                   { name: "Maghrib", time: "6:44 PM" },
                   { name: "Isha", time: "8:01 PM" }
                 ].map((p, idx) => (
-                  <div key={idx} className={`p-1.5 rounded-xl border ${p.name === nextPrayer.name ? "bg-emerald-500/10 border-emerald-500/35 text-white" : "border-slate-800/40 text-slate-450"}`}>
-                    <span className="block font-bold">{p.name}</span>
+                  <div key={idx} className={`p-1.5 rounded-xl border ${p.name === nextPrayer.name ? "bg-emerald-500/10 border-emerald-500/35 text-white" : "border-slate-800/40 text-white"}`}>
+                    <span className="block font-bold">{t(p.name.toLowerCase())}</span>
                     <span className="block text-[8.5px] font-mono font-semibold mt-0.5">{p.time}</span>
                   </div>
                 ))}
@@ -585,9 +647,9 @@ export default function HomePage() {
           {/* Stats/Metrics cards */}
           <div className="grid grid-cols-3 gap-3">
             {[
-              { title: "Registered Citizens", value: "125,430", percent: "12.4% this month", color: "bg-emerald-50/60 dark:bg-[#01205B] border-emerald-100/50 dark:border-slate-800/40 text-emerald-800 dark:text-slate-200 icon-emerald-500", icon: Users },
-              { title: "Resolved Complaints", value: "1,824", percent: "8.7% this month", color: "bg-blue-50/60 dark:bg-[#01205B] border-blue-100/50 dark:border-slate-800/40 text-blue-800 dark:text-slate-200 icon-blue-500", icon: ShieldCheck },
-              { title: "Active Volunteers", value: "320", percent: "15.2% this month", color: "bg-purple-50/60 dark:bg-[#01205B] border-purple-100/50 dark:border-slate-800/40 text-purple-800 dark:text-slate-200 icon-purple-550", icon: Award }
+              { title: t("registeredCitizens"), value: "125,430", percent: `12.4% ${t("percentThisMonth")}`, color: "bg-emerald-50/60 dark:bg-[#01205B] border-emerald-100/50 dark:border-slate-800/40 text-emerald-800 dark:text-slate-200 icon-emerald-500", icon: Users },
+              { title: t("resolvedComplaints"), value: "1,824", percent: `8.7% ${t("percentThisMonth")}`, color: "bg-blue-50/60 dark:bg-[#01205B] border-blue-100/50 dark:border-slate-800/40 text-blue-800 dark:text-slate-200 icon-blue-500", icon: ShieldCheck },
+              { title: t("activeVolunteers"), value: "320", percent: `15.2% ${t("percentThisMonth")}`, color: "bg-purple-50/60 dark:bg-[#01205B] border-purple-100/50 dark:border-slate-800/40 text-purple-800 dark:text-slate-200 icon-purple-550", icon: Award }
             ].map((stat, idx) => {
               const StatIcon = stat.icon;
               return (
@@ -597,9 +659,9 @@ export default function HomePage() {
                       <StatIcon className="w-5 h-5 text-slate-800 dark:text-[#4A89DA]" />
                     </div>
                     <span className="block text-base font-black tracking-tight leading-none text-slate-900 dark:text-white">{stat.value}</span>
-                    <span className="block text-[8px] text-slate-500 dark:text-[#859798] font-extrabold mt-1.5 leading-snug">{stat.title}</span>
+                    <span className="block text-[8px] text-slate-550 dark:text-[#859798] font-bold mt-1.5 leading-snug">{stat.title}</span>
                   </div>
-                  <span className="block text-[7.5px] font-black text-emerald-600 dark:text-[#0CA671] mt-2.5 leading-none">â†‘ {stat.percent}</span>
+                  <span className="block text-[7.5px] font-black text-emerald-600 dark:text-[#0CA671] mt-2.5 leading-none">↑ {stat.percent}</span>
                 </div>
               );
             })}
@@ -614,7 +676,7 @@ export default function HomePage() {
             className="flex flex-col items-center gap-0.5 text-[#0CA671] dark:text-[#0CA671]"
           >
             <Home className="w-5.5 h-5.5" />
-            <span className="text-[9px] font-black">{language === "en" ? "Home" : "à¦®à§‚à¦² à¦ªà¦¾à¦¤à¦¾"}</span>
+            <span className="text-[9px] font-black">{t("homeNav")}</span>
           </button>
 
           <button 
@@ -625,7 +687,7 @@ export default function HomePage() {
             className="flex flex-col items-center gap-0.5 hover:text-slate-800 dark:hover:text-white"
           >
             <LayoutGrid className="w-5.5 h-5.5" />
-            <span className="text-[9px] font-black">{language === "en" ? "Services" : "à¦¸à§‡à¦¬à¦¾"}</span>
+            <span className="text-[9px] font-black">{t("servicesNav")}</span>
           </button>
 
           {/* SOS button */}
@@ -651,7 +713,7 @@ export default function HomePage() {
             className="flex flex-col items-center gap-0.5 hover:text-slate-800 dark:hover:text-white"
           >
             <MosqueIcon className="w-5.5 h-5.5 text-slate-500 dark:text-slate-400" />
-            <span className="text-[9px] font-black">{language === "en" ? "Mosque" : "à¦®à¦¸à¦œà¦¿à¦¦"}</span>
+            <span className="text-[9px] font-black">{t("mosqueNav")}</span>
           </button>
 
           <button 
@@ -659,7 +721,7 @@ export default function HomePage() {
             className="flex flex-col items-center gap-0.5 hover:text-slate-800 dark:hover:text-white"
           >
             <User className="w-5.5 h-5.5" />
-            <span className="text-[9px] font-black">{language === "en" ? "Profile" : "à¦ªà§à¦°à§‹à¦«à¦¾à¦‡à¦²"}</span>
+            <span className="text-[9px] font-black">{t("profileNav")}</span>
           </button>
         </div>
 
@@ -684,40 +746,39 @@ export default function HomePage() {
                 </div>
                 <div className="leading-tight">
                   <span className="text-base font-bold tracking-tight text-slate-900 dark:text-white block">
-                    Bakalia
+                    {language === "en" ? "Bakalia" : "বাকলিয়া"}
                   </span>
                   <span className="block text-[9px] uppercase font-bold tracking-wider text-slate-500 dark:text-slate-400">
-                    Community
+                    {t("community")}
                   </span>
                 </div>
               </div>
 
-              {/* Location selector dropdown from light mode mockup */}
+              {/* Location selector dropdown */}
               <div className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-[#04142F] border border-slate-200/60 dark:border-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-350 cursor-pointer hover:bg-slate-200/60 dark:hover:bg-slate-800/80 transition-all select-none">
                 <MapPin className="w-3.5 h-3.5 text-blue-500" />
-                <span>Bakalia, Chattogram</span>
+                <span>{t("locationBakalia")}</span>
                 <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+              </div>
+
+              {/* Date Month Year Header on Desktop */}
+              <div className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-[#04142F] border border-slate-200/60 dark:border-slate-800 text-xs font-semibold text-slate-705 dark:text-slate-300 select-none transition-colors">
+                <Calendar className="w-3.5 h-3.5 text-emerald-500" />
+                <span>{formatDate()}</span>
               </div>
             </div>
 
-            {/* Center: Search Bar */}
-            <div className="hidden md:flex flex-1 max-w-sm mx-6 relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Search className="h-4 w-4 text-slate-400 dark:text-slate-500" />
-              </div>
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder={t("searchPlaceholder")}
-                className="w-full pl-9 pr-12 py-1.5 text-xs rounded-lg bg-slate-100 dark:bg-[#04142F] border border-slate-200 dark:border-slate-800/80 focus:border-blue-500/30 dark:focus:border-[#4A89DA]/45 focus:bg-white dark:focus:bg-[#04142F] focus:ring-1 focus:ring-blue-500/10 outline-none transition-all duration-200 text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-400"
-              />
-              <div className="absolute inset-y-0 right-0 pr-2.5 flex items-center pointer-events-none">
-                <kbd className="hidden sm:inline-block px-1.5 py-0.5 text-[9px] font-medium text-slate-400 dark:text-slate-500 bg-white dark:bg-[#01205B] border border-slate-200 dark:border-slate-700/65 rounded">
-                  Ctrl K
-                </kbd>
-              </div>
-            </div>
+            {/* Center: Search Trigger (Redesigned as click trigger) */}
+            <button
+              onClick={() => setIsSearchOpen(true)}
+              className="hidden md:flex flex-1 max-w-sm mx-6 items-center bg-slate-100 dark:bg-[#04142F] border border-slate-200 dark:border-slate-800/80 rounded-lg px-3 py-1.5 text-xs text-slate-400 hover:bg-slate-200/40 dark:hover:bg-slate-800/50 outline-none transition-all cursor-pointer select-none text-left active:scale-[0.99]"
+            >
+              <Search className="h-4 w-4 text-slate-450 dark:text-slate-500 mr-2 shrink-0" />
+              <span className="flex-grow">{t("searchPlaceholder")}</span>
+              <kbd className="hidden sm:inline-block px-1.5 py-0.5 text-[9px] font-medium text-slate-400 dark:text-slate-500 bg-white dark:bg-[#01205B] border border-slate-200 dark:border-slate-700/65 rounded shadow-sm shrink-0">
+                Ctrl K
+              </kbd>
+            </button>
 
             {/* Right: Language switch, Theme switch, Login, Register */}
             <div className="hidden lg:flex items-center gap-3">
@@ -728,7 +789,7 @@ export default function HomePage() {
                 className="px-2 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 flex items-center gap-1.5 text-xs font-semibold transition-all border border-transparent hover:border-slate-200 dark:hover:border-slate-805"
               >
                 <Globe className="w-4 h-4 text-emerald-500" />
-                <span>{language === "en" ? "à¦¬à¦¾à¦‚à¦²à¦¾" : "English"}</span>
+                <span>{language === "en" ? "বাংলা" : "English"}</span>
               </button>
 
               {/* Theme Switch */}
@@ -821,17 +882,14 @@ export default function HomePage() {
           <div className="lg:hidden bg-white dark:bg-[#010818] border-b border-slate-200/80 dark:border-slate-800/80 animate-in fade-in slide-in-from-top-3 duration-150">
             <div className="px-4 pt-2 pb-5 space-y-3.5 shadow-xl">
               
-              {/* Mobile Search */}
-              <div className="relative">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder={t("searchPlaceholder")}
-                  className="w-full pl-9 pr-4 py-2 text-xs rounded-lg bg-slate-100 dark:bg-[#04142F] border border-slate-200 dark:border-slate-850 text-slate-805 dark:text-slate-100 outline-none"
-                />
-              </div>
+              {/* Mobile Search Trigger */}
+              <button
+                onClick={() => { setIsMobileMenuOpen(false); setIsSearchOpen(true); }}
+                className="w-full flex items-center bg-slate-100 dark:bg-[#04142F] border border-slate-200 dark:border-slate-850 rounded-lg px-3 py-2 text-xs text-slate-400 text-left outline-none"
+              >
+                <Search className="h-4 w-4 text-slate-400 mr-2 shrink-0" />
+                <span className="flex-grow">{t("searchPlaceholder")}</span>
+              </button>
 
               {/* Navigation Links */}
               <div className="grid grid-cols-2 gap-2 text-xs font-semibold">
@@ -839,7 +897,7 @@ export default function HomePage() {
                   <a
                     key={idx}
                     href="#"
-                    className="p-2.5 rounded-lg bg-slate-50 dark:bg-[#04142F]/50 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-350 hover:text-slate-900 hover:text-white transition-all flex items-center gap-2"
+                    className="p-2.5 rounded-lg bg-slate-50 dark:bg-[#04142F]/50 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-350 hover:text-slate-900 dark:hover:text-white transition-all flex items-center gap-2"
                   >
                     <div className="w-1.5 h-1.5 rounded-full bg-slate-400" />
                     {label}
@@ -854,9 +912,9 @@ export default function HomePage() {
                   className="w-full flex items-center justify-between p-2.5 rounded-lg bg-slate-100 dark:bg-[#04142F]/60 text-xs font-semibold text-slate-700 dark:text-slate-300"
                 >
                   <span className="flex items-center gap-2">
-                    <Globe className="w-4 h-4 text-emerald-500" /> Language
+                    <Globe className="w-4 h-4 text-emerald-500" /> {t("languageLabel")}
                   </span>
-                  <span>{language === "en" ? "à¦¬à¦¾à¦‚à¦²à¦¾" : "English"}</span>
+                  <span>{language === "en" ? "বাংলা" : "English"}</span>
                 </button>
 
                 {/* Login/Register Buttons */}
@@ -1008,7 +1066,7 @@ export default function HomePage() {
                 </div>
 
                 {/* Next Prayer Banner for Mobile (hidden when expanded, always hidden on desktop) */}
-                <div className={`mt-2.5 flex items-center justify-between p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-[#0CA671] md:hidden ${isPrayerExpanded ? "hidden" : "flex"}`}>
+                <div className={`mt-2.5 flex items-center justify-between p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-white md:hidden ${isPrayerExpanded ? "hidden" : "flex"}`}>
                   <div className="flex items-center gap-2">
                     <span className="w-1.5 h-1.5 rounded-full bg-[#0CA671] animate-ping" />
                     <span className="text-[11px] font-bold">
@@ -1027,8 +1085,8 @@ export default function HomePage() {
                         key={key}
                         className={`flex items-center justify-between px-3 py-1.5 rounded-lg transition-all duration-200 ${
                           isNext 
-                            ? "bg-[#0CA671]/10 border border-[#0CA671]/25 text-emerald-600 dark:text-[#0CA671] shadow-sm font-bold" 
-                            : "bg-slate-50/50 dark:bg-slate-900/20 border border-transparent text-slate-700 dark:text-slate-335 hover:bg-slate-100 dark:hover:bg-slate-900/40 hover:text-slate-900 dark:hover:text-white"
+                            ? "bg-[#0CA671]/10 border border-[#0CA671]/25 text-emerald-600 dark:text-white shadow-sm font-bold" 
+                            : "bg-slate-50/50 dark:bg-slate-900/20 border border-transparent text-slate-700 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-900/40 hover:text-slate-900 dark:hover:text-white"
                         }`}
                       >
                         <div className="flex items-center gap-2">
@@ -1234,26 +1292,7 @@ export default function HomePage() {
 
               {/* News List */}
               <div className="space-y-3.5">
-                {[
-                  {
-                    title: language === "en" 
-                      ? "Youth coordination campaign to ensure purity in Bakalia Area"
-                      : "à¦¬à¦¾à¦•à¦²à¦¿à¦¯à¦¼à¦¾à§Ÿ à¦¯à§à¦¬ à¦¸à¦®à¦¾à¦œà§‡à¦° à¦‰à¦¦à§à¦¯à§‹à¦—à§‡ à¦ªà¦°à¦¿à¦šà§à¦›à¦¨à§à¦¨à¦¤à¦¾ à¦…à¦­à¦¿à¦¯à¦¾à¦¨ à¦ªà¦°à¦¿à¦šà¦¾à¦²à¦¨à¦¾",
-                    category: language === "en" ? "Civic Activity" : "à¦¨à¦¾à¦—à¦°à¦¿à¦• à¦‰à¦¦à§à¦¯à§‹à¦—",
-                    categoryColor: "bg-emerald-50 text-emerald-600 dark:bg-[#22444B] dark:text-[#0CA671] border border-emerald-100 dark:border-[#0CA671]/20",
-                    time: language === "en" ? "2 hours ago" : "à§¨ à¦˜à¦£à§à¦Ÿà¦¾ à¦†à¦—à§‡",
-                    views: "1.2k views",
-                  },
-                  {
-                    title: language === "en"
-                      ? "Police Notice: Landlords urged to follow guidelines on traffic laws"
-                      : "à¦Ÿà§à¦°à¦¾à¦«à¦¿à¦• à¦†à¦‡à¦¨ à¦®à§‡à¦¨à§‡ à¦šà¦²à¦¾à¦° à¦†à¦¹à§à¦¬à¦¾à¦¨ à¦ªà§à¦²à¦¿à¦¶à§‡à¦°: à¦¸à¦‚à¦¯à§‹à¦— à¦¸à§œà¦•à§‡ à¦¸à¦¤à¦°à§à¦•à§€à¦•à¦°à¦£ à¦¨à§‹à¦Ÿà¦¿à¦¶",
-                    category: language === "en" ? "Police Notice" : "à¦ªà§à¦²à¦¿à¦¶ à¦¨à§‹à¦Ÿà¦¿à¦¶",
-                    categoryColor: "bg-blue-50 text-blue-600 dark:bg-[#04142F] dark:text-[#4A89DA] border border-blue-105 dark:border-[#4A89DA]/20",
-                    time: language === "en" ? "5 hours ago" : "à§« à¦˜à¦£à§à¦Ÿà¦¾ à¦†à¦—à§‡",
-                    views: "856 views",
-                  }
-                ].map((news, idx) => (
+                {newsItems.map((news, idx) => (
                   <div key={idx} className="glass-card bg-white dark:bg-[#01205B] border-slate-200 dark:border-slate-850 rounded-xl overflow-hidden p-3.5 flex gap-3.5 hover:border-slate-300 dark:hover:border-slate-700/50 transition-all cursor-pointer shadow-sm">
                     
                     {/* Visual Dummy News Image Box */}
@@ -1270,9 +1309,9 @@ export default function HomePage() {
                           {news.title}
                         </h4>
                       </div>
-                      <div className="mt-1 flex items-center gap-2 text-[9px] text-slate-455 dark:text-[#859798]">
+                      <div className="mt-1 flex items-center gap-2 text-[9px] text-slate-550 dark:text-[#859798]">
                         <span>{news.time}</span>
-                        <span>â€¢</span>
+                        <span>•</span>
                         <span>{news.views}</span>
                       </div>
                     </div>
@@ -1777,7 +1816,7 @@ export default function HomePage() {
                 </span>
                 {isHoldingSos && (
                   <span className="text-[10px] text-red-400 font-extrabold animate-pulse block">
-                    {language === "en" ? "\ud83d\udea8 Keep holding..." : "\ud83d\udea8 \u09a7\u09b0\u09c7 \u09b0\u09be\u0996\u09c1\u09a8..."}
+                    {language === "en" ? "🚨 Keep holding..." : "🚨 ধরে রাখুন..."}
                   </span>
                 )}
               </div>
@@ -1788,7 +1827,7 @@ export default function HomePage() {
                   onClick={() => { setShowSosHoldOverlay(false); setSosHoldProgress(0); setSosHoldTimeLeft(5); }}
                   className="mt-10 px-6 py-2.5 rounded-full border border-slate-800 text-[11px] font-bold text-slate-500 hover:text-white hover:border-slate-600 transition-all active:scale-95"
                 >
-                  {language === "en" ? "Go Back" : "\u09ab\u09bf\u09b0\u09c7 \u09af\u09be\u09a8"}
+                  {language === "en" ? "Go Back" : "ফিরে যান"}
                 </button>
               )}
             </>
@@ -1800,25 +1839,213 @@ export default function HomePage() {
               </div>
               <div className="space-y-3">
                 <h3 className="text-xl font-black tracking-tight text-white leading-tight">
-                  {language === "en" ? "Alert Sent!" : "\u0985\u09cd\u09af\u09be\u09b2\u09be\u09b0\u09cd\u099f \u09aa\u09be\u09a0\u09be\u09a8\u09cb \u09b9\u09af\u09bc\u09c7\u099b\u09c7!"}
+                  {language === "en" ? "Alert Sent!" : "অ্যালার্ট পাঠানো হয়েছে!"}
                 </h3>
                 <p className="text-sm text-emerald-400 font-bold animate-pulse">
-                  {language === "en" ? "Please stay calm." : "\u09a6\u09af\u09bc\u09be \u0995\u09b0\u09c7 \u09b6\u09be\u09a8\u09cd\u09a4 \u09a5\u09be\u0995\u09c1\u09a8\u0964"}
+                  {language === "en" ? "Please stay calm." : "দয়া করে শান্ত থাকুন।"}
                 </p>
                 <p className="text-xs text-slate-400 font-medium leading-relaxed">
                   {language === "en" 
                     ? "Help is being notified. The Thana police and volunteers have received your details." 
-                    : "\u09b8\u09be\u09b9\u09be\u09af\u09cd\u09af\u0995\u09be\u09b0\u09c0 \u09a6\u09b2\u0995\u09c7 \u099c\u09be\u09a8\u09be\u09a8\u09cb \u09b9\u099a\u09cd\u099b\u09c7\u0964 \u09a5\u09be\u09a8\u09be \u09aa\u09c1\u09b2\u09bf\u09b6 \u098f\u09ac\u0982 \u09b8\u09cd\u09ac\u09c7\u099a\u09cd\u099b\u09be\u09b8\u09c7\u09ac\u09c0\u09b0\u09be \u0986\u09aa\u09a8\u09be\u09b0 \u09ac\u09bf\u09ac\u09b0\u09a3 \u09aa\u09c7\u09af\u09bc\u09c7\u099b\u09c7\u09a8\u0964"}
+                    : "সাহায্যকারী দলকে জানানো হচ্ছে। থানা পুলিশ এবং স্বেচ্ছাসেবকরা আপনার বিবরণ পেয়েছেন।"}
                 </p>
               </div>
               <button
                 onClick={() => { setShowSosHoldOverlay(false); setSosSuccess(false); setSosHoldProgress(0); setSosHoldTimeLeft(5); }}
                 className="mt-4 px-8 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-bold transition-all active:scale-95"
               >
-                {language === "en" ? "Dismiss" : "\u09ac\u09a8\u09cd\u09a7 \u0995\u09b0\u09c1\u09a8"}
+                {language === "en" ? "Dismiss" : "বন্ধ করুন"}
               </button>
             </div>
           )}
+        </div>
+      )}
+
+      {/* ==================== REDESIGNED SMART SEARCH POPUP ==================== */}
+      {isSearchOpen && (
+        <div 
+          className="fixed inset-0 z-[150] bg-black/65 backdrop-blur-md flex items-start justify-center pt-10 sm:pt-20 px-4 animate-in fade-in duration-200 text-slate-800 dark:text-white"
+          onClick={(e) => { if (e.target === e.currentTarget) setIsSearchOpen(false); }}
+        >
+          <div className="w-full max-w-2xl bg-white dark:bg-[#01122C] border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-white rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh] animate-in zoom-in-95 duration-200">
+            
+            {/* Header / Input Row */}
+            <div className="p-4 border-b border-slate-200/80 dark:border-slate-800 flex items-center gap-3 bg-white dark:bg-[#01122C]">
+              <Search className="w-5 h-5 text-slate-400 dark:text-[#0CA671] shrink-0" />
+              <input
+                ref={searchInputRef}
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder={t("searchPlaceholder")}
+                className="w-full bg-transparent border-none outline-none text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 font-medium"
+              />
+              {searchQuery && (
+                <button 
+                  onClick={() => setSearchQuery("")}
+                  className="p-1 rounded-md text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-bold shrink-0"
+                >
+                  Clear
+                </button>
+              )}
+              <button
+                onClick={() => setIsSearchOpen(false)}
+                className="px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all shrink-0"
+              >
+                {t("closeSearch")}
+              </button>
+            </div>
+
+            {/* Results / List Area */}
+            <div className="p-4 overflow-y-auto space-y-4 divide-y divide-slate-100 dark:divide-slate-800/50 bg-white dark:bg-[#01122C]">
+              
+              {/* If search query is empty: show quick suggestions */}
+              {!searchQuery ? (
+                <div className="space-y-3 pb-2 pt-1 first:pt-0">
+                  <span className="block text-[10px] uppercase font-extrabold tracking-wider text-slate-400 dark:text-slate-500">
+                    {t("quickLinks")}
+                  </span>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {quickAccessServices.slice(0, 6).map((service) => {
+                      const Icon = service.icon;
+                      return (
+                        <div
+                          key={service.id}
+                          onClick={() => {
+                            if (service.id === "sos") {
+                              triggerSOS();
+                            } else if (service.id === "mosques") {
+                              setIsPrayerExpanded(true);
+                            } else {
+                              setAuthMode("login");
+                              setShowAuthModal(true);
+                            }
+                            setIsSearchOpen(false);
+                          }}
+                          className="flex items-center gap-2.5 p-2 rounded-xl bg-slate-50 dark:bg-[#04142F] border border-slate-200/50 dark:border-slate-800/40 hover:border-blue-500/30 dark:hover:border-[#0CA671]/45 hover:bg-white dark:hover:bg-[#01205B]/40 transition-all cursor-pointer shadow-sm group"
+                        >
+                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${service.iconBg}`}>
+                            <Icon className="w-4 h-4" />
+                          </div>
+                          <span className="text-xs font-bold text-slate-700 dark:text-slate-200 group-hover:text-blue-600 dark:group-hover:text-[#0CA671] transition-colors truncate">
+                            {service.title}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : (
+                /* Else if search query is present: show matching services and news */
+                <>
+                  {/* Matching Services */}
+                  {filteredServices.length > 0 && (
+                    <div className="space-y-2.5 pb-3 pt-2 first:pt-0">
+                      <span className="block text-[10px] uppercase font-extrabold tracking-wider text-slate-400 dark:text-slate-500">
+                        {t("services")} ({filteredServices.length})
+                      </span>
+                      <div className="grid sm:grid-cols-2 gap-2">
+                        {filteredServices.map((service) => {
+                          const Icon = service.icon;
+                          return (
+                            <div
+                              key={service.id}
+                              onClick={() => {
+                                if (service.id === "sos") {
+                                  triggerSOS();
+                                } else if (service.id === "mosques") {
+                                  setIsPrayerExpanded(true);
+                                } else {
+                                  setAuthMode("login");
+                                  setShowAuthModal(true);
+                                }
+                                setIsSearchOpen(false);
+                              }}
+                              className="flex items-start gap-3 p-2.5 rounded-xl bg-slate-50 dark:bg-[#04142F] border border-slate-200/50 dark:border-slate-800/40 hover:border-blue-500/30 dark:hover:border-[#0CA671]/40 hover:bg-white dark:hover:bg-[#01205B]/40 transition-all cursor-pointer shadow-sm group"
+                            >
+                              <div className={`w-8.5 h-8.5 rounded-lg flex items-center justify-center shrink-0 ${service.iconBg}`}>
+                                <Icon className="w-4.5 h-4.5" />
+                              </div>
+                              <div className="min-w-0">
+                                <span className="block text-xs font-bold text-slate-855 dark:text-slate-200 group-hover:text-blue-600 dark:group-hover:text-[#0CA671] transition-colors leading-tight">
+                                  {service.title}
+                                </span>
+                                <span className="block text-[9.5px] text-slate-400 dark:text-[#859798] font-medium leading-tight mt-0.5 truncate">
+                                  {service.desc}
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Matching News */}
+                  {filteredNews.length > 0 && (
+                    <div className="space-y-2.5 pb-3 pt-3">
+                      <span className="block text-[10px] uppercase font-extrabold tracking-wider text-slate-400 dark:text-slate-500">
+                        {t("latestNews")} ({filteredNews.length})
+                      </span>
+                      <div className="space-y-2">
+                        {filteredNews.map((news, idx) => (
+                          <div
+                            key={idx}
+                            onClick={() => {
+                              alert(language === "en" ? `Opening news: ${news.title}` : `খবরটি খোলা হচ্ছে: ${news.title}`);
+                              setIsSearchOpen(false);
+                            }}
+                            className="flex items-start gap-3 p-2.5 rounded-xl bg-slate-50 dark:bg-[#04142F] border border-slate-200/50 dark:border-slate-800/40 hover:border-blue-500/30 dark:hover:border-[#0CA671]/40 hover:bg-white dark:hover:bg-[#01205B]/40 transition-all cursor-pointer shadow-sm group"
+                          >
+                            <div className="w-12 h-12 rounded-lg bg-slate-100 dark:bg-[#01205B] border border-slate-200 shrink-0 flex items-center justify-center text-[8px] font-bold text-slate-400 dark:text-slate-500">
+                              NEWS
+                            </div>
+                            <div className="min-w-0">
+                              <span className={`inline-block px-1.5 py-0.5 text-[8px] font-extrabold rounded ${news.categoryColor}`}>
+                                {news.category}
+                              </span>
+                              <span className="block text-xs font-bold text-slate-800 dark:text-slate-200 leading-tight mt-1 group-hover:text-blue-650 dark:group-hover:text-[#0CA671] transition-colors">
+                                {news.title}
+                              </span>
+                              <div className="mt-1.5 flex items-center gap-2 text-[9px] text-slate-455 dark:text-[#859798]">
+                                <span>{news.time}</span>
+                                <span>•</span>
+                                <span>{news.views}</span>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* No Results found */}
+                  {filteredServices.length === 0 && filteredNews.length === 0 && (
+                    <div className="py-12 text-center space-y-2">
+                      <Search className="w-8 h-8 text-slate-300 dark:text-slate-700 mx-auto" />
+                      <span className="block text-xs font-bold text-slate-505 dark:text-slate-400">
+                        {t("noResults")}
+                      </span>
+                      <span className="block text-[10px] text-slate-400 dark:text-slate-500">
+                        Try searching for a different keyword or service
+                      </span>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+            
+            {/* Footer Row */}
+            <div className="p-3 bg-slate-50 dark:bg-[#010818] border-t border-slate-200/80 dark:border-slate-800/80 flex items-center justify-between text-[10px] text-slate-400 dark:text-slate-500 font-semibold px-4 select-none">
+              <span>{t("systemTag")}</span>
+              <span className="flex items-center gap-1.5">
+                <span>ESC to close</span>
+                <span>•</span>
+                <span>Ctrl K to search</span>
+              </span>
+            </div>
+
+          </div>
         </div>
       )}
 

@@ -118,6 +118,65 @@ const translations: Record<Language, Record<string, string>> = {
     help: "Help",
     contact: "Contact",
     downloadRules: "Download Rules",
+
+    // Mobile Services Grid
+    policeHelp: "Police Help",
+    policeHelpDesc: "Report & Support",
+    emergencyServices: "Emergency",
+    emergencyServicesDesc: "24/7 Services",
+    mosquesNearYou: "Mosques",
+    mosquesNearYouDesc: "Near You",
+    marketplaceBuySell: "Marketplace",
+    marketplaceBuySellDesc: "Buy & Sell",
+    jobsFind: "Jobs",
+    jobsFindDesc: "Find Opportunities",
+    bloodDonors: "Blood Donors",
+    bloodDonorsDesc: "Save Lives",
+    documents: "Documents",
+    documentsDesc: "Forms & Info",
+    community: "Community",
+    communityDesc: "Groups & Events",
+
+    // Quick Services Section
+    quickServices: "Quick Services",
+
+    // Bottom Nav
+    homeNav: "Home",
+    servicesNav: "Services",
+    mosqueNav: "Mosque",
+    profileNav: "Profile",
+
+    // Next Prayer
+    nextPrayer: "Next Prayer",
+
+    // Date
+    today: "Today",
+
+    // Search Popup
+    searchTitle: "Search",
+    searchHint: "Type to search services, news, people...",
+    quickLinks: "Quick Links",
+    recentSearches: "Recent Searches",
+    noResults: "No results found",
+    closeSearch: "Close",
+
+    // Stats percent labels
+    percentThisMonth: "this month",
+
+    // View All Services
+    viewAllServices: "View All Services",
+
+    // Language label
+    languageLabel: "Language",
+
+    // Desktop location
+    locationBakalia: "Bakalia, Chattogram",
+
+    // Tap for SOS
+    tapForSos: "Tap for SOS",
+
+    // Show Less
+    showLess: "Show Less",
   },
   bn: {
     // Navbar
@@ -152,7 +211,7 @@ const translations: Record<Language, Record<string, string>> = {
     // Stats
     registeredCitizens: "নিবন্ধিত নাগরিক",
     resolvedComplaints: "সমাধানকৃত অভিযোগ",
-    activeVolunteers: "সক্রিয় স্বেচ্ছাসেবক",
+    activeVolunteers: "সক্রিয় স্বেচ্ছাসেবক",
     dailyVisitors: "দৈনিক দর্শনার্থী",
     emergencyWidgetTitle: "জরুরি",
     emergencyWidgetDesc: "জরুরি সাহায্যের প্রয়োজন? SOS টিপুন",
@@ -161,7 +220,7 @@ const translations: Record<Language, Record<string, string>> = {
 
     // Quick Access
     quickAccessTitle: "কুইক অ্যাক্সেস",
-    quickAccessDesc: "সব কমিউনিটি সেবা এক জায়গায়",
+    quickAccessDesc: "সব কমিউনিটি সেবা এক জায়গায়",
     complaints: "অভিযোগ ও সমস্যা",
     complaintsDesc: "সমস্যা রিপোর্ট ও ট্র্যাক করুন",
     policeNotices: "পুলিশ নোটিশ",
@@ -172,12 +231,12 @@ const translations: Record<Language, Record<string, string>> = {
     bloodDonationDesc: "রক্ত দিন, জীবন বাঁচান",
     emergencySos: "জরুরি SOS",
     emergencySosDesc: "তাৎক্ষণিক জরুরি সাহায্য",
-    houseRent: "বাসা ভাড়া",
-    houseRentDesc: "ভাড়া বাসা খুঁজুন",
+    houseRent: "বাসা ভাড়া",
+    houseRentDesc: "ভাড়া বাসা খুঁজুন",
     jobs: "চাকরি",
     jobsDesc: "স্থানীয় চাকরি খুঁজুন",
     mosques: "মসজিদসমূহ",
-    mosquesDesc: "নামাজের সময় ও কার্যক্রম",
+    mosquesDesc: "নামাজের সময় ও কার্যক্রম",
     events: "ইভেন্টস",
     eventsDesc: "কমিউনিটি ইভেন্টসমূহ",
     marketplaceDesc: "পণ্য কেনাবেচা করুন",
@@ -195,20 +254,20 @@ const translations: Record<Language, Record<string, string>> = {
     hospitals: "হাসপাতাল",
     policeStation: "থানা পুলিশ",
     schools: "বিদ্যালয়সমূহ",
-    fireService: "ফায়ার সার্ভিস",
+    fireService: "ফায়ার সার্ভিস",
 
     // Leaderboard
     points: "পয়েন্ট",
     topVolunteer: "সেরা স্বেচ্ছাসেবক",
-    activeCitizen: "সক্রিয় নাগরিক",
-    helpfulCitizen: "সহায়ক নাগরিক",
+    activeCitizen: "সক্রিয় নাগরিক",
+    helpfulCitizen: "সহায়ক নাগরিক",
 
     // Trust & Features
     verifiedSecure: "ভেরিফাইড ও সুরক্ষিত",
     verifiedSecureDesc: "আপনার তথ্য আমাদের কাছে নিরাপদ",
     aiModeration: "এআই মডারেশন",
     aiModerationDesc: "নিরাপদ সমাজের জন্য",
-    support: "২৪/৭ সহায়তা",
+    support: "২৪/৭ সহায়তা",
     supportDesc: "আমরা সাহায্যের জন্য প্রস্তুত",
     trustedBy: "১ লাখ+ মানুষের বিশ্বস্ত",
     trustedByDesc: "কমিউনিটি সদস্য",
@@ -220,6 +279,65 @@ const translations: Record<Language, Record<string, string>> = {
     help: "সাহায্য",
     contact: "যোগাযোগ",
     downloadRules: "নিয়মাবলী ডাউনলোড করুন",
+
+    // Mobile Services Grid
+    policeHelp: "পুলিশ সেবা",
+    policeHelpDesc: "রিপোর্ট ও সহায়তা",
+    emergencyServices: "জরুরি সেবা",
+    emergencyServicesDesc: "২৪/৭ সেবা",
+    mosquesNearYou: "মসজিদসমূহ",
+    mosquesNearYouDesc: "আপনার কাছে",
+    marketplaceBuySell: "বাজার",
+    marketplaceBuySellDesc: "কেনা ও বেচা",
+    jobsFind: "চাকরি",
+    jobsFindDesc: "সুযোগ খুঁজুন",
+    bloodDonors: "রক্তদাতা",
+    bloodDonorsDesc: "জীবন বাঁচান",
+    documents: "ডকুমেন্টস",
+    documentsDesc: "ফরম ও তথ্য",
+    community: "কমিউনিটি",
+    communityDesc: "গ্রুপ ও ইভেন্ট",
+
+    // Quick Services Section
+    quickServices: "কুইক সার্ভিস",
+
+    // Bottom Nav
+    homeNav: "মূল পাতা",
+    servicesNav: "সেবা",
+    mosqueNav: "মসজিদ",
+    profileNav: "প্রোফাইল",
+
+    // Next Prayer
+    nextPrayer: "পরবর্তী নামাজ",
+
+    // Date
+    today: "আজ",
+
+    // Search Popup
+    searchTitle: "অনুসন্ধান",
+    searchHint: "সেবা, খবর, মানুষ খুঁজুন...",
+    quickLinks: "দ্রুত লিংক",
+    recentSearches: "সাম্প্রতিক অনুসন্ধান",
+    noResults: "কোনো ফলাফল পাওয়া যায়নি",
+    closeSearch: "বন্ধ করুন",
+
+    // Stats percent labels
+    percentThisMonth: "এই মাসে",
+
+    // View All Services
+    viewAllServices: "সকল সেবাসমূহ দেখুন",
+
+    // Language label
+    languageLabel: "ভাষা",
+
+    // Desktop location
+    locationBakalia: "বাকলিয়া, চট্টগ্রাম",
+
+    // Tap for SOS
+    tapForSos: "SOS টিপুন",
+
+    // Show Less
+    showLess: "সংক্ষিপ্ত রূপ",
   },
 };
 

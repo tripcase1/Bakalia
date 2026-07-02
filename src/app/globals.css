@@ -34,6 +34,14 @@ body {
   color: var(--foreground);
   transition: background-color 0.3s ease, color 0.3s ease;
   font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  font-family: var(--font-geist-sans), var(--font-bangla), system-ui, sans-serif;
+}
+
+/* When language is Bangla, prioritize the Bangla font stack globally */
+html[lang="bn"],
+html[lang="bn"] body,
+html[lang="bn"] * {
+  font-family: var(--font-bangla), var(--font-geist-sans), system-ui, sans-serif !important;
 }
 
 /* Glassmorphism Styles */
