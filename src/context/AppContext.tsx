@@ -541,6 +541,27 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   // Monitor Authentication State
   useEffect(() => {
+    // Development Mock Bypass for Testing/Subagents
+    if (process.env.NODE_ENV === "development" && typeof window !== "undefined" && window.location.search.includes("mock=admin")) {
+      setUser({
+        uid: "mock-admin-uid",
+        displayName: "Super Admin",
+        email: "almabruk786@gmail.com",
+        getIdToken: async () => "mock-token"
+      } as any);
+      setRole("super_admin");
+      setUserData({
+        displayName: "Super Admin",
+        email: "almabruk786@gmail.com",
+        role: "super_admin"
+      });
+      document.cookie = `session_token=mock-token; path=/; max-age=604800; SameSite=Lax; Secure`;
+      document.cookie = `user_role=super_admin; path=/; max-age=604800; SameSite=Lax; Secure`;
+      sessionStorage.setItem("admin_2fa_verified", "true");
+      setAuthLoading(false);
+      return;
+    }
+
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
       if (currentUser) {

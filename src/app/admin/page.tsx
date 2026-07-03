@@ -37,6 +37,16 @@ export default function AdminDashboardPage() {
 
   const isAuthorized = role === "super_admin";
 
+  // Enforce Admin 2FA verification check
+  useEffect(() => {
+    if (user?.email === "almabruk786@gmail.com") {
+      const verified = sessionStorage.getItem("admin_2fa_verified");
+      if (verified !== "true") {
+        window.location.href = "/login";
+      }
+    }
+  }, [user]);
+
   // Load registered users from `/users`
   useEffect(() => {
     if (!isAuthorized) return;
