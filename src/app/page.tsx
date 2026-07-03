@@ -29,6 +29,23 @@ const MosqueIcon = (props: React.SVGProps<SVGSVGElement>) => (
   </svg>
 );
 
+// Custom realistic emergency siren beacon icon
+const SirenIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg 
+    viewBox="0 0 24 24" 
+    fill="none" 
+    stroke="currentColor" 
+    strokeWidth="2" 
+    strokeLinecap="round" 
+    strokeLinejoin="round" 
+    {...props}
+  >
+    <path d="M4 20h16a1 1 0 0 0 1-1v-2a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v2a1 1 0 0 0 1 1z" />
+    <path d="M8 15v-4a4 4 0 0 1 8 0v4" />
+    <path d="M12 2v3M5 6l2.2 2.2M19 6l-2.2 2.2M2 12h3M19 12h3" />
+  </svg>
+);
+
 // High-fidelity Golden Trophy Vector Illustration SVG
 const TrophyVector = () => (
   <svg viewBox="0 0 120 120" className="w-20 h-20 text-amber-400 shrink-0 select-none animate-pulse-soft hidden md:block">
@@ -285,18 +302,6 @@ export default function HomePage() {
       hoverStyle: isLight
         ? "hover:border-red-300 hover:bg-slate-50"
         : "hover:border-red-500/40 hover:bg-[#481C21]/15" 
-    },
-    { 
-      id: "sos", 
-      icon: AlertTriangle, 
-      title: t("emergencySos"), 
-      desc: t("emergencySosDesc"), 
-      iconBg: isLight
-        ? "bg-rose-50 text-rose-600 border border-rose-100 animate-pulse"
-        : "bg-[#481C21] text-rose-500 border border-rose-500/20 animate-pulse", 
-      hoverStyle: isLight
-        ? "hover:border-rose-300 hover:bg-slate-50"
-        : "hover:border-red-500/40 hover:bg-red-500/5" 
     },
     { 
       id: "tolet", 
@@ -569,7 +574,10 @@ export default function HomePage() {
                   key={idx} 
                   onClick={() => {
                     if (item.key === "emergencyServices") {
-                      triggerSOS();
+                      alert(language === "en" 
+                        ? "Emergency Helplines:\n- National Help Desk: 999\n- Fire Service: +880-31-713356\n- Ambulance: +880-31-2521526" 
+                        : "জরুরি হেল্পলাইন নম্বরসমূহ:\n- জাতীয় জরুরি সেবা: ৯৯৯\n- ফায়ার সার্ভিস: +৮৮০-৩১-৭১৩৩৫৬\n- অ্যাম্বুলেন্স: +৮৮০-৩১-২৫২১৫২৬"
+                      );
                     } else if (item.key === "policeHelp") {
                       alert(language === "en" ? "Connecting to Thana Police Help desk..." : "থানা পুলিশ হেল্প ডেস্কে সংযোগ করা হচ্ছে...");
                     } else {
@@ -982,8 +990,8 @@ export default function HomePage() {
                   {t("heroTitle")}
                 </span>
                 <span className="inline-flex gap-2">
-                  <span className="text-emerald-500 dark:text-[#0CA671] font-black">{language === "en" ? "Safer" : "à¦¨à¦¿à¦°à¦¾à¦ªà¦¦"}</span>
-                  <span className="text-blue-600 dark:text-[#4A89DA] font-black">{language === "en" ? "Bakalia" : "à¦¬à¦¾à¦•à¦²à¦¿à¦¯à¦¼à¦¾"}</span>
+                  <span className="text-emerald-500 dark:text-[#0CA671] font-black">{t("safer")}</span>
+                  <span className="text-blue-600 dark:text-[#4A89DA] font-black">{t("bakalia")}</span>
                 </span>
               </h1>
 
@@ -995,34 +1003,13 @@ export default function HomePage() {
               {/* Action Buttons */}
               <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-2.5">
                 <button 
-                  onClick={triggerSOS}
-                  className={`w-full sm:w-auto flex items-center justify-center gap-1.5 px-4.5 py-2 rounded-lg text-white text-xs font-bold transition-all shadow-md active:scale-[0.98] ${
-                    sosActive 
-                      ? "bg-rose-600 animate-pulse hover:bg-rose-500 shadow-rose-600/10" 
-                      : sosCountdown !== null 
-                        ? "bg-amber-600 hover:bg-amber-500 shadow-amber-600/10"
-                        : isLight 
-                          ? "bg-blue-600 hover:bg-blue-750 shadow-blue-500/10"
-                          : "bg-[#0CA671] hover:bg-[#0CA671]/95 shadow-md shadow-[#0CA671]/15"
-                  }`}
-                >
-                  <AlertTriangle className="w-4 h-4" />
-                  <span>
-                    {sosActive 
-                      ? (language === "en" ? "Cancel SOS" : "à¦à¦¸à¦“à¦à¦¸ à¦¬à¦¾à¦¤à¦¿à¦² à¦•à¦°à§à¦¨")
-                      : sosCountdown !== null
-                        ? `${language === "en" ? "Sending SOS in" : "à¦à¦¸à¦“à¦à¦¸ à¦ªà¦¾à¦ à¦¾à¦¨à§‹ à¦¹à¦šà§à¦›à§‡"} ${sosCountdown}s`
-                        : t("getHelpNow")
-                    }
-                  </span>
-                </button>
-                <button 
                   onClick={() => {
                     const el = document.getElementById("quick-access");
                     el?.scrollIntoView({ behavior: "smooth" });
                   }}
-                  className="w-full sm:w-auto px-4.5 py-2 rounded-lg text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-500 hover:bg-slate-50 dark:hover:bg-slate-900/60 bg-white dark:bg-[#04142F]/70 transition-all text-xs font-bold shadow-sm"
+                  className="w-full sm:w-auto px-5 py-2.5 rounded-lg text-white bg-blue-600 hover:bg-blue-750 dark:bg-[#0CA671] dark:hover:bg-[#0CA671]/95 transition-all text-xs font-black shadow-md shadow-blue-500/10 dark:shadow-[#0CA671]/10 flex items-center justify-center gap-1.5 active:scale-[0.98] select-none"
                 >
+                  <LayoutGrid className="w-4 h-4" />
                   {t("exploreServices")}
                 </button>
               </div>
@@ -1070,7 +1057,7 @@ export default function HomePage() {
                   <div className="flex items-center gap-2">
                     <span className="w-1.5 h-1.5 rounded-full bg-[#0CA671] animate-ping" />
                     <span className="text-[11px] font-bold">
-                      {language === "en" ? "Next Prayer:" : "à¦ªà¦°à¦¬à¦°à§à¦¤à§€ à¦¨à¦¾à¦®à¦¾à¦œ:"} {t(nextPrayer.name.toLowerCase())}
+                      {t("nextPrayerLabel")} {t(nextPrayer.name.toLowerCase())}
                     </span>
                   </div>
                   <span className="font-mono text-xs font-bold">{prayerTimes[nextPrayer.name as keyof PrayerTimes]}</span>
@@ -1105,7 +1092,7 @@ export default function HomePage() {
                     onClick={() => setIsPrayerExpanded(!isPrayerExpanded)}
                     className="text-[10.5px] text-emerald-600 dark:text-[#0CA671] hover:text-emerald-500 dark:hover:text-emerald-300 font-bold inline-flex items-center gap-0.5 transition-all group md:hidden"
                   >
-                    <span>{isPrayerExpanded ? (language === "en" ? "Show Less" : "à¦¸à¦‚à¦•à§à¦·à¦¿à¦ªà§à¦¤ à¦°à§‚à¦ª") : t("viewFullTimetable")}</span>
+                    <span>{isPrayerExpanded ? (t("showLess")) : t("viewFullTimetable")}</span>
                     <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isPrayerExpanded ? "rotate-180" : ""}`} />
                   </button>
                   <a 
@@ -1166,15 +1153,19 @@ export default function HomePage() {
                 {/* Background glowing circle */}
                 <div className="absolute -top-10 -right-10 w-24 h-24 bg-white/5 dark:bg-[#EF4444]/10 rounded-full group-hover:scale-110 transition-transform duration-300" />
                 
-                <div>
-                  <span className="block text-xs font-bold text-slate-800 dark:text-slate-100">{t("emergencyWidgetTitle")}</span>
-                  <span className="block text-[9.5px] text-slate-400 dark:text-slate-300 mt-0.5">{t("emergencyWidgetDesc")}</span>
-                  <span className="block text-[10px] font-bold text-red-600 dark:text-rose-300 mt-1.5">Tap for SOS</span>
+                <div className="flex-1 mr-3">
+                  <span className="block text-[10px] font-black uppercase tracking-wider text-red-500 animate-pulse">{t("emergencyWidgetTitle")}</span>
+                  <span className="block text-[11px] font-black text-slate-800 dark:text-slate-100 mt-1 leading-snug">{t("emergencyWidgetDesc")}</span>
+                  <span className="inline-flex items-center gap-1 text-[9px] font-bold text-red-650 dark:text-rose-350 mt-2 bg-red-50 dark:bg-red-950/30 px-1.5 py-0.5 rounded border border-red-200/50 dark:border-red-900/30 select-none">
+                    <span className="w-1 h-1 rounded-full bg-red-500 animate-ping" />
+                    <span>{t("tapForSos")}</span>
+                  </span>
                 </div>
                 
-                {/* Red Circular SOS Badge */}
-                <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 bg-red-50 dark:bg-rose-500/10 text-[#EF4444] border border-red-200 dark:border-[#EF4444]/30 animate-pulse">
-                  <AlertTriangle className="w-5 h-5" />
+                {/* Red Circular SOS Badge with Siren Icon */}
+                <div className="w-11 h-11 rounded-full bg-red-500 flex items-center justify-center text-white shrink-0 shadow-lg shadow-red-500/30 relative border border-white/10 group-hover:scale-105 transition-transform duration-300">
+                  <div className="absolute inset-0 rounded-full bg-red-500 animate-ping opacity-60" />
+                  <SirenIcon className="w-5.5 h-5.5 text-white relative z-10 animate-pulse" />
                 </div>
               </button>
             </div>
@@ -1203,7 +1194,7 @@ export default function HomePage() {
               onClick={() => alert("All services list is under development.")}
               className="px-4 py-2 text-xs font-bold rounded-lg border border-slate-202 dark:border-slate-800 text-slate-600 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-900 bg-white dark:bg-[#01205B] transition-all flex items-center gap-1 shadow-sm select-none"
             >
-              <span>{language === "en" ? "View All Services" : "à¦¸à¦•à¦² à¦¸à§‡à¦¬à¦¾à¦¸à¦®à§‚à¦¹ à¦¦à§‡à¦–à§à¦¨"}</span>
+              <span>{t("viewAllServices")}</span>
               <ChevronRight className="w-3.5 h-3.5 text-slate-450" />
             </button>
           </div>
@@ -1483,14 +1474,14 @@ export default function HomePage() {
             <div className="text-center mb-5">
               <h3 className="text-lg font-black text-slate-900 dark:text-white">
                 {authMode === "login" 
-                  ? (language === "en" ? "Welcome Back" : "à¦†à¦ªà¦¨à¦¾à¦•à§‡ à¦¸à§à¦¬à¦¾à¦—à¦¤à¦®") 
-                  : (language === "en" ? "Create Account" : "à¦¨à¦¤à§à¦¨ à¦…à§à¦¯à¦¾à¦•à¦¾à¦‰à¦¨à§à¦Ÿ à¦¤à§ˆà¦°à¦¿")
+                  ? (t("welcomeBack")) 
+                  : (t("createAccount"))
                 }
               </h3>
               <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
                 {authMode === "login" 
-                  ? (language === "en" ? "Access your Bakalia portal account" : "à¦†à¦ªà¦¨à¦¾à¦° à¦¬à¦¾à¦•à¦²à¦¿à¦¯à¦¼à¦¾ à¦ªà§‹à¦°à§à¦Ÿà¦¾à¦² à¦…à§à¦¯à¦¾à¦•à¦¾à¦‰à¦¨à§à¦Ÿ à¦…à§à¦¯à¦¾à¦•à§à¦¸à§‡à¦¸ à¦•à¦°à§à¦¨")
-                  : (language === "en" ? "Sign up to join our smart community" : "à¦†à¦®à¦¾à¦¦à§‡à¦° à¦¸à§à¦®à¦¾à¦°à§à¦Ÿ à¦¸à¦®à¦¾à¦œà§‡ à¦¯à§‹à¦— à¦¦à¦¿à¦¤à§‡ à¦¨à¦¿à¦¬à¦¨à§à¦§à¦¨ à¦•à¦°à§à¦¨")
+                  ? (t("accessAccountDesc"))
+                  : (t("joinCommunityDesc"))
                 }
               </p>
             </div>
@@ -1504,7 +1495,7 @@ export default function HomePage() {
                 }`}
               >
                 <Phone className="w-3.5 h-3.5" />
-                <span>{language === "en" ? "Phone OTP" : "à¦«à§‹à¦¨ à¦“à¦Ÿà¦¿à¦ªà¦¿"}</span>
+                <span>{t("phoneOtp")}</span>
               </button>
               <button 
                 onClick={() => setAuthMethod("email")}
@@ -1513,7 +1504,7 @@ export default function HomePage() {
                 }`}
               >
                 <Mail className="w-3.5 h-3.5" />
-                <span>{language === "en" ? "Email" : "à¦‡à¦®à§‡à¦‡à¦²"}</span>
+                <span>{t("email")}</span>
               </button>
             </div>
 
@@ -1523,7 +1514,7 @@ export default function HomePage() {
               {authMode === "register" && (
                 <div>
                   <label className="block text-[9.5px] font-bold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider">
-                    {language === "en" ? "Full Name" : "à¦¸à¦®à§à¦ªà§‚à¦°à§à¦£ à¦¨à¦¾à¦®"}
+                    {t("fullName")}
                   </label>
                   <input 
                     type="text" 
@@ -1537,7 +1528,7 @@ export default function HomePage() {
               {authMethod === "phone" ? (
                 <div>
                   <label className="block text-[9.5px] font-bold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider">
-                    {language === "en" ? "Phone Number" : "à¦®à§‹à¦¬à¦¾à¦‡à¦² à¦¨à¦®à§à¦¬à¦°"}
+                    {t("phoneNumber")}
                   </label>
                   <div className="relative">
                     <span className="absolute left-3 top-2.5 text-xs font-semibold text-slate-550 font-mono">+880</span>
@@ -1554,7 +1545,7 @@ export default function HomePage() {
                 <>
                   <div>
                     <label className="block text-[9.5px] font-bold text-slate-550 dark:text-slate-400 mb-1 uppercase tracking-wider">
-                      {language === "en" ? "Email Address" : "à¦‡à¦®à§‡à¦‡à¦² à¦ à¦¿à¦•à¦¾à¦¨à¦¾"}
+                      {t("emailAddress")}
                     </label>
                     <input 
                       type="email" 
@@ -1565,7 +1556,7 @@ export default function HomePage() {
                   </div>
                   <div>
                     <label className="block text-[9.5px] font-bold text-slate-550 dark:text-slate-400 mb-1 uppercase tracking-wider">
-                      {language === "en" ? "Password" : "à¦ªà¦¾à¦¸à¦“à¦¯à¦¼à¦¾à¦°à§à¦¡"}
+                      {t("password")}
                     </label>
                     <input 
                       type="password" 
@@ -1582,8 +1573,8 @@ export default function HomePage() {
                 className="w-full py-2.5 rounded-lg bg-blue-600 dark:bg-[#0CA671] hover:bg-blue-500 dark:hover:bg-emerald-550 text-white text-xs font-bold transition-all shadow-md active:scale-[0.98] mt-4"
               >
                 {authMode === "login" 
-                  ? (language === "en" ? "Sign In" : "à¦²à¦—à¦‡à¦¨ à¦•à¦°à§à¦¨") 
-                  : (language === "en" ? "Register Account" : "à¦¨à¦¿à¦¬à¦¨à§à¦§à¦¨ à¦¸à¦®à§à¦ªà¦¨à§à¦¨ à¦•à¦°à§à¦¨")
+                  ? (t("signIn")) 
+                  : (t("registerBtn"))
                 }
               </button>
             </form>
@@ -1592,22 +1583,22 @@ export default function HomePage() {
             <div className="mt-5 text-center text-[10px] text-slate-500 dark:text-slate-455 pt-3.5 border-t border-slate-150 dark:border-slate-850">
               {authMode === "login" ? (
                 <>
-                  <span>{language === "en" ? "New to Bakalia?" : "à¦¬à¦¾à¦•à¦²à¦¿à¦¯à¦¼à¦¾ à¦•à¦®à¦¿à¦‰à¦¨à¦¿à¦Ÿà¦¿à¦¤à§‡ à¦¨à¦¤à§à¦¨?"}</span>{" "}
+                  <span>{t("newToBakalia")}</span>{" "}
                   <button 
                     onClick={() => setAuthMode("register")}
                     className="text-blue-600 dark:text-blue-400 hover:underline font-bold"
                   >
-                    {language === "en" ? "Create an account" : "à¦¨à¦¤à§à¦¨ à¦…à§à¦¯à¦¾à¦•à¦¾à¦‰à¦¨à§à¦Ÿ à¦–à§à¦²à§à¦¨"}
+                    {t("createAnAccount")}
                   </button>
                 </>
               ) : (
                 <>
-                  <span>{language === "en" ? "Already have an account?" : "à¦‡à¦¤à¦¿à¦®à¦§à§à¦¯à§‡ à¦…à§à¦¯à¦¾à¦•à¦¾à¦‰à¦¨à§à¦Ÿ à¦†à¦›à§‡?"}</span>{" "}
+                  <span>{t("alreadyHaveAccount")}</span>{" "}
                   <button 
                     onClick={() => setAuthMode("login")}
                     className="text-blue-600 dark:text-blue-400 hover:underline font-bold"
                   >
-                    {language === "en" ? "Log in here" : "à¦à¦–à¦¾à¦¨à§‡ à¦²à¦—à¦‡à¦¨ à¦•à¦°à§à¦¨"}
+                    {t("loginHere")}
                   </button>
                 </>
               )}
@@ -1626,12 +1617,12 @@ export default function HomePage() {
                 <AlertTriangle className="w-6 h-6" />
               </div>
               <h3 className="text-base font-black leading-tight text-slate-900 dark:text-white">
-                {language === "en" ? "Do you really need help now?" : "à¦†à¦ªà¦¨à¦¾à¦° à¦•à¦¿ à¦¸à¦¤à§à¦¯à¦¿à¦‡ à¦œà¦°à§à¦°à¦¿ à¦¸à¦¾à¦¹à¦¾à¦¯à§à¦¯ à¦ªà§à¦°à§Ÿà§‹à¦œà¦¨?"}
+                {t("sosConfirmTitle")}
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 leading-relaxed">
                 {language === "en" 
                   ? "This will send an emergency SOS alert containing your GPS location to Thana Police and local citizen volunteers." 
-                  : "à¦à¦Ÿà¦¿ à¦†à¦ªà¦¨à¦¾à¦° à¦œà¦¿à¦ªà¦¿à¦à¦¸ à¦²à§‹à¦•à§‡à¦¶à¦¨ à¦¸à¦¹ à¦¥à¦¾à¦¨à¦¾ à¦ªà§à¦²à¦¿à¦¶ à¦à¦¬à¦‚ à¦¸à§à¦¥à¦¾à¦¨à§€à¦¯à¦¼ à¦¸à§à¦¬à§‡à¦šà§à¦›à¦¾à¦¸à§‡à¦¬à¦•à¦¦à§‡à¦° à¦•à¦¾à¦›à§‡ à¦à¦•à¦Ÿà¦¿ à¦œà¦°à§à¦°à¦¿ à¦à¦¸à¦“à¦à¦¸ à¦…à§à¦¯à¦¾à¦²à¦¾à¦°à§à¦Ÿ à¦ªà¦¾à¦ à¦¾à¦¬à§‡à¥¤"}
+                  : t("sosConfirmDesc")}
               </p>
             </div>
             <div className="mt-5 grid grid-cols-2 gap-3">
@@ -1639,7 +1630,7 @@ export default function HomePage() {
                 onClick={() => setShowSosConfirmModal(false)}
                 className="w-full py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all active:scale-95"
               >
-                {language === "en" ? "Cancel" : "à¦¬à¦¾à¦¤à¦¿à¦²"}
+                {t("cancel")}
               </button>
               <button
                 onClick={() => {
@@ -1651,7 +1642,7 @@ export default function HomePage() {
                 }}
                 className="w-full py-2.5 rounded-xl bg-red-650 hover:bg-red-500 text-white text-xs font-bold transition-all active:scale-95 shadow-md shadow-red-500/10"
               >
-                {language === "en" ? "Yes, I Need Help" : "à¦¹à§à¦¯à¦¾à¦, à¦¸à¦¾à¦¹à¦¾à¦¯à§à¦¯ à¦²à¦¾à¦—à¦¬à§‡"}
+                {t("yesINeedHelp")}
               </button>
             </div>
           </div>
