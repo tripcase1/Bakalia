@@ -1,6 +1,9 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { auth, db } from "@/lib/firebase";
+import { onAuthStateChanged, signOut, User } from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore";
 
 type Theme = "light" | "dark";
 type Language = "en" | "bn";
@@ -11,15 +14,52 @@ interface AppContextType {
   toggleTheme: () => void;
   setLanguage: (lang: Language) => void;
   t: (key: string) => string;
+
+  // Navigation & UI control states
+  isSearchOpen: boolean;
+  setIsSearchOpen: (open: boolean) => void;
+  searchQuery: string;
+  setSearchQuery: (query: string) => void;
+  showAuthModal: boolean;
+  setShowAuthModal: (show: boolean) => void;
+  authMode: "login" | "register" | "forgot";
+  setAuthMode: (mode: "login" | "register" | "forgot") => void;
+  authMethod: "phone" | "email";
+  setAuthMethod: (method: "phone" | "email") => void;
+  isMobileMenuOpen: boolean;
+  setIsMobileMenuOpen: (open: boolean) => void;
+  isPrayerExpanded: boolean;
+  setIsPrayerExpanded: (expanded: boolean) => void;
+
+  // SOS State
+  showSosConfirmModal: boolean;
+  setShowSosConfirmModal: (show: boolean) => void;
+  sosActive: boolean;
+  setSosActive: (active: boolean) => void;
+  sosCountdown: number | null;
+  setSosCountdown: (count: number | null) => void;
+  triggerSOS: () => void;
+
+  // Auth Session State
+  user: User | null;
+  role: string | null; // "citizen" | "police_admin" | "super_admin"
+  userData: any;
+  authLoading: boolean;
+  logout: () => Promise<void>;
+
+  // Location States
+  gpsCoords: { lat: number; lng: number } | null;
+  detectedWard: string | null;
+  gpsStatus: "idle" | "loading" | "granted" | "denied";
+  requestGps: () => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-// Simple dictionary for translations used on the homepage
 const translations: Record<Language, Record<string, string>> = {
   en: {
     // Navbar
-    searchPlaceholder: "Search services, news, places...",
+    searchPlaceholder: "Search services, news or places...",
     login: "Login",
     register: "Register",
     home: "Home",
@@ -35,11 +75,11 @@ const translations: Record<Language, Record<string, string>> = {
     systemTag: "Smart Community Operating System",
     heroTitle: "Stronger Community",
     heroSubtitle: "Safer Bakalia",
-    heroDesc: "Connecting citizens, police and community services for a better and safer Bakalia.",
+    heroDesc: "Connecting citizens, police, and social services seamlessly for a safer and smarter Ward Bakalia.",
     getHelpNow: "Get Help Now",
     exploreServices: "Explore Services",
-    prayerTimesTitle: "Prayer Times",
-    prayerTimesLoc: "Bakalia, Chattogram",
+    prayerTimesTitle: "Prayer Timetable",
+    prayerTimesLoc: "Bakalia, Chittogram",
     fajr: "Fajr",
     dhuhr: "Dhuhr",
     asr: "Asr",
@@ -59,26 +99,26 @@ const translations: Record<Language, Record<string, string>> = {
 
     // Quick Access
     quickAccessTitle: "Quick Access",
-    quickAccessDesc: "All community services in one place",
-    complaints: "Complaints",
-    complaintsDesc: "Report & track issues",
+    quickAccessDesc: "All community services in one location",
+    complaints: "Complaints & Issues",
+    complaintsDesc: "Report and track civic issues",
     policeNotices: "Police Notices",
-    policeNoticesDesc: "Latest updates",
+    policeNoticesDesc: "Latest updates from Thana",
     lostFound: "Lost & Found",
-    lostFoundDesc: "Find or report items",
+    lostFoundDesc: "Report or search for lost items",
     bloodDonation: "Blood Donation",
     bloodDonationDesc: "Donate blood, save lives",
     emergencySos: "Emergency SOS",
-    emergencySosDesc: "Instant emergency help",
-    houseRent: "House Rent",
-    houseRentDesc: "Find rental homes",
-    jobs: "Jobs",
-    jobsDesc: "Find local jobs",
-    mosques: "Mosques",
-    mosquesDesc: "Prayer times & events",
-    events: "Events",
-    eventsDesc: "Community events",
-    marketplaceDesc: "Buy & sell items",
+    emergencySosDesc: "Instant emergency assistance",
+    houseRent: "House Rent (To-Let)",
+    houseRentDesc: "Find apartments for rent",
+    jobs: "Local Jobs",
+    jobsDesc: "Explore employment opportunities",
+    mosques: "Mosques Directory",
+    mosquesDesc: "Prayer times & announcements",
+    events: "Community Events",
+    eventsDesc: "Ward updates and programs",
+    marketplaceDesc: "Buy and sell local products",
 
     // Columns
     latestNews: "Latest News",
@@ -92,8 +132,8 @@ const translations: Record<Language, Record<string, string>> = {
     // Nearby list
     hospitals: "Hospitals",
     policeStation: "Police Station",
-    schools: "Schools",
-    fireService: "Fire Service",
+    schools: "Schools Directory",
+    fireService: "Fire Service Station",
 
     // Leaderboard
     points: "points",
@@ -103,39 +143,39 @@ const translations: Record<Language, Record<string, string>> = {
 
     // Trust & Features
     verifiedSecure: "Verified & Secure",
-    verifiedSecureDesc: "Your data is safe with us",
-    aiModeration: "AI Moderation",
-    aiModerationDesc: "For a safer community",
-    support: "24/7 Support",
-    supportDesc: "We are here to help",
-    trustedBy: "Trusted by 100K+",
-    trustedByDesc: "Community members",
+    verifiedSecureDesc: "Your details are encrypted and safe",
+    aiModeration: "AI Smart Moderation",
+    aiModerationDesc: "Proactive reporting & filtering",
+    support: "24/7 Ward Support",
+    supportDesc: "Our volunteers are always ready",
+    trustedBy: "Trusted by 100K+ Citizens",
+    trustedByDesc: "Active community members",
 
     // Footer
     copyright: "© 2026 Bakalia Community. All rights reserved.",
-    privacy: "Privacy",
-    terms: "Terms",
-    help: "Help",
-    contact: "Contact",
-    downloadRules: "Download Rules",
+    privacy: "Privacy Policy",
+    terms: "Terms & Conditions",
+    help: "Help Center",
+    contact: "Contact us",
+    downloadRules: "Download Rules Booklet",
 
     // Mobile Services Grid
     policeHelp: "Police Help",
-    policeHelpDesc: "Report & Support",
+    policeHelpDesc: "Reporting & Assistance",
     emergencyServices: "Emergency",
-    emergencyServicesDesc: "24/7 Services",
-    mosquesNearYou: "Mosques",
-    mosquesNearYouDesc: "Near You",
+    emergencyServicesDesc: "24/7 hotline support",
+    mosquesNearYou: "Mosques Directory",
+    mosquesNearYouDesc: "Nearby mosques list",
     marketplaceBuySell: "Marketplace",
-    marketplaceBuySellDesc: "Buy & Sell",
-    jobsFind: "Jobs",
-    jobsFindDesc: "Find Opportunities",
+    marketplaceBuySellDesc: "Trade local goods",
+    jobsFind: "Jobs Board",
+    jobsFindDesc: "Find opportunities",
     bloodDonors: "Blood Donors",
-    bloodDonorsDesc: "Save Lives",
-    documents: "Documents",
-    documentsDesc: "Forms & Info",
-    community: "Community",
-    communityDesc: "Groups & Events",
+    bloodDonorsDesc: "Find a match",
+    documents: "Documents Portal",
+    documentsDesc: "E-Forms & Manuals",
+    community: "Community Forum",
+    communityDesc: "Groups & Programs",
 
     // Quick Services Section
     quickServices: "Quick Services",
@@ -153,12 +193,12 @@ const translations: Record<Language, Record<string, string>> = {
     today: "Today",
 
     // Search Popup
-    searchTitle: "Search",
-    searchHint: "Type to search services, news, people...",
+    searchTitle: "Search Portal",
+    searchHint: "Search services, news, listings...",
     quickLinks: "Quick Links",
     recentSearches: "Recent Searches",
-    noResults: "No results found",
-    closeSearch: "Close",
+    noResults: "No matching records found",
+    closeSearch: "Close search panel",
 
     // Stats percent labels
     percentThisMonth: "this month",
@@ -176,6 +216,7 @@ const translations: Record<Language, Record<string, string>> = {
     tapForSos: "Tap for SOS",
 
     // Show Less
+    showLess: "Show Less",
     
     // Extra keys
     safer: "Safer",
@@ -203,7 +244,6 @@ const translations: Record<Language, Record<string, string>> = {
     sosConfirmDesc: "This will send an emergency SOS alert with your GPS location to the Thana police and local volunteers.",
     cancel: "Cancel",
     yesINeedHelp: "Yes, I Need Help",
-    showLess: "Show Less",
   },
   bn: {
     // Navbar
@@ -364,6 +404,7 @@ const translations: Record<Language, Record<string, string>> = {
     tapForSos: "SOS টিপুন",
 
     // Show Less
+    showLess: "সংক্ষিপ্ত রূপ",
     
     // Extra keys
     safer: "নিরাপদ",
@@ -391,24 +432,83 @@ const translations: Record<Language, Record<string, string>> = {
     sosConfirmDesc: "এটি আপনার জিপিএস লোকেশন সহ থানা পুলিশ এবং স্থানীয় স্বেচ্ছাসেবকদের কাছে একটি জরুরি এসওএস অ্যালার্ট পাঠাবে।",
     cancel: "বাতিল",
     yesINeedHelp: "হ্যাঁ, সাহায্য লাগবে",
-    showLess: "সংক্ষিপ্ত রূপ",
   },
 };
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<Theme>("light"); // Defaulting to light as in the light theme design spec
+  const [theme, setTheme] = useState<Theme>("light");
   const [language, setLanguageState] = useState<Language>("en");
   const [mounted, setMounted] = useState(false);
 
+  // App Layout control states
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [authMode, setAuthMode] = useState<"login" | "register" | "forgot">("login");
+  const [authMethod, setAuthMethod] = useState<"phone" | "email">("phone");
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isPrayerExpanded, setIsPrayerExpanded] = useState(false);
+
+  // SOS States
+  const [showSosConfirmModal, setShowSosConfirmModal] = useState(false);
+  const [sosActive, setSosActive] = useState(false);
+  const [sosCountdown, setSosCountdown] = useState<number | null>(null);
+
+  // Auth States
+  const [user, setUser] = useState<User | null>(null);
+  const [role, setRole] = useState<string | null>(null);
+  const [userData, setUserData] = useState<any>(null);
+  const [authLoading, setAuthLoading] = useState(true);
+
+  // Location States
+  const [gpsCoords, setGpsCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [detectedWard, setDetectedWard] = useState<string | null>(null);
+  const [gpsStatus, setGpsStatus] = useState<"idle" | "loading" | "granted" | "denied">("idle");
+
+  const calculateWard = (lat: number, lng: number): string => {
+    const distance = (lat1: number, lng1: number, lat2: number, lng2: number) => {
+      return Math.sqrt(Math.pow(lat1 - lat2, 2) + Math.pow(lng1 - lng2, 2));
+    };
+    const d17 = distance(lat, lng, 22.3562, 91.8398);
+    const d18 = distance(lat, lng, 22.3475, 91.8482);
+    const d19 = distance(lat, lng, 22.3391, 91.8443);
+    const minDist = Math.min(d17, d18, d19);
+    
+    if (minDist === d17) return language === "en" ? "Ward 17 (West Bakalia)" : "ওয়ার্ড ১৭ (পশ্চিম বাকলিয়া)";
+    if (minDist === d18) return language === "en" ? "Ward 18 (East Bakalia)" : "ওয়ার্ড ১৮ (পূর্ব বাকলিয়া)";
+    return language === "en" ? "Ward 19 (South Bakalia)" : "ওয়ার্ড ১৯ (দক্ষিণ বাকলিয়া)";
+  };
+
+  const requestGps = () => {
+    if (typeof window === "undefined" || !navigator.geolocation) {
+      setGpsStatus("denied");
+      return;
+    }
+    setGpsStatus("loading");
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        setGpsCoords({ lat, lng });
+        setDetectedWard(calculateWard(lat, lng));
+        setGpsStatus("granted");
+      },
+      (error) => {
+        console.warn("Geolocation permission error:", error);
+        setGpsStatus("denied");
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  };
+
   useEffect(() => {
-    // Check localStorage if available
     const savedTheme = localStorage.getItem("theme") as Theme;
     const savedLang = localStorage.getItem("lang") as Language;
     
     if (savedTheme) {
       setTheme(savedTheme);
     } else {
-      setTheme("light"); // Default to light theme
+      setTheme("light");
     }
 
     if (savedLang) {
@@ -419,6 +519,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     
     setMounted(true);
   }, []);
+
+  // Auto-trigger GPS request on client mount
+  useEffect(() => {
+    if (mounted) {
+      requestGps();
+    }
+  }, [mounted]);
 
   useEffect(() => {
     if (!mounted) return;
@@ -431,6 +538,62 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
     localStorage.setItem("theme", theme);
   }, [theme, mounted]);
+
+  // Monitor Authentication State
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      setUser(currentUser);
+      if (currentUser) {
+        try {
+          const userDoc = await getDoc(doc(db, "users", currentUser.uid));
+          let currentRole = "citizen";
+          if (currentUser.email === "almabruk786@gmail.com") {
+            currentRole = "super_admin";
+          } else if (userDoc.exists()) {
+            const data = userDoc.data();
+            currentRole = data.role || "citizen";
+          }
+
+          setRole(currentRole);
+          setUserData(userDoc.exists() ? userDoc.data() : { email: currentUser.email, role: currentRole });
+
+          // If the admin user doesn't exist in Firestore users collection yet, create it!
+          if (!userDoc.exists() && currentUser.email === "almabruk786@gmail.com") {
+            const { setDoc: setDocFs } = await import("firebase/firestore");
+            await setDocFs(doc(db, "users", currentUser.uid), {
+              uid: currentUser.uid,
+              displayName: "Super Admin",
+              email: currentUser.email,
+              role: "super_admin",
+              verified: true,
+              createdAt: new Date().toISOString()
+            });
+          }
+
+          // Set cookies for Next.js Middleware edge protection
+          const token = await currentUser.getIdToken();
+          document.cookie = `session_token=${token}; path=/; max-age=604800; SameSite=Lax; Secure`;
+          document.cookie = `user_role=${currentRole}; path=/; max-age=604800; SameSite=Lax; Secure`;
+        } catch (error) {
+          console.error("Error loading user profile from Firestore:", error);
+          let fallbackRole = currentUser.email === "almabruk786@gmail.com" ? "super_admin" : "citizen";
+          setRole(fallbackRole);
+          const token = await currentUser.getIdToken();
+          document.cookie = `session_token=${token}; path=/; max-age=604800; SameSite=Lax; Secure`;
+          document.cookie = `user_role=${fallbackRole}; path=/; max-age=604800; SameSite=Lax; Secure`;
+        }
+      } else {
+        setRole(null);
+        setUserData(null);
+        // Clear cookies on sign-out
+        document.cookie = "session_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+        document.cookie = "user_role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+      }
+      setAuthLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   const toggleTheme = () => {
     setTheme((prev) => (prev === "light" ? "dark" : "light"));
@@ -445,13 +608,65 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     return translations[language][key] || key;
   };
 
+  const triggerSOS = () => {
+    setShowSosConfirmModal(true);
+  };
+
+  const logout = async () => {
+    setAuthLoading(true);
+    await signOut(auth);
+    setRole(null);
+    setUserData(null);
+    document.cookie = "session_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+    document.cookie = "user_role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+    setAuthLoading(false);
+  };
+
   // Prevent hydration mismatch
   if (!mounted) {
     return <div className="min-h-screen bg-[#0F172A]"></div>;
   }
 
   return (
-    <AppContext.Provider value={{ theme, language, toggleTheme, setLanguage, t }}>
+    <AppContext.Provider
+      value={{
+        theme,
+        language,
+        toggleTheme,
+        setLanguage,
+        t,
+        isSearchOpen,
+        setIsSearchOpen,
+        searchQuery,
+        setSearchQuery,
+        showAuthModal,
+        setShowAuthModal,
+        authMode,
+        setAuthMode,
+        authMethod,
+        setAuthMethod,
+        isMobileMenuOpen,
+        setIsMobileMenuOpen,
+        isPrayerExpanded,
+        setIsPrayerExpanded,
+        showSosConfirmModal,
+        setShowSosConfirmModal,
+        sosActive,
+        setSosActive,
+        sosCountdown,
+        setSosCountdown,
+        triggerSOS,
+        user,
+        role,
+        userData,
+        authLoading,
+        logout,
+        gpsCoords,
+        detectedWard,
+        gpsStatus,
+        requestGps,
+      }}
+    >
       {children}
     </AppContext.Provider>
   );

@@ -23,7 +23,22 @@ const notoSansBengali = Noto_Sans_Bengali({
 export const metadata: Metadata = {
   title: "Bakalia Community Portal - Smart Community Operating System",
   description: "A digital bridge connecting Bakalia citizens, Ward Councilors, and local Thana Police. View prayer times, report civic issues, submit tenant forms, check blood donors, and view emergency details.",
+  keywords: ["Bakalia", "Chattogram", "Chittagong City Corporation", "Smart Community", "Citizen Portal", "Bakalia Police", "Ward 17", "Ward 18", "Ward 19"],
+  authors: [{ name: "Bakalia Municipal Council" }],
+  openGraph: {
+    title: "Bakalia Smart Community Portal",
+    description: "Digital operating system connecting Bakalia citizens and administrative units.",
+    url: "https://bakalia-ctg.firebaseapp.com",
+    siteName: "Bakalia Smart Portal",
+    type: "website"
+  }
 };
+
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
+import SearchModal from "@/components/SearchModal";
+import AuthModal from "@/components/AuthModal";
+import SosOverlay from "@/components/SosOverlay";
 
 export default function RootLayout({
   children,
@@ -36,9 +51,24 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} ${notoSansBengali.variable} h-full antialiased`}
       suppressHydrationWarning
     >
+      <head>
+        <link 
+          rel="stylesheet" 
+          href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" 
+          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" 
+          crossOrigin="" 
+        />
+      </head>
       <body className="min-h-full flex flex-col bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-50 transition-colors duration-300">
         <AppProvider>
-          {children}
+          <Header />
+          <SearchModal />
+          <AuthModal />
+          <SosOverlay />
+          <main className="flex-grow">
+            {children}
+          </main>
+          <Footer />
         </AppProvider>
       </body>
     </html>

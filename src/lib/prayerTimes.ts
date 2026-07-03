@@ -6,6 +6,42 @@ export interface PrayerTimes {
   Isha: string;
 }
 
+// Helper to convert "18:45" to "6:45 PM"
+export function convert24To12(time24: string): string {
+  const [hourStr, minuteStr] = time24.split(":");
+  const hour = parseInt(hourStr, 10);
+  const period = hour >= 12 ? "PM" : "AM";
+  const displayHour = hour % 12 === 0 ? 12 : hour % 12;
+  return `${displayHour}:${minuteStr} ${period}`;
+}
+
+export async function fetchLivePrayerTimes(latitude?: number, longitude?: number): Promise<PrayerTimes | null> {
+  try {
+    let url = "https://api.aladhan.com/v1/timingsByCity?city=Chittagong&country=Bangladesh&method=2";
+    if (latitude !== undefined && longitude !== undefined) {
+      url = `https://api.aladhan.com/v1/timings?latitude=${latitude}&longitude=${longitude}&method=2`;
+    }
+
+    const response = await fetch(url, { next: { revalidate: 3600 } }); // Cache for 1 hour
+    if (!response.ok) throw new Error("Prayer times fetch failed");
+    
+    const json = await response.json();
+    const timings = json.data?.timings;
+    if (!timings) return null;
+
+    return {
+      Fajr: convert24To12(timings.Fajr),
+      Dhuhr: convert24To12(timings.Dhuhr),
+      Asr: convert24To12(timings.Asr),
+      Maghrib: convert24To12(timings.Maghrib),
+      Isha: convert24To12(timings.Isha)
+    };
+  } catch (error) {
+    console.warn("Failed to fetch live prayer times from API, falling back to local formulas:", error);
+    return null;
+  }
+}
+
 export function getPrayerTimes(date: Date): PrayerTimes {
   // Return exact user-specified timings for July
   if (date.getMonth() === 6) {
@@ -28,19 +64,10 @@ export function getPrayerTimes(date: Date): PrayerTimes {
   const declinationFactor = Math.sin(((dayOfYear - 80) * 2 * Math.PI) / 365);
 
   // Base prayer hours in UTC+6 for Chattogram, Bangladesh
-  // Fajr: earlier in summer (around 3:45 AM / 3.75h), later in winter (around 5:20 AM / 5.33h)
   const fajrHour = 4.54 - decljs(declinationFactor) * 0.75;
-  
-  // Dhuhr: standard local noon fluctuates slightly (11:58 AM to 12:12 PM)
   const dhuhrHour = 12.05 - Math.sin((dayOfYear * 4 * Math.PI) / 365) * 0.12;
-  
-  // Asr: mid afternoon, ranges from 3:35 PM (15.58h) in winter to 4:45 PM (16.75h) in summer
   const asrHour = 16.15 + decljs(declinationFactor) * 0.6;
-  
-  // Maghrib: Sunset ranges from 5:10 PM (17.16h) in winter to 6:45 PM (18.75h) in summer
   const maghribHour = 17.95 + decljs(declinationFactor) * 0.8;
-  
-  // Isha: Night starts around 6:30 PM (18.5h) in winter to 8:10 PM (20.16h) in summer
   const ishaHour = 19.2 + decljs(declinationFactor) * 0.85;
 
   return {
