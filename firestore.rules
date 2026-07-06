@@ -99,5 +99,38 @@ service cloud.firestore {
       allow create, update: if isAuthenticated() && request.auth.uid == donorId;
       allow delete: if isAuthenticated() && (request.auth.uid == donorId || hasRole('super_admin'));
     }
+
+    // 9. News collection
+    match /news/{newsId} {
+      allow read: if true;
+      allow write: if hasRole('super_admin') || hasRole('editor');
+    }
+
+    // 10. Jobs collection
+    match /jobs/{jobId} {
+      allow read: if true;
+      allow create: if isAuthenticated();
+      allow update, delete: if isAuthenticated() && (
+        isOwner(resource.data.userId) || 
+        hasRole('super_admin')
+      );
+    }
+
+    // 11. Marketplace Items
+    match /marketplace_items/{itemId} {
+      allow read: if true;
+      allow create: if isAuthenticated();
+      allow update, delete: if isAuthenticated() && (
+        isOwner(resource.data.userId) || 
+        isOwner(resource.data.ownerId) || 
+        hasRole('super_admin')
+      );
+    }
+
+    // 12. Events Calendar
+    match /events/{eventId} {
+      allow read: if true;
+      allow write: if hasRole('super_admin') || hasRole('editor') || hasRole('volunteer');
+    }
   }
 }
