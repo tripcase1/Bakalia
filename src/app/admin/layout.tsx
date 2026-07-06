@@ -71,7 +71,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <div className="flex flex-1 relative md:overflow-hidden">
         <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
         
-        <div className="flex-grow flex flex-col min-h-screen overflow-y-auto overflow-x-hidden">
+        <div className="flex-grow flex flex-col min-h-screen md:h-screen md:overflow-y-auto overflow-x-hidden">
           <Header sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
           
           <main className="p-4 md:p-6 w-full max-w-7xl mx-auto flex-grow flex flex-col">

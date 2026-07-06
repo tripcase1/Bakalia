@@ -696,6 +696,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   const triggerSOS = () => {
+    if (!user) {
+      showToast(
+        language === "en" 
+          ? "Please register or log in to trigger an SOS alert." 
+          : "জরুরি এসওএস ব্যবহারের জন্য দয়া করে নিবন্ধন বা লগইন করুন।", 
+        "error"
+      );
+      setAuthMode("register");
+      setShowAuthModal(true);
+      return;
+    }
     setShowSosConfirmModal(true);
   };
 
