@@ -508,8 +508,39 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         const lat = position.coords.latitude;
         const lng = position.coords.longitude;
         setGpsCoords({ lat, lng });
-        setDetectedWard(calculateWard(lat, lng));
         setGpsStatus("granted");
+
+        // Dynamic reverse geocoding lookup for any location in Bangladesh
+        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=14`)
+          .then((res) => {
+            if (res.ok) return res.json();
+            throw new Error("HTTP error");
+          })
+          .then((data) => {
+            const addr = data.address || {};
+            const localArea = addr.suburb || addr.neighbourhood || addr.village || addr.town || addr.city_district || "";
+            const thana = addr.county || addr.city_district || addr.suburb || "";
+            const district = addr.state_district || addr.city || addr.state || "";
+            
+            // Check if user is near Bakalia (lat: 22.34, lng: 91.84)
+            const isNearBakalia = Math.abs(lat - 22.3475) < 0.05 && Math.abs(lng - 91.8482) < 0.05;
+            if (isNearBakalia) {
+              setDetectedWard(calculateWard(lat, lng));
+            } else {
+              // Construct dynamic district/thana name for other areas in Bangladesh
+              let label = "";
+              if (localArea && thana) {
+                label = `${localArea}, ${thana.replace(" Upazila", "").replace(" Thana", "")}`;
+              } else {
+                label = thana || district || "Bangladesh";
+              }
+              setDetectedWard(label);
+            }
+          })
+          .catch((err) => {
+            console.warn("Reverse geocode failed on mount, using default distance fallback:", err);
+            setDetectedWard(calculateWard(lat, lng));
+          });
       },
       (error) => {
         console.warn("Geolocation permission error:", error);

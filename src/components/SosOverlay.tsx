@@ -55,6 +55,8 @@ export default function SosOverlay() {
 
     // 2. Reverse geocoding
     let address = "East Bakalia, Chittagong, Bangladesh";
+    let thanaName = "Bakalia";
+    let districtName = "Chittagong";
     try {
       const res = await Promise.race([
         fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18`),
@@ -63,6 +65,14 @@ export default function SosOverlay() {
       if (res && res.ok) {
         const data = await res.json();
         address = data.display_name || address;
+        
+        const addr = data.address || {};
+        thanaName = addr.county || addr.city_district || addr.suburb || addr.town || thanaName;
+        districtName = addr.state_district || addr.city || addr.state || districtName;
+        
+        // Clean names
+        thanaName = thanaName.replace(" Upazila", "").replace(" Thana", "").replace(" Police Station", "");
+        districtName = districtName.replace(" District", "");
       }
     } catch (e) {
       console.warn("Reverse geocoding failed, falling back:", e);
@@ -136,10 +146,10 @@ export default function SosOverlay() {
       }
     } catch (e) {}
 
-    // 6. Nearby services
-    const nearbyPolice = "Bakalia Thana (CMP) - 0.8 km";
-    const nearbyHospital = "Chittagong Medical College Hospital (CMCH) - 1.5 km";
-    const nearbyFire = "Agrabad Fire Station - 3.2 km";
+    // 6. Nearby services (dynamically constructed based on their actual location in Bangladesh)
+    const nearbyPolice = `${thanaName} Police Station (PS) - Nearest`;
+    const nearbyHospital = `Nearest Medical Hospital (${districtName}) - Dispatching`;
+    const nearbyFire = `${thanaName} Fire Service Station - Dispatching`;
 
     // 7. Write to Firestore
     try {
