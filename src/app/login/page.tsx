@@ -302,113 +302,46 @@ export default function LoginPage() {
               </div>
             )}
 
-            <div className="flex bg-slate-50 dark:bg-[#010818] p-1 rounded-lg border dark:border-slate-800/30 mb-5">
-              <button
-                onClick={() => { setMethod("email"); setErrorMsg(""); }}
-                className={`flex-1 py-1.5 text-xs font-bold rounded-md transition-all ${
-                  method === "email"
-                    ? "bg-white dark:bg-[#01205B] text-slate-900 dark:text-white shadow-sm"
-                    : "text-slate-400 dark:text-slate-500"
-                }`}
-              >
-                {language === "en" ? "Email Address" : "ইমেইল"}
-              </button>
-              <button
-                onClick={() => { setMethod("phone"); setErrorMsg(""); }}
-                className={`flex-1 py-1.5 text-xs font-bold rounded-md transition-all ${
-                  method === "phone"
-                    ? "bg-white dark:bg-[#01205B] text-slate-900 dark:text-white shadow-sm"
-                    : "text-slate-400 dark:text-slate-500"
-                }`}
-              >
-                {language === "en" ? "Phone OTP" : "ফোন ওটিপি"}
-              </button>
-            </div>
-
-            {method === "email" ? (
-              <form onSubmit={handleEmailLogin} className="space-y-4">
-                <div>
-                  <label className="block text-[9.5px] font-bold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider">{t("emailAddress")}</label>
-                  <div className="relative">
-                    <Mail className="w-4 h-4 absolute left-3 top-3.5 text-slate-400" />
-                    <input 
-                      type="email" 
-                      required
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="name@example.com"
-                      className="w-full pl-10 pr-3 py-3 rounded-lg bg-slate-50 dark:bg-[#010818] border text-xs text-slate-800 dark:text-white outline-none focus:border-blue-500/40"
-                    />
-                  </div>
+            <form onSubmit={handleEmailLogin} className="space-y-4">
+              <div>
+                <label className="block text-[9.5px] font-bold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider">{t("emailAddress")}</label>
+                <div className="relative">
+                  <Mail className="w-4 h-4 absolute left-3 top-3.5 text-slate-400" />
+                  <input 
+                    type="email" 
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="name@example.com"
+                    className="w-full pl-10 pr-3 py-3 rounded-lg bg-slate-50 dark:bg-[#010818] border text-xs text-slate-800 dark:text-white outline-none focus:border-blue-500/40"
+                  />
                 </div>
+              </div>
 
-                <div>
-                  <label className="block text-[9.5px] font-bold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider">{t("password")}</label>
-                  <div className="relative">
-                    <Lock className="w-4 h-4 absolute left-3 top-3.5 text-slate-400" />
-                    <input 
-                      type="password" 
-                      required
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      placeholder="••••••••"
-                      className="w-full pl-10 pr-3 py-3 rounded-lg bg-slate-50 dark:bg-[#010818] border text-xs text-slate-800 dark:text-white outline-none focus:border-blue-500/40"
-                    />
-                  </div>
+              <div>
+                <label className="block text-[9.5px] font-bold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider">{t("password")}</label>
+                <div className="relative">
+                  <Lock className="w-4 h-4 absolute left-3 top-3.5 text-slate-400" />
+                  <input 
+                    type="password" 
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="w-full pl-10 pr-3 py-3 rounded-lg bg-slate-50 dark:bg-[#010818] border text-xs text-slate-800 dark:text-white outline-none focus:border-blue-500/40"
+                  />
                 </div>
+              </div>
 
-                <button 
-                  type="submit"
-                  disabled={loading}
-                  className="w-full py-3 bg-blue-600 dark:bg-[#0CA671] hover:bg-blue-700 text-white font-bold rounded-lg text-xs transition-all shadow-md active:scale-[0.98] flex items-center justify-center gap-1.5"
-                >
-                  {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowRight className="w-4 h-4" />}
-                  <span>{t("signIn")}</span>
-                </button>
-              </form>
-            ) : (
-              <form onSubmit={otpSent ? handleVerifyOtp : handleSendOtp} className="space-y-4">
-                {!otpSent ? (
-                  <div>
-                    <label className="block text-[9.5px] font-bold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider">{t("phoneNumber")}</label>
-                    <div className="relative">
-                      <Phone className="w-4 h-4 absolute left-3 top-3.5 text-slate-400" />
-                      <input 
-                        type="tel" 
-                        required
-                        value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
-                        placeholder="e.g. 01712345678"
-                        className="w-full pl-10 pr-3 py-3 rounded-lg bg-slate-50 dark:bg-[#010818] border text-xs text-slate-800 dark:text-white outline-none"
-                      />
-                    </div>
-                  </div>
-                ) : (
-                  <div>
-                    <label className="block text-[9.5px] font-bold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider">
-                      {language === "en" ? "Verification OTP Code" : "ওটিপি কোড"}
-                    </label>
-                    <input 
-                      type="text" 
-                      required
-                      value={otpCode}
-                      onChange={(e) => setOtpCode(e.target.value)}
-                      placeholder="e.g. 123456"
-                      className="w-full px-3 py-3 rounded-lg bg-slate-50 dark:bg-[#010818] border text-xs text-slate-800 dark:text-white outline-none tracking-widest text-center font-mono font-black"
-                    />
-                  </div>
-                )}
-
-                <button 
-                  type="submit"
-                  disabled={loading}
-                  className="w-full py-3 bg-blue-600 dark:bg-[#0CA671] hover:bg-blue-700 text-white font-bold rounded-lg text-xs transition-all shadow-md active:scale-[0.98] flex items-center justify-center gap-1.5"
-                >
-                  {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowRight className="w-4 h-4" />}
-                  <span>{otpSent ? (language === "en" ? "Verify Code" : "কোড যাচাই করুন") : (language === "en" ? "Send SMS OTP" : "এসএমএস ওটিপি পাঠান")}</span>
-                </button>
-              </form>
-            )}
+              <button 
+                type="submit"
+                disabled={loading}
+                className="w-full py-3 bg-blue-600 dark:bg-[#0CA671] hover:bg-blue-700 text-white font-bold rounded-lg text-xs transition-all shadow-md active:scale-[0.98] flex items-center justify-center gap-1.5"
+              >
+                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowRight className="w-4 h-4" />}
+                <span>{t("signIn")}</span>
+              </button>
+            </form>
 
             <div className="my-5 flex items-center justify-between text-[10px] text-slate-400 uppercase font-black tracking-wider select-none">
               <span className="h-[1px] bg-slate-200 dark:bg-slate-800 flex-1"></span>
