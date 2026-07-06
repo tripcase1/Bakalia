@@ -970,7 +970,7 @@ export default function DataManagement({ tab }: DataManagementProps) {
       {drawerRecord && (
         <div className="fixed inset-0 z-40 bg-black/40 backdrop-blur-xs flex justify-end">
           <div className="fixed inset-0" onClick={() => setDrawerRecord(null)} />
-          <div className="bg-white dark:bg-[#0F1420] border-l border-slate-200/80 dark:border-slate-800/80 w-full max-w-md h-full z-50 flex flex-col p-6 shadow-2xl relative animate-in slide-in-from-right duration-250">
+          <div className="bg-white dark:bg-[#0F1420] border-l border-slate-200/80 dark:border-slate-800/80 w-full max-w-md h-[100dvh] z-50 flex flex-col p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] shadow-2xl relative animate-in slide-in-from-right duration-250">
             {/* Drawer Header */}
             <div className="flex items-center justify-between border-b pb-4 shrink-0">
               <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">Inspect Document Details</h3>

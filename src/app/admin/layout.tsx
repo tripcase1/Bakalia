@@ -9,9 +9,15 @@ import { Loader2, ShieldAlert } from "lucide-react";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const { user, role, authLoading } = useAppContext();
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const router = useRouter();
   const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL;
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setSidebarOpen(window.innerWidth >= 768);
+    }
+  }, []);
 
   useEffect(() => {
     if (authLoading) return;
@@ -62,7 +68,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#090D16] text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors duration-200">
-      <div className="flex flex-1 relative overflow-hidden">
+      <div className="flex flex-1 relative md:overflow-hidden">
         <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
         
         <div className="flex-grow flex flex-col min-h-screen overflow-y-auto overflow-x-hidden">

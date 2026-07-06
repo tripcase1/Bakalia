@@ -222,7 +222,7 @@ export default function SosOverlay() {
       {/* ==================== REALISTIC 3D SOS HOLD OVERLAY ==================== */}
       {showSosHoldOverlay && (
         <div 
-          className="fixed inset-0 z-[120] flex flex-col items-center justify-center text-center px-4 animate-in fade-in duration-300 text-white"
+          className="fixed inset-0 z-[120] flex flex-col items-center justify-center text-center px-4 animate-in fade-in duration-300 text-white bg-[#010818]"
           style={{ 
             touchAction: 'none',
             WebkitTouchCallout: 'none', 
@@ -281,7 +281,7 @@ export default function SosOverlay() {
           
           {!sosSuccess ? (
             <>
-              <div className="max-w-xs space-y-2 mb-10">
+              <div className="max-w-xs space-y-2 mb-5">
                 <h2 className="text-lg font-black tracking-tight uppercase text-red-500">
                   {language === "en" ? "Emergency SOS" : "জরুরি এসওএস"}
                 </h2>
@@ -330,7 +330,7 @@ export default function SosOverlay() {
                 {/* The realistic 3D SOS button - uses ref for native touch listeners */}
                 <div 
                   ref={sosBtnRef}
-                  className={`relative rounded-full cursor-pointer select-none flex items-center justify-center ${
+                  className={`relative rounded-full bg-red-600 cursor-pointer select-none flex items-center justify-center ${
                     isHoldingSos ? 'sos-btn-active' : 'sos-btn-idle'
                   }`}
                   style={{
@@ -373,7 +373,7 @@ export default function SosOverlay() {
               {/* Cancel Button */}
               <button 
                 onClick={() => setShowSosHoldOverlay(false)}
-                className="mt-14 px-6 py-2.5 rounded-lg border border-white/10 hover:border-white/20 bg-white/5 hover:bg-white/10 text-xs font-bold transition-all text-slate-300 hover:text-white"
+                className="mt-6 px-6 py-2.5 rounded-lg border border-white/10 hover:border-white/20 bg-white/5 hover:bg-white/10 text-xs font-bold transition-all text-slate-300 hover:text-white"
               >
                 {t("cancel")}
               </button>
