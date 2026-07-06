@@ -434,108 +434,7 @@ export default function Header() {
           </div>
         </div>
 
-        {/* Mobile Navigation Drawer */}
-        {isMobileMenuOpen && (
-          <div className="lg:hidden bg-white dark:bg-[#010818] border-b border-slate-200/80 dark:border-slate-800/80 animate-in fade-in slide-in-from-top-3 duration-150">
-            <div className="px-4 pt-2 pb-5 space-y-3.5 shadow-xl">
-              
-              {/* Mobile Search Trigger */}
-              <button
-                onClick={() => { setIsMobileMenuOpen(false); setIsSearchOpen(true); }}
-                className="w-full flex items-center bg-slate-100 dark:bg-[#04142F] border border-slate-200 dark:border-slate-850 rounded-lg px-3 py-2 text-xs text-slate-400 text-left outline-none"
-              >
-                <Search className="h-4 w-4 text-slate-400 mr-2 shrink-0" />
-                <span className="flex-grow">{t("searchPlaceholder")}</span>
-              </button>
 
-              {/* Navigation Links */}
-              <div className="grid grid-cols-2 gap-2 text-xs font-semibold">
-                {[
-                  { label: t("home"), href: "/" },
-                  { label: t("news"), href: "/news" },
-                  { label: t("services"), href: "/services" },
-                  { label: t("police"), href: "/police" },
-                  { label: t("emergency"), href: "/emergency" },
-                  { label: t("mosque"), href: "/mosque" },
-                  { label: t("marketplace"), href: "/marketplace" },
-                  { label: t("aboutUs"), href: "/about" }
-                ].map((item, idx) => (
-                  <a
-                    key={idx}
-                    href={item.href}
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="p-2.5 rounded-lg bg-slate-50 dark:bg-[#04142F]/50 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-355 hover:text-slate-900 dark:hover:text-white transition-all flex items-center gap-2"
-                  >
-                    <div className="w-1.5 h-1.5 rounded-full bg-slate-400" />
-                    <span>{item.label}</span>
-                  </a>
-                ))}
-              </div>
-
-              {/* Mobile Auth Actions */}
-              <div className="pt-3 border-t border-slate-200/80 dark:border-slate-800/80 flex items-center justify-between gap-3">
-                {user ? (
-                  <div className="w-full space-y-3">
-                    {/* User profile info for mobile */}
-                    <div className="flex items-center gap-3 p-2.5 rounded-xl bg-slate-50 dark:bg-[#04142F]/60 border border-slate-200 dark:border-slate-800">
-                      <div className="w-8 h-8 rounded-full bg-blue-600 dark:bg-[#0CA671] text-white flex items-center justify-center text-sm font-black uppercase shadow-inner shrink-0">
-                        {((userData as any)?.displayName || user.displayName || user.email || "?").charAt(0)}
-                      </div>
-                      <div className="flex flex-col leading-none">
-                        <span className="text-xs font-black text-slate-850 dark:text-white">
-                          {(userData as any)?.displayName || user.displayName || user.email?.split('@')[0]}
-                        </span>
-                        <span className={`text-[8.5px] font-black uppercase tracking-wider mt-1 ${
-                          role === "super_admin" ? "text-red-500" :
-                          role === "police_admin" ? "text-blue-500" :
-                          role === "councilor" ? "text-purple-500" :
-                          role === "volunteer" ? "text-emerald-500" :
-                          "text-slate-400"
-                        }`}>
-                          {role ? role.replace("_", " ") : "citizen"}
-                        </span>
-                      </div>
-                    </div>
-                    
-                    <div className="flex gap-2">
-                      <a
-                        href={getDashboardPath(role)}
-                        onClick={() => setIsMobileMenuOpen(false)}
-                        className="flex-1 py-2 text-center text-xs font-bold rounded-lg border border-slate-200 dark:border-slate-800 text-slate-705 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900 transition-all"
-                      >
-                        {language === "en" ? "Dashboard" : "ড্যাশবোর্ড"}
-                      </a>
-                      <button
-                        onClick={() => { setIsMobileMenuOpen(false); logout(); }}
-                        className="flex-1 py-2 text-xs font-bold rounded-lg text-white bg-red-650 hover:bg-red-750 transition-all shadow-md"
-                      >
-                        {language === "en" ? "Logout" : "লগআউট"}
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex items-center justify-between gap-3 w-full">
-                    <a
-                      href="/login"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                      className="flex-1 py-2 text-center text-xs font-bold rounded-lg border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900 transition-all"
-                    >
-                      {t("login")}
-                    </a>
-                    <a
-                      href="/register"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                      className="flex-1 py-2 text-center text-xs font-bold rounded-lg text-white bg-blue-600 dark:bg-[#0CA671] hover:bg-blue-500 dark:hover:bg-emerald-500 transition-all shadow-md"
-                    >
-                      {t("register")}
-                    </a>
-                  </div>
-                )}
-              </div>
-
-            </div>
-          </div>
-        )}
       </header>
 
       {/* 5. Sticky Bottom Navigation Bar */}
@@ -566,16 +465,16 @@ export default function Header() {
               <button 
                 key={idx}
                 onClick={triggerSOS}
-                className={`flex flex-col items-center justify-center -mt-5 w-11 h-11 rounded-full text-white shadow-lg transition-transform duration-200 active:scale-95 ${
+                className={`flex flex-col items-center justify-center -mt-6.5 w-13 h-13 rounded-full text-white transition-all duration-200 active:scale-90 border-4 border-white dark:border-[#01205B] z-20 shadow-[0_0_15px_rgba(239,68,68,0.45),inset_0_2px_4px_rgba(255,255,255,0.3),inset_0_-2px_4px_rgba(0,0,0,0.3)] ${
                   sosActive 
-                    ? "bg-rose-600 animate-pulse shadow-rose-500/30" 
+                    ? "bg-gradient-to-tr from-rose-700 via-rose-500 to-rose-400 animate-pulse shadow-rose-500/40" 
                     : sosCountdown !== null 
-                      ? "bg-amber-600 animate-pulse shadow-amber-500/30"
-                      : "bg-red-650 hover:bg-red-550 shadow-red-500/35"
+                      ? "bg-gradient-to-tr from-amber-700 via-amber-500 to-amber-400 animate-pulse shadow-amber-500/40"
+                      : "bg-gradient-to-tr from-red-800 via-red-600 to-red-500 hover:from-red-700 hover:to-red-400 shadow-red-500/35"
                 }`}
                 title="SOS Alert"
               >
-                <Icon className="w-5 h-5" />
+                <Icon className="w-6 h-6 drop-shadow-md" />
               </button>
             );
           }
@@ -597,6 +496,109 @@ export default function Header() {
           );
         })}
       </div>
+
+      {/* Mobile Navigation Drawer - placed outside headers to bypass overflow hidden clipping */}
+      {isMobileMenuOpen && (
+        <div className="md:hidden fixed top-[56px] left-0 right-0 z-45 bg-white dark:bg-[#010818] border-b border-slate-200/80 dark:border-slate-800/80 shadow-2xl overflow-y-auto max-h-[calc(100vh-56px)] animate-in fade-in slide-in-from-top-3 duration-200">
+          <div className="px-4 pt-2 pb-5 space-y-3.5">
+            
+            {/* Mobile Search Trigger */}
+            <button
+              onClick={() => { setIsMobileMenuOpen(false); setIsSearchOpen(true); }}
+              className="w-full flex items-center bg-slate-100 dark:bg-[#04142F] border border-slate-200 dark:border-slate-850 rounded-lg px-3 py-2 text-xs text-slate-400 text-left outline-none"
+            >
+              <Search className="h-4 w-4 text-slate-400 mr-2 shrink-0" />
+              <span className="flex-grow">{t("searchPlaceholder")}</span>
+            </button>
+
+            {/* Navigation Links */}
+            <div className="grid grid-cols-2 gap-2 text-xs font-semibold">
+              {[
+                { label: t("home"), href: "/" },
+                { label: t("news"), href: "/news" },
+                { label: t("services"), href: "/services" },
+                { label: t("police"), href: "/police" },
+                { label: t("emergency"), href: "/emergency" },
+                { label: t("mosque"), href: "/mosque" },
+                { label: t("marketplace"), href: "/marketplace" },
+                { label: t("aboutUs"), href: "/about" }
+              ].map((item, idx) => (
+                <a
+                  key={idx}
+                  href={item.href}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="p-2.5 rounded-lg bg-slate-50 dark:bg-[#04142F]/50 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-355 hover:text-slate-900 dark:hover:text-white transition-all flex items-center gap-2"
+                >
+                  <div className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+                  <span>{item.label}</span>
+                </a>
+              ))}
+            </div>
+
+            {/* Mobile Auth Actions */}
+            <div className="pt-3 border-t border-slate-200/80 dark:border-slate-800/80 flex items-center justify-between gap-3">
+              {user ? (
+                <div className="w-full space-y-3">
+                  {/* User profile info for mobile */}
+                  <div className="flex items-center gap-3 p-2.5 rounded-xl bg-slate-50 dark:bg-[#04142F]/60 border border-slate-200 dark:border-slate-800">
+                    <div className="w-8 h-8 rounded-full bg-blue-600 dark:bg-[#0CA671] text-white flex items-center justify-center text-sm font-black uppercase shadow-inner shrink-0">
+                      {((userData as any)?.displayName || user.displayName || user.email || "?").charAt(0)}
+                    </div>
+                    <div className="flex flex-col leading-none">
+                      <span className="text-xs font-black text-slate-850 dark:text-white">
+                        {(userData as any)?.displayName || user.displayName || user.email?.split('@')[0]}
+                      </span>
+                      <span className={`text-[8.5px] font-black uppercase tracking-wider mt-1 ${
+                        role === "super_admin" ? "text-red-500" :
+                        role === "police_admin" ? "text-blue-500" :
+                        role === "councilor" ? "text-purple-500" :
+                        role === "volunteer" ? "text-emerald-500" :
+                        "text-slate-400"
+                      }`}>
+                        {role ? role.replace("_", " ") : "citizen"}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className="flex gap-2">
+                    <a
+                      href={getDashboardPath(role)}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="flex-1 py-2 text-center text-xs font-bold rounded-lg border border-slate-205 dark:border-slate-800 text-slate-705 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900 transition-all"
+                    >
+                      {language === "en" ? "Dashboard" : "ড্যাশবোর্ড"}
+                    </a>
+                    <button
+                      onClick={() => { setIsMobileMenuOpen(false); logout(); }}
+                      className="flex-1 py-2 text-xs font-bold rounded-lg text-white bg-red-650 hover:bg-red-750 transition-all shadow-md"
+                    >
+                      {language === "en" ? "Logout" : "লগআউট"}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center justify-between gap-3 w-full">
+                  <a
+                    href="/login"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="flex-1 py-2 text-center text-xs font-bold rounded-lg border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900 transition-all"
+                  >
+                    {t("login")}
+                  </a>
+                  <a
+                    href="/register"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="flex-1 py-2 text-center text-xs font-bold rounded-lg text-white bg-blue-600 dark:bg-[#0CA671] hover:bg-blue-500 dark:hover:bg-emerald-500 transition-all shadow-md"
+                  >
+                    {t("register")}
+                  </a>
+                </div>
+              )}
+            </div>
+
+          </div>
+        </div>
+      )}
     </>
   );
 }
