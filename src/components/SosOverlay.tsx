@@ -3,13 +3,16 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { AlertTriangle, X, ShieldAlert, CheckCircle } from "lucide-react";
 import { useAppContext } from "@/context/AppContext";
+import { db } from "@/lib/firebase";
+import { collection, addDoc } from "firebase/firestore";
 
 export default function SosOverlay() {
   const {
     language, theme, t,
     showSosConfirmModal, setShowSosConfirmModal,
     sosActive, setSosActive,
-    sosCountdown, setSosCountdown
+    sosCountdown, setSosCountdown,
+    gpsCoords, user
   } = useAppContext();
 
   // Overlay states
@@ -46,9 +49,55 @@ export default function SosOverlay() {
         setIsHoldingSos(false);
         setSosSuccess(true);
         setSosActive(true);
+
+        // Log the SOS trigger to Firestore
+        if (db) {
+          const lat = gpsCoords?.lat || 22.3562;
+          const lng = gpsCoords?.lng || 91.8398;
+
+          let deviceInfo = "Unknown Device";
+          if (typeof window !== "undefined" && window.navigator) {
+            const ua = window.navigator.userAgent;
+            if (ua.match(/Android/i)) {
+              const match = ua.match(/Android\s+([0-9\.]+);\s+([^;]+)\s+Build/);
+              deviceInfo = match ? `Android (${match[2].trim()})` : "Android Device";
+            } else if (ua.match(/iPhone/i)) {
+              deviceInfo = "Apple iPhone";
+            } else if (ua.match(/iPad/i)) {
+              deviceInfo = "Apple iPad";
+            } else if (ua.match(/Windows/i)) {
+              deviceInfo = "Windows PC";
+            } else if (ua.match(/Macintosh/i)) {
+              deviceInfo = "Apple Mac";
+            } else {
+              deviceInfo = "Mobile/Browser";
+            }
+          }
+
+          addDoc(collection(db, "civic_reports"), {
+            title: language === "en" ? "Emergency SOS Distress Alert" : "জরুরি এসওএস বিপদ সংকেত",
+            description: language === "en" 
+              ? "Emergency distress panic trigger initiated. GPS location is live." 
+              : "জরুরি বিপদ সংকেত বাটন চাপা হয়েছে। লাইভ জিপিএস লোকেশন সক্রিয়।",
+            category: "Emergency",
+            lat,
+            lng,
+            deviceInfo,
+            status: "pending",
+            userId: user?.uid || "anonymous",
+            userName: user?.displayName || user?.email || "Citizen User",
+            votes: 0,
+            upvotedBy: [],
+            createdAt: new Date().toISOString()
+          }).then((docRef) => {
+            console.log("SOS report logged in Firestore:", docRef.id);
+          }).catch(err => {
+            console.warn("Failed to log SOS report to Firestore:", err);
+          });
+        }
       }
     }, 30);
-  }, [setSosActive]);
+  }, [setSosActive, gpsCoords, user, language]);
 
   // Stop hold
   const stopHold = useCallback(() => {

@@ -10,10 +10,18 @@ import { db } from "@/lib/firebase";
 import { collection, onSnapshot, updateDoc, doc, deleteDoc, addDoc } from "firebase/firestore";
 
 export default function PoliceDashboardPage() {
-  const { 
-    user, role, theme, language, t,
-    setAuthMode, setShowAuthModal
-  } = useAppContext();
+
+
+  const { user, role, theme, language, t,
+    setAuthMode, setShowAuthModal, authLoading } = useAppContext();
+
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="w-8 h-8 text-blue-600 dark:text-[#0CA671] animate-spin" />
+      </div>
+    );
+  }
 
   // Tab: "overview" | "complaints" | "tips" | "notices" | "tenants" | "crime" | "missing"
   const [activeTab, setActiveTab] = useState<"overview" | "complaints" | "tips" | "notices" | "tenants" | "crime" | "missing">("overview");

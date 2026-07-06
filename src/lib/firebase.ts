@@ -2,30 +2,26 @@ import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
-import { getAnalytics, isSupported } from "firebase/analytics";
+import { getAnalytics, isSupported, Analytics } from "firebase/analytics";
 
-// Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyBSMy4suf-HYnt3d6PRotQyXwOZEy2nCdU",
-  authDomain: "bakalia-ctg.firebaseapp.com",
-  projectId: "bakalia-ctg",
-  storageBucket: "bakalia-ctg.firebasestorage.app",
-  messagingSenderId: "503566948480",
-  appId: "1:503566948480:web:35f3094291c0ddf874ae65",
-  measurementId: "G-9REQ25FZJ9"
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
 };
 
-// Initialize Firebase (checking if already initialized to avoid duplicate apps in hot-reloads)
 const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
 
-// Initialize Firebase Auth, Firestore, and Storage Databases
 const auth = getAuth(app);
 const db = getFirestore(app);
 const storage = getStorage(app);
 
-// Initialize Analytics only on the client side if supported
-let analytics = null;
-if (typeof window !== "undefined") {
+let analytics: Analytics | null = null;
+if (typeof window !== "undefined" && process.env.NODE_ENV === "production") {
   isSupported().then((supported) => {
     if (supported) {
       analytics = getAnalytics(app);

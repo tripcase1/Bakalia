@@ -4,6 +4,7 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import { auth, db } from "@/lib/firebase";
 import { onAuthStateChanged, signOut, User } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
+import { CheckCircle, AlertCircle, Info } from "lucide-react";
 
 type Theme = "light" | "dark";
 type Language = "en" | "bn";
@@ -14,6 +15,7 @@ interface AppContextType {
   toggleTheme: () => void;
   setLanguage: (lang: Language) => void;
   t: (key: string) => string;
+  showToast: (message: string, type?: "success" | "error" | "info") => void;
 
   // Navigation & UI control states
   isSearchOpen: boolean;
@@ -465,6 +467,22 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [detectedWard, setDetectedWard] = useState<string | null>(null);
   const [gpsStatus, setGpsStatus] = useState<"idle" | "loading" | "granted" | "denied">("idle");
 
+  interface Toast {
+    message: string;
+    type: "success" | "error" | "info";
+    id: number;
+  }
+
+  const [toasts, setToasts] = useState<Toast[]>([]);
+
+  const showToast = React.useCallback((message: string, type: "success" | "error" | "info" = "info") => {
+    const id = Date.now();
+    setToasts(prev => [...prev, { id, message, type }]);
+    setTimeout(() => {
+      setToasts(prev => prev.filter(t => t.id !== id));
+    }, 4000);
+  }, []);
+
   const calculateWard = (lat: number, lng: number): string => {
     const distance = (lat1: number, lng1: number, lat2: number, lng2: number) => {
       return Math.sqrt(Math.pow(lat1 - lat2, 2) + Math.pow(lng1 - lng2, 2));
@@ -566,7 +584,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       setUser(currentUser);
       if (currentUser) {
         try {
-          const userDoc = await getDoc(doc(db, "users", currentUser.uid));
+          // Race getDoc against a 4-second timeout to prevent infinite hangs when Firestore is offline/blocked
+          const getDocPromise = getDoc(doc(db, "users", currentUser.uid));
+          const getDocTimeout = new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error("Firestore connection timed out")), 4000)
+          );
+          const userDoc = await Promise.race([getDocPromise, getDocTimeout]);
+
           let currentRole = "citizen";
           if (currentUser.email === "almabruk786@gmail.com") {
             currentRole = "super_admin";
@@ -578,17 +602,24 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           setRole(currentRole);
           setUserData(userDoc.exists() ? userDoc.data() : { email: currentUser.email, role: currentRole });
 
-          // If the admin user doesn't exist in Firestore users collection yet, create it!
-          if (!userDoc.exists() && currentUser.email === "almabruk786@gmail.com") {
-            const { setDoc: setDocFs } = await import("firebase/firestore");
-            await setDocFs(doc(db, "users", currentUser.uid), {
-              uid: currentUser.uid,
-              displayName: "Super Admin",
-              email: currentUser.email,
-              role: "super_admin",
-              verified: true,
-              createdAt: new Date().toISOString()
-            });
+          if (currentUser.email === "almabruk786@gmail.com") {
+            if (!userDoc.exists() || (userDoc.data() as { role?: string })?.role !== "super_admin") {
+              const { setDoc: setDocFs } = await import("firebase/firestore");
+              const setDocPromise = setDocFs(doc(db, "users", currentUser.uid), {
+                uid: currentUser.uid,
+                displayName: userDoc.exists() ? (userDoc.data()?.displayName || "Super Admin") : "Super Admin",
+                email: currentUser.email,
+                role: "super_admin",
+                verified: true,
+                createdAt: userDoc.exists() ? (userDoc.data()?.createdAt || new Date().toISOString()) : new Date().toISOString()
+              }, { merge: true });
+
+              // Race write against 3-second timeout
+              await Promise.race([
+                setDocPromise,
+                new Promise<void>((_, reject) => setTimeout(() => reject(new Error("Firestore write timed out")), 3000))
+              ]);
+            }
           }
 
           // Set cookies for Next.js Middleware edge protection
@@ -599,9 +630,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           console.error("Error loading user profile from Firestore:", error);
           let fallbackRole = currentUser.email === "almabruk786@gmail.com" ? "super_admin" : "citizen";
           setRole(fallbackRole);
-          const token = await currentUser.getIdToken();
-          document.cookie = `session_token=${token}; path=/; max-age=604800; SameSite=Lax; Secure`;
-          document.cookie = `user_role=${fallbackRole}; path=/; max-age=604800; SameSite=Lax; Secure`;
+          try {
+            const token = await currentUser.getIdToken();
+            document.cookie = `session_token=${token}; path=/; max-age=604800; SameSite=Lax; Secure`;
+            document.cookie = `user_role=${fallbackRole}; path=/; max-age=604800; SameSite=Lax; Secure`;
+          } catch (tokenErr) {
+            console.warn("Could not get id token on fallback:", tokenErr);
+          }
         }
       } else {
         setRole(null);
@@ -682,6 +717,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         userData,
         authLoading,
         logout,
+        showToast,
         gpsCoords,
         detectedWard,
         gpsStatus,
@@ -689,6 +725,26 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       }}
     >
       {children}
+      {/* Dynamic Toast Notifications */}
+      <div className="fixed bottom-5 right-5 z-[9999] space-y-2.5 max-w-sm pointer-events-none">
+        {toasts.map(t => (
+          <div
+            key={t.id}
+            className={`pointer-events-auto flex items-center gap-3 p-3.5 rounded-xl border shadow-2xl animate-in slide-in-from-bottom-5 fade-in duration-300 ${
+              t.type === "success" 
+                ? "bg-[#0CA671]/10 border-[#0CA671]/30 text-emerald-800 dark:text-[#0CA671] bg-white dark:bg-[#04142F]"
+                : t.type === "error"
+                  ? "bg-rose-500/10 border-rose-500/20 text-rose-800 dark:text-rose-450 bg-white dark:bg-[#04142F]"
+                  : "bg-blue-500/10 border-blue-500/20 text-blue-800 dark:text-blue-405 bg-white dark:bg-[#04142F]"
+            }`}
+          >
+            {t.type === "success" && <CheckCircle className="w-5 h-5 text-[#0CA671] shrink-0" />}
+            {t.type === "error" && <AlertCircle className="w-5 h-5 text-rose-500 shrink-0" />}
+            {t.type === "info" && <Info className="w-5 h-5 text-blue-500 shrink-0" />}
+            <span className="text-xs font-bold leading-tight">{t.message}</span>
+          </div>
+        ))}
+      </div>
     </AppContext.Provider>
   );
 }

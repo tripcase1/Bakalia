@@ -34,11 +34,7 @@ export const metadata: Metadata = {
   }
 };
 
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
-import SearchModal from "@/components/SearchModal";
-import AuthModal from "@/components/AuthModal";
-import SosOverlay from "@/components/SosOverlay";
+import ClientLayoutWrapper from "@/components/ClientLayoutWrapper";
 
 export default function RootLayout({
   children,
@@ -56,19 +52,12 @@ export default function RootLayout({
           rel="stylesheet" 
           href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" 
           integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" 
-          crossOrigin="" 
+          crossOrigin="anonymous" 
         />
       </head>
       <body className="min-h-full flex flex-col bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-50 transition-colors duration-300">
         <AppProvider>
-          <Header />
-          <SearchModal />
-          <AuthModal />
-          <SosOverlay />
-          <main className="flex-grow">
-            {children}
-          </main>
-          <Footer />
+          <ClientLayoutWrapper>{children}</ClientLayoutWrapper>
         </AppProvider>
       </body>
     </html>

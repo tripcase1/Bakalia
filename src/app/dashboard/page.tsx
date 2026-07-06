@@ -7,14 +7,14 @@ import {
 } from "lucide-react";
 import { useAppContext } from "@/context/AppContext";
 import { db } from "@/lib/firebase";
-import { collection, query, where, onSnapshot, updateDoc, doc } from "firebase/firestore";
+import { collection, query, where, onSnapshot, updateDoc, doc, getDoc } from "firebase/firestore";
 import { updateProfile } from "firebase/auth";
 
 export default function CitizenDashboardPage() {
-  const { 
-    user, role, theme, language, t,
-    setAuthMode, setShowAuthModal, triggerSOS, logout
-  } = useAppContext();
+
+
+  const { user, role, theme, language, t,
+    setAuthMode, setShowAuthModal, triggerSOS, logout, authLoading } = useAppContext();
 
   // Tab state
   const [activeTab, setActiveTab] = useState<"profile" | "complaints" | "lostfound" | "rentals" | "saved" | "notifications" | "sos" | "settings">("profile");
@@ -36,18 +36,16 @@ export default function CitizenDashboardPage() {
   // Sync profile details
   useEffect(() => {
     if (user) {
-      setDisplayName(user.displayName || "");
-      // Load extra details from Firestore if available
       const loadUserDoc = async () => {
-        const userRef = doc(db, "users", user.uid);
         const userSnap = await getDoc(doc(db, "users", user.uid));
         if (userSnap.exists()) {
-          const uData = userSnap.data() as any;
+          const uData = userSnap.data() as { phoneNumber?: string; address?: string; ward?: string };
           setPhoneNumber(uData.phoneNumber || "");
           setAddress(uData.address || "");
           setWard(uData.ward || "Ward 17");
         }
       };
+      setDisplayName(user.displayName || "");
       loadUserDoc().catch(err => console.warn(err));
     }
   }, [user]);
@@ -111,6 +109,28 @@ export default function CitizenDashboardPage() {
     return () => unsubscribe();
   }, []);
 
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="w-8 h-8 text-blue-600 dark:text-[#0CA671] animate-spin" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+        <p className="text-sm font-bold text-slate-500">Please log in to access your dashboard.</p>
+        <button
+          onClick={() => { setShowAuthModal(true); setAuthMode("login"); }}
+          className="px-4 py-2 bg-blue-600 dark:bg-[#0CA671] text-white rounded-lg text-xs font-bold"
+        >
+          Login
+        </button>
+      </div>
+    );
+  }
+
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
@@ -154,14 +174,6 @@ export default function CitizenDashboardPage() {
         Pending
       </span>
     );
-  };
-
-  // Helper import from firebase
-  const getDoc = async (docRef: any) => {
-    const snap = await docRef;
-    // Client wrapper
-    const { getDoc: getDocFs } = await import("firebase/firestore");
-    return getDocFs(docRef);
   };
 
   return (

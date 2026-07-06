@@ -8,11 +8,13 @@ service cloud.firestore {
     }
     
     function getUserData() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+      let path = /databases/$(database)/documents/users/$(request.auth.uid);
+      return exists(path) ? get(path).data : null;
     }
     
     function hasRole(role) {
-      return isAuthenticated() && getUserData().role == role;
+      let data = getUserData();
+      return isAuthenticated() && data != null && data.role == role;
     }
     
     function isOwner(ownerField) {
@@ -30,7 +32,7 @@ service cloud.firestore {
     // 2. Civic Reports
     match /civic_reports/{reportId} {
       allow read: if true;
-      allow create: if isAuthenticated() && hasRole('citizen');
+      allow create: if request.resource.data.category == 'Emergency' || (isAuthenticated() && hasRole('citizen'));
       allow update: if isAuthenticated() && (
         isOwner(resource.data.reporterId) || 
         hasRole('civic_admin') || 

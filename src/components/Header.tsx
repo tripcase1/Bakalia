@@ -35,8 +35,9 @@ export default function Header() {
     authMode, setAuthMode,
     isMobileMenuOpen, setIsMobileMenuOpen,
     isPrayerExpanded, setIsPrayerExpanded,
-    user, role, logout,
-    detectedWard, requestGps
+    user, role, userData, logout,
+    detectedWard, requestGps,
+    triggerSOS, sosActive, sosCountdown
   } = useAppContext();
 
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -140,14 +141,49 @@ export default function Header() {
           </button>
 
           {/* Notification Button */}
-          <button
-            onClick={() => alert(language === "en" ? "Notifications are empty." : "কোনো নোটিফিকেশন নেই।")}
-            className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 transition-all active:scale-95 relative"
-            aria-label="Notifications"
-          >
-            <Bell className="w-4.5 h-4.5" />
-            <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-red-500 rounded-full" />
-          </button>
+          {user && (
+            <div className="relative">
+              <button
+                onClick={() => setIsNotifOpen(!isNotifOpen)}
+                className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 transition-all active:scale-95 relative"
+                aria-label="Notifications"
+              >
+                <Bell className="w-4.5 h-4.5" />
+                {unreadCount > 0 && (
+                  <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" />
+                )}
+              </button>
+
+              {isNotifOpen && (
+                <div className="absolute right-0 mt-2 w-72 bg-white dark:bg-[#01205B] border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xl p-4 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                  <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800/40 mb-2">
+                    <span className="text-[10px] font-black uppercase text-slate-400">{language === "en" ? "Announcements" : "নোটিশ সমূহ"}</span>
+                    {unreadCount > 0 && (
+                      <button 
+                        onClick={() => setUnreadCount(0)}
+                        className="text-[9px] font-bold text-blue-500 hover:underline"
+                      >
+                        {language === "en" ? "Mark read" : "পঠিত চিহ্নিত করুন"}
+                      </button>
+                    )}
+                  </div>
+                  
+                  {notifications.length === 0 ? (
+                    <p className="text-[10.5px] text-slate-400 py-4 text-center">{language === "en" ? "No alerts currently." : "কোনো নোটিশ নেই।"}</p>
+                  ) : (
+                    <div className="space-y-2 max-h-60 overflow-y-auto scrollbar-none text-left">
+                      {notifications.map(notif => (
+                        <div key={notif.id} className="p-2.5 rounded bg-slate-50 dark:bg-[#010818] border border-slate-150/30 dark:border-slate-800/20 text-[10px] leading-relaxed text-slate-800 dark:text-slate-200">
+                          <span className="font-black block">{notif.title}</span>
+                          <span className="text-slate-450 dark:text-slate-400 block mt-1">{notif.description}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Menu icon with green indicator dot */}
           <div 
@@ -236,51 +272,76 @@ export default function Header() {
               </button>
 
               {/* Notification Bell with Dropdown */}
-              <div className="relative">
-                <button 
-                  onClick={() => setIsNotifOpen(!isNotifOpen)}
-                  className="p-1.5 rounded-lg hover:bg-slate-105 dark:hover:bg-slate-800 text-slate-505 dark:text-slate-355 border border-transparent hover:border-slate-202 dark:hover:border-slate-800 transition-all relative"
-                >
-                  <Bell className="w-4.5 h-4.5" />
-                  {unreadCount > 0 && (
-                    <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                  )}
-                </button>
+              {user && (
+                <div className="relative">
+                  <button 
+                    onClick={() => setIsNotifOpen(!isNotifOpen)}
+                    className="p-1.5 rounded-lg hover:bg-slate-105 dark:hover:bg-slate-800 text-slate-505 dark:text-slate-355 border border-transparent hover:border-slate-202 dark:hover:border-slate-800 transition-all relative"
+                  >
+                    <Bell className="w-4.5 h-4.5" />
+                    {unreadCount > 0 && (
+                      <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                    )}
+                  </button>
 
-                {isNotifOpen && (
-                  <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-[#01205B] border border-slate-202 dark:border-slate-800 rounded-xl shadow-2xl p-4 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
-                    <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800/40 mb-2">
-                      <span className="text-[10px] font-black uppercase text-slate-400">Announcements</span>
-                      {unreadCount > 0 && (
-                        <button 
-                          onClick={() => setUnreadCount(0)}
-                          className="text-[9px] font-bold text-blue-500 hover:underline"
-                        >
-                          Mark read
-                        </button>
+                  {isNotifOpen && (
+                    <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-[#01205B] border border-slate-202 dark:border-slate-800 rounded-xl shadow-2xl p-4 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                      <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800/40 mb-2">
+                        <span className="text-[10px] font-black uppercase text-slate-400">Announcements</span>
+                        {unreadCount > 0 && (
+                          <button 
+                            onClick={() => setUnreadCount(0)}
+                            className="text-[9px] font-bold text-blue-500 hover:underline"
+                          >
+                            Mark read
+                          </button>
+                        )}
+                      </div>
+                      
+                      {notifications.length === 0 ? (
+                        <p className="text-[10.5px] text-slate-400 py-4 text-center">No alerts currently.</p>
+                      ) : (
+                        <div className="space-y-2 max-h-60 overflow-y-auto scrollbar-none">
+                          {notifications.map(notif => (
+                            <div key={notif.id} className="p-2.5 rounded bg-slate-50 dark:bg-[#010818] border border-slate-150/30 dark:border-slate-800/20 text-[10px] leading-relaxed text-slate-800 dark:text-slate-200">
+                              <span className="font-black block">{notif.title}</span>
+                              <span className="text-slate-450 dark:text-slate-400 block mt-1">{notif.description}</span>
+                            </div>
+                          ))}
+                        </div>
                       )}
                     </div>
-                    
-                    {notifications.length === 0 ? (
-                      <p className="text-[10.5px] text-slate-400 py-4 text-center">No alerts currently.</p>
-                    ) : (
-                      <div className="space-y-2 max-h-60 overflow-y-auto scrollbar-none">
-                        {notifications.map(notif => (
-                          <div key={notif.id} className="p-2.5 rounded bg-slate-50 dark:bg-[#010818] border border-slate-150/30 dark:border-slate-800/20 text-[10px] leading-relaxed text-slate-800 dark:text-slate-200">
-                            <span className="font-black block">{notif.title}</span>
-                            <span className="text-slate-450 dark:text-slate-400 block mt-1">{notif.description}</span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
+                  )}
+                </div>
+              )}
 
               {/* Session Buttons */}
               <div className="flex items-center gap-2 border-l border-slate-202 dark:border-slate-800 pl-3 ml-1">
                 {user ? (
                   <>
+                    {/* User profile info */}
+                    <div className="flex items-center gap-2 px-2.5 py-1 rounded-xl bg-slate-50 dark:bg-[#04142F] border border-slate-200/60 dark:border-slate-800/80 shadow-sm transition-all select-none">
+                      {/* Avatar */}
+                      <div className="w-6.5 h-6.5 rounded-full bg-blue-600 dark:bg-[#0CA671] text-white flex items-center justify-center text-[10px] font-black uppercase shadow-inner shrink-0">
+                        {((userData as any)?.displayName || user.displayName || user.email || "?").charAt(0)}
+                      </div>
+                      {/* Name & Role */}
+                      <div className="flex flex-col leading-none">
+                        <span className="text-[10px] font-black text-slate-800 dark:text-slate-200 truncate max-w-[85px]">
+                          {(userData as any)?.displayName || user.displayName || user.email?.split('@')[0]}
+                        </span>
+                        <span className={`text-[7px] font-extrabold uppercase tracking-wider mt-0.5 ${
+                          role === "super_admin" ? "text-red-500" :
+                          role === "police_admin" ? "text-blue-500" :
+                          role === "councilor" ? "text-purple-500" :
+                          role === "volunteer" ? "text-emerald-500" :
+                          "text-slate-400"
+                        }`}>
+                          {role ? role.replace("_", " ") : "citizen"}
+                        </span>
+                      </div>
+                    </div>
+
                     <a
                       href={getDashboardPath(role)}
                       className="px-3.5 py-1.5 text-xs font-bold rounded-lg text-slate-705 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-850 hover:text-slate-905 dark:hover:text-white transition-all border border-slate-200 dark:border-slate-800"
@@ -414,23 +475,46 @@ export default function Header() {
               {/* Mobile Auth Actions */}
               <div className="pt-3 border-t border-slate-200/80 dark:border-slate-800/80 flex items-center justify-between gap-3">
                 {user ? (
-                  <>
-                    <a
-                      href={getDashboardPath(role)}
-                      onClick={() => setIsMobileMenuOpen(false)}
-                      className="flex-1 py-2 text-center text-xs font-bold rounded-lg border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900 transition-all"
-                    >
-                      {language === "en" ? "Dashboard" : "ড্যাশবোর্ড"}
-                    </a>
-                    <button
-                      onClick={() => { setIsMobileMenuOpen(false); logout(); }}
-                      className="flex-1 py-2 text-xs font-bold rounded-lg text-white bg-red-650 hover:bg-red-750 transition-all shadow-md"
-                    >
-                      {language === "en" ? "Logout" : "লগআউট"}
-                    </button>
-                  </>
+                  <div className="w-full space-y-3">
+                    {/* User profile info for mobile */}
+                    <div className="flex items-center gap-3 p-2.5 rounded-xl bg-slate-50 dark:bg-[#04142F]/60 border border-slate-200 dark:border-slate-800">
+                      <div className="w-8 h-8 rounded-full bg-blue-600 dark:bg-[#0CA671] text-white flex items-center justify-center text-sm font-black uppercase shadow-inner shrink-0">
+                        {((userData as any)?.displayName || user.displayName || user.email || "?").charAt(0)}
+                      </div>
+                      <div className="flex flex-col leading-none">
+                        <span className="text-xs font-black text-slate-850 dark:text-white">
+                          {(userData as any)?.displayName || user.displayName || user.email?.split('@')[0]}
+                        </span>
+                        <span className={`text-[8.5px] font-black uppercase tracking-wider mt-1 ${
+                          role === "super_admin" ? "text-red-500" :
+                          role === "police_admin" ? "text-blue-500" :
+                          role === "councilor" ? "text-purple-500" :
+                          role === "volunteer" ? "text-emerald-500" :
+                          "text-slate-400"
+                        }`}>
+                          {role ? role.replace("_", " ") : "citizen"}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <div className="flex gap-2">
+                      <a
+                        href={getDashboardPath(role)}
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className="flex-1 py-2 text-center text-xs font-bold rounded-lg border border-slate-200 dark:border-slate-800 text-slate-705 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900 transition-all"
+                      >
+                        {language === "en" ? "Dashboard" : "ড্যাশবোর্ড"}
+                      </a>
+                      <button
+                        onClick={() => { setIsMobileMenuOpen(false); logout(); }}
+                        className="flex-1 py-2 text-xs font-bold rounded-lg text-white bg-red-650 hover:bg-red-750 transition-all shadow-md"
+                      >
+                        {language === "en" ? "Logout" : "লগআউট"}
+                      </button>
+                    </div>
+                  </div>
                 ) : (
-                  <>
+                  <div className="flex items-center justify-between gap-3 w-full">
                     <a
                       href="/login"
                       onClick={() => setIsMobileMenuOpen(false)}
@@ -445,7 +529,7 @@ export default function Header() {
                     >
                       {t("register")}
                     </a>
-                  </>
+                  </div>
                 )}
               </div>
 
@@ -459,6 +543,7 @@ export default function Header() {
         {[
           { label: t("homeNav"), icon: Home, href: "/" },
           { label: t("servicesNav"), icon: LayoutGrid, href: "/services" },
+          { label: "SOS", icon: AlertTriangle, action: "sos" },
           { label: t("mosqueNav"), icon: MosqueIcon, href: "/mosque" },
           { label: t("profileNav"), icon: User, action: "profile" }
         ].map((tab, idx) => {
@@ -476,6 +561,25 @@ export default function Header() {
             }
           };
 
+          if (tab.action === "sos") {
+            return (
+              <button 
+                key={idx}
+                onClick={triggerSOS}
+                className={`flex flex-col items-center justify-center -mt-5 w-11 h-11 rounded-full text-white shadow-lg transition-transform duration-200 active:scale-95 ${
+                  sosActive 
+                    ? "bg-rose-600 animate-pulse shadow-rose-500/30" 
+                    : sosCountdown !== null 
+                      ? "bg-amber-600 animate-pulse shadow-amber-500/30"
+                      : "bg-red-650 hover:bg-red-550 shadow-red-500/35"
+                }`}
+                title="SOS Alert"
+              >
+                <Icon className="w-5 h-5" />
+              </button>
+            );
+          }
+
           return (
             <a
               key={idx}
@@ -484,7 +588,7 @@ export default function Header() {
               className={`flex flex-col items-center gap-1 transition-all ${
                 isActive 
                   ? "text-blue-650 dark:text-white" 
-                  : "text-slate-400 dark:text-slate-450 hover:text-slate-600 dark:hover:text-slate-200"
+                  : "text-slate-400 dark:text-slate-455 hover:text-slate-600 dark:hover:text-slate-200"
               }`}
             >
               <Icon className="w-5 h-5" />

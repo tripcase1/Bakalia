@@ -10,9 +10,17 @@ import { db } from "@/lib/firebase";
 import { collection, onSnapshot, query, where, addDoc } from "firebase/firestore";
 
 export default function CouncilDashboardPage() {
-  const { 
-    user, role, theme, language, t
-  } = useAppContext();
+
+
+  const { user, role, theme, language, t, authLoading } = useAppContext();
+
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="w-8 h-8 text-blue-600 dark:text-[#0CA671] animate-spin" />
+      </div>
+    );
+  }
 
   // Tab: "overview" | "complaints" | "announcements" | "stats"
   const [activeTab, setActiveTab] = useState<"overview" | "complaints" | "announcements" | "stats">("overview");

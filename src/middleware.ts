@@ -15,8 +15,24 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  if (!sessionToken || !role) {
+  // Only block protected role-specific routes, not general pages
+  const isRoleProtected =
+    pathname.startsWith("/admin") ||
+    pathname.startsWith("/police") ||
+    pathname.startsWith("/council") ||
+    pathname.startsWith("/volunteer") ||
+    pathname.startsWith("/business") ||
+    pathname.startsWith("/moderator") ||
+    pathname.startsWith("/editor") ||
+    pathname.startsWith("/mosque");
+
+  if (isRoleProtected && (!sessionToken || !role)) {
     return NextResponse.redirect(new URL("/login", request.url));
+  }
+
+  // For /dashboard, allow through — page handles its own auth check
+  if (pathname.startsWith("/dashboard") && (!sessionToken || !role)) {
+    return NextResponse.next();
   }
 
   // Super Admin bypasses all checks
@@ -25,7 +41,7 @@ export function middleware(request: NextRequest) {
   }
 
   // Dashboard role routing rules
-  if (pathname.startsWith("/admin") && role !== "super_admin") {
+  if (pathname.startsWith("/admin") && role !== "super_admin" && role !== "admin") {
     return NextResponse.redirect(new URL(getRoleDashboard(role), request.url));
   }
   if (pathname.startsWith("/police") && role !== "police_admin") {
@@ -49,15 +65,20 @@ export function middleware(request: NextRequest) {
   if (pathname.startsWith("/editor") && role !== "editor") {
     return NextResponse.redirect(new URL(getRoleDashboard(role), request.url));
   }
+  if (pathname.startsWith("/mosque") && role !== "mosque_admin") {
+    return NextResponse.redirect(new URL(getRoleDashboard(role), request.url));
+  }
 
   return NextResponse.next();
 }
 
-function getRoleDashboard(role: string): string {
+function getRoleDashboard(role?: string): string {
+  if (!role) return "/";
   switch (role) {
     case "citizen":
       return "/dashboard";
     case "super_admin":
+    case "admin":
       return "/admin";
     case "police_admin":
       return "/police";
@@ -82,13 +103,13 @@ export const config = {
   matcher: [
     "/login",
     "/register",
-    "/dashboard/:path*",
     "/admin/:path*",
     "/police/:path*",
     "/council/:path*",
     "/volunteer/:path*",
     "/business/:path*",
     "/moderator/:path*",
-    "/editor/:path*"
+    "/editor/:path*",
+    "/mosque/:path*"
   ]
 };
