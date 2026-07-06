@@ -606,7 +606,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       });
       document.cookie = `session_token=mock-token; path=/; max-age=604800; SameSite=Lax; Secure`;
       document.cookie = `user_role=super_admin; path=/; max-age=604800; SameSite=Lax; Secure`;
-      sessionStorage.setItem("admin_2fa_verified", "true");
+      localStorage.setItem("admin_2fa_verified", "true");
       setAuthLoading(false);
       return;
     }
@@ -717,6 +717,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setUserData(null);
     document.cookie = "session_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
     document.cookie = "user_role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+    localStorage.removeItem("admin_2fa_verified");
     setAuthLoading(false);
   };
 

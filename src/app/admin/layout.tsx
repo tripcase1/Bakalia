@@ -37,7 +37,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
     // Check 2FA for super admin
     if (adminEmail && user.email === adminEmail) {
-      const verified = sessionStorage.getItem("admin_2fa_verified");
+      const verified = localStorage.getItem("admin_2fa_verified");
       if (verified !== "true") {
         router.push("/login");
       }

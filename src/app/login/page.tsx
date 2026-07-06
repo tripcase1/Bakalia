@@ -49,7 +49,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (!authLoading && user && role) {
-      if (ADMIN_EMAIL && user.email === ADMIN_EMAIL && sessionStorage.getItem("admin_2fa_verified") !== "true") {
+      if (ADMIN_EMAIL && user.email === ADMIN_EMAIL && localStorage.getItem("admin_2fa_verified") !== "true") {
         setShow2fa(true);
         setPendingRole(role);
         return;
@@ -219,7 +219,7 @@ export default function LoginPage() {
   const handle2faSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (ADMIN_2FA && admin2faCode.trim() === ADMIN_2FA) {
-      sessionStorage.setItem("admin_2fa_verified", "true");
+      localStorage.setItem("admin_2fa_verified", "true");
       showToast(language === "en" ? "Admin authorized successfully!" : "অ্যাডমিন সফলভাবে অনুমোদিত হয়েছে!", "success");
       router.push(getRoleDashboard(pendingRole || "super_admin"));
     } else {
