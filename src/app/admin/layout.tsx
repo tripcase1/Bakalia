@@ -10,17 +10,19 @@ import { Loader2, ShieldAlert } from "lucide-react";
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const { user, role, authLoading } = useAppContext();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const router = useRouter();
   const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL;
 
   useEffect(() => {
+    setMounted(true);
     if (typeof window !== "undefined") {
       setSidebarOpen(window.innerWidth >= 768);
     }
   }, []);
 
   useEffect(() => {
-    if (authLoading) return;
+    if (!mounted || authLoading) return;
     
     // Redirect to login if not authenticated
     if (!user) {
@@ -42,9 +44,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         router.push("/login");
       }
     }
-  }, [user, role, authLoading, router, adminEmail]);
+  }, [user, role, authLoading, router, adminEmail, mounted]);
 
-  if (authLoading) {
+  if (!mounted || authLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-slate-50 dark:bg-[#090D16]">
         <Loader2 className="w-10 h-10 text-blue-600 dark:text-[#0CA671] animate-spin" />
