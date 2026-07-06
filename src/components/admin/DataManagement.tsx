@@ -1112,6 +1112,132 @@ export default function DataManagement({ tab }: DataManagementProps) {
                           <span className="text-slate-700 dark:text-slate-300 font-semibold">{drawerRecord.userName}</span>
                         </div>
                       )}
+
+                      {/* Emergency specific rich details */}
+                      {drawerRecord.category === "Emergency" && (
+                        <>
+                          <div className="py-2.5 flex justify-between items-center text-rose-500 font-extrabold uppercase text-[10px] tracking-wider border-b border-rose-500/10 mt-3 pb-1">
+                            🚨 Emergency Signal Details
+                          </div>
+                          <div className="py-2 flex justify-between">
+                            <span className="font-bold text-slate-400">SOS Activate ID</span>
+                            <span className="text-slate-700 dark:text-slate-300 font-mono select-all font-semibold">
+                              {drawerRecord.id || drawerRecord.uid || "N/A"}
+                            </span>
+                          </div>
+                          <div className="py-2 flex justify-between">
+                            <span className="font-bold text-slate-400">Citizen Name</span>
+                            <span className="text-slate-700 dark:text-slate-300 font-semibold">
+                              {drawerRecord.userName || "N/A"}
+                            </span>
+                          </div>
+                          <div className="py-2 flex justify-between">
+                            <span className="font-bold text-slate-400">Phone Number</span>
+                            <span className="text-slate-700 dark:text-slate-300 font-mono font-semibold">
+                              {drawerRecord.userPhone || "N/A"}
+                            </span>
+                          </div>
+                          <div className="py-2 flex justify-between">
+                            <span className="font-bold text-slate-400">User ID</span>
+                            <span className="text-slate-700 dark:text-slate-300 font-mono text-[10px]">
+                              {drawerRecord.userId || "N/A"}
+                            </span>
+                          </div>
+                          <div className="py-2 flex justify-between">
+                            <span className="font-bold text-slate-400">Citizen Role</span>
+                            <span className="text-slate-700 dark:text-slate-300 font-semibold uppercase text-[10px]">
+                              {drawerRecord.userRole || "citizen"}
+                            </span>
+                          </div>
+                          <div className="py-2 flex justify-between">
+                            <span className="font-bold text-slate-400">GPS Accuracy</span>
+                            <span className="text-slate-700 dark:text-slate-300 font-bold">
+                              {drawerRecord.locationAccuracy || "N/A"}
+                            </span>
+                          </div>
+                          <div className="py-2 flex justify-between">
+                            <span className="font-bold text-slate-400">Ward Number</span>
+                            <span className="text-slate-700 dark:text-slate-300 font-bold">
+                              {drawerRecord.wardNumber || "Ward 18"}
+                            </span>
+                          </div>
+                          <div className="py-2 flex flex-col gap-1.5">
+                            <span className="font-bold text-slate-400">Full Address (Reverse Geocoding)</span>
+                            <span className="text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800/80 p-2.5 rounded-lg leading-relaxed text-[11px] font-medium">
+                              {drawerRecord.address || "Fetching full reverse geocoded coordinates..."}
+                            </span>
+                          </div>
+
+                          <div className="py-2.5 flex justify-between items-center text-blue-500 font-extrabold uppercase text-[10px] tracking-wider border-b border-blue-500/10 mt-3 pb-1">
+                            💻 Device & Telemetry Data
+                          </div>
+                          <div className="py-2 flex justify-between">
+                            <span className="font-bold text-slate-400">Device Type</span>
+                            <span className="text-slate-700 dark:text-slate-300 font-semibold">
+                              {drawerRecord.deviceType || "Mobile"}
+                            </span>
+                          </div>
+                          <div className="py-2 flex justify-between">
+                            <span className="font-bold text-slate-400">Operating System</span>
+                            <span className="text-slate-700 dark:text-slate-300 font-semibold">
+                              {drawerRecord.os || "N/A"}
+                            </span>
+                          </div>
+                          <div className="py-2 flex justify-between">
+                            <span className="font-bold text-slate-400">Browser</span>
+                            <span className="text-slate-700 dark:text-slate-300 font-semibold">
+                              {drawerRecord.browser || "N/A"}
+                            </span>
+                          </div>
+                          <div className="py-2 flex justify-between">
+                            <span className="font-bold text-slate-400">Locale Language</span>
+                            <span className="text-slate-700 dark:text-slate-300 font-semibold font-mono uppercase">
+                              {drawerRecord.language || "en"}
+                            </span>
+                          </div>
+                          <div className="py-2 flex justify-between">
+                            <span className="font-bold text-slate-400">Time Zone</span>
+                            <span className="text-slate-700 dark:text-slate-300 font-mono text-[10.5px]">
+                              {drawerRecord.timezone || "N/A"}
+                            </span>
+                          </div>
+                          <div className="py-2 flex justify-between">
+                            <span className="font-bold text-slate-400">Battery Level</span>
+                            <span className="text-slate-700 dark:text-slate-300 font-bold font-mono">
+                              {drawerRecord.batteryLevel || "N/A"}
+                            </span>
+                          </div>
+                          <div className="py-2 flex justify-between">
+                            <span className="font-bold text-slate-400">Connection Link</span>
+                            <span className="text-slate-700 dark:text-slate-300 font-bold capitalize">
+                              {drawerRecord.networkType || "Unknown"}
+                            </span>
+                          </div>
+
+                          <div className="py-2.5 flex justify-between items-center text-emerald-500 font-extrabold uppercase text-[10px] tracking-wider border-b border-emerald-500/10 mt-3 pb-1">
+                            🏥 Nearby Emergency Dispatchers
+                          </div>
+                          <div className="py-2 flex justify-between">
+                            <span className="font-bold text-slate-400">Nearest Police Precinct</span>
+                            <span className="text-slate-700 dark:text-slate-300 font-semibold">
+                              {drawerRecord.nearbyPolice || "Bakalia Police Thana"}
+                            </span>
+                          </div>
+                          <div className="py-2 flex justify-between">
+                            <span className="font-bold text-slate-400">Nearest Hospital</span>
+                            <span className="text-slate-700 dark:text-slate-300 font-semibold">
+                              {drawerRecord.nearbyHospital || "Chittagong Medical College"}
+                            </span>
+                          </div>
+                          <div className="py-2 flex justify-between">
+                            <span className="font-bold text-slate-400">Nearest Fire Station</span>
+                            <span className="text-slate-700 dark:text-slate-300 font-semibold">
+                              {drawerRecord.nearbyFire || "Agrabad Fire Station"}
+                            </span>
+                          </div>
+                        </>
+                      )}
+
                       {drawerRecord.status && (
                         <div className="py-2 flex justify-between items-center">
                           <span className="font-bold text-slate-400">Current Status</span>
@@ -1120,11 +1246,22 @@ export default function DataManagement({ tab }: DataManagementProps) {
                               <select 
                                 value={editStatus} 
                                 onChange={e => setEditStatus(e.target.value)}
-                                className="px-2 py-1 rounded bg-slate-50 dark:bg-slate-900 border text-xs text-slate-800 dark:text-white"
+                                className="px-2 py-1 rounded bg-slate-50 dark:bg-slate-900 border text-xs text-slate-800 dark:text-white outline-none"
                               >
-                                <option value="pending">Pending</option>
-                                <option value="in_progress">In Progress</option>
-                                <option value="resolved">Resolved</option>
+                                {drawerRecord.category === "Emergency" ? (
+                                  <>
+                                    <option value="pending">Pending</option>
+                                    <option value="accepted">Accepted</option>
+                                    <option value="responding">Responding</option>
+                                    <option value="closed">Closed</option>
+                                  </>
+                                ) : (
+                                  <>
+                                    <option value="pending">Pending</option>
+                                    <option value="in_progress">In Progress</option>
+                                    <option value="resolved">Resolved</option>
+                                  </>
+                                )}
                               </select>
                               <button onClick={handleUpdateStatus} className="p-1 rounded bg-blue-600 text-white hover:bg-blue-500">
                                 <Check className="w-3.5 h-3.5" />

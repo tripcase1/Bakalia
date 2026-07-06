@@ -12,7 +12,7 @@ export default function SosOverlay() {
     showSosConfirmModal, setShowSosConfirmModal,
     sosActive, setSosActive,
     sosCountdown, setSosCountdown,
-    gpsCoords, user
+    gpsCoords, user, userData, role, detectedWard
   } = useAppContext();
 
   // Overlay states
@@ -27,6 +27,158 @@ export default function SosOverlay() {
   const holdTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const holdStartRef = useRef(0);
   const sosBtnRef = useRef<HTMLDivElement>(null);
+
+  // Async emergency distress logger
+  const triggerDistressAlert = async () => {
+    if (!db) return;
+    
+    let lat = gpsCoords?.lat || 22.3475;
+    let lng = gpsCoords?.lng || 91.8482;
+    let accuracy = "15m (Cell Tower / IP)";
+
+    // 1. Get high-precision coordinates if possible
+    try {
+      if (typeof window !== "undefined" && navigator.geolocation) {
+        const pos: any = await new Promise((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, {
+            enableHighAccuracy: true,
+            timeout: 3000
+          });
+        });
+        lat = pos.coords.latitude;
+        lng = pos.coords.longitude;
+        accuracy = `${Math.round(pos.coords.accuracy)}m`;
+      }
+    } catch (e) {
+      console.warn("Could not get high accuracy location, falling back:", e);
+    }
+
+    // 2. Reverse geocoding
+    let address = "East Bakalia, Chittagong, Bangladesh";
+    try {
+      const res = await Promise.race([
+        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18`),
+        new Promise<never>((_, reject) => setTimeout(() => reject(new Error("Timeout")), 2000))
+      ]);
+      if (res && res.ok) {
+        const data = await res.json();
+        address = data.display_name || address;
+      }
+    } catch (e) {
+      console.warn("Reverse geocoding failed, falling back:", e);
+    }
+
+    // 3. System properties
+    let deviceInfo = "Unknown Device";
+    let deviceType = "Desktop";
+    let browserName = "Unknown Browser";
+    let osName = "Unknown OS";
+
+    if (typeof window !== "undefined" && window.navigator) {
+      const ua = window.navigator.userAgent;
+      
+      // Device Info & Type
+      if (/Mobi|Android|iPhone|iPad/i.test(ua)) {
+        deviceType = "Mobile";
+      }
+      if (ua.match(/Android/i)) {
+        const match = ua.match(/Android\s+([0-9\.]+);\s+([^;]+)\s+Build/);
+        deviceInfo = match ? `Android (${match[2].trim()})` : "Android Device";
+      } else if (ua.match(/iPhone/i)) {
+        deviceInfo = "Apple iPhone";
+      } else if (ua.match(/iPad/i)) {
+        deviceInfo = "Apple iPad";
+      } else if (ua.match(/Windows/i)) {
+        deviceInfo = "Windows PC";
+      } else if (ua.match(/Macintosh/i)) {
+        deviceInfo = "Apple Mac";
+      } else {
+        deviceInfo = "Mobile/Browser";
+      }
+
+      // Browser Name
+      if (ua.indexOf("Firefox") > -1) browserName = "Mozilla Firefox";
+      else if (ua.indexOf("SamsungBrowser") > -1) browserName = "Samsung Internet";
+      else if (ua.indexOf("Opera") > -1 || ua.indexOf("OPR") > -1) browserName = "Opera";
+      else if (ua.indexOf("Trident") > -1) browserName = "Internet Explorer";
+      else if (ua.indexOf("Edge") > -1 || ua.indexOf("Edg") > -1) browserName = "Microsoft Edge";
+      else if (ua.indexOf("Chrome") > -1) browserName = "Google Chrome";
+      else if (ua.indexOf("Safari") > -1) browserName = "Apple Safari";
+
+      // OS Name
+      if (ua.indexOf("Windows NT 10.0") > -1) osName = "Windows 10/11";
+      else if (ua.indexOf("Windows NT 6.2") > -1) osName = "Windows 8";
+      else if (ua.indexOf("Windows NT 6.1") > -1) osName = "Windows 7";
+      else if (ua.indexOf("Macintosh") > -1) osName = "macOS";
+      else if (ua.indexOf("Android") > -1) osName = "Android OS";
+      else if (ua.indexOf("iPhone") > -1 || ua.indexOf("iPad") > -1) osName = "iOS";
+      else if (ua.indexOf("Linux") > -1) osName = "Linux";
+    }
+
+    const systemLanguage = typeof navigator !== "undefined" ? navigator.language : "en";
+    const timezone = typeof Intl !== "undefined" ? Intl.DateTimeFormat().resolvedOptions().timeZone : "UTC";
+
+    // 4. Battery Level
+    let batteryLevel = "N/A";
+    try {
+      if (typeof navigator !== "undefined" && (navigator as any).getBattery) {
+        const battery = await (navigator as any).getBattery();
+        batteryLevel = `${Math.round(battery.level * 100)}%`;
+      }
+    } catch (e) {}
+
+    // 5. Network Type
+    let networkType = "Unknown";
+    try {
+      if (typeof navigator !== "undefined" && (navigator as any).connection) {
+        const conn = (navigator as any).connection;
+        networkType = conn.effectiveType || conn.type || "Unknown";
+      }
+    } catch (e) {}
+
+    // 6. Nearby services
+    const nearbyPolice = "Bakalia Thana (CMP) - 0.8 km";
+    const nearbyHospital = "Chittagong Medical College Hospital (CMCH) - 1.5 km";
+    const nearbyFire = "Agrabad Fire Station - 3.2 km";
+
+    // 7. Write to Firestore
+    try {
+      await addDoc(collection(db, "civic_reports"), {
+        title: language === "en" ? "Emergency SOS Distress Alert" : "জরুরি এসওএস বিপদ সংকেত",
+        description: language === "en" 
+          ? "Emergency distress panic trigger initiated. GPS location is live." 
+          : "জরুরি বিপদ সংকেত বাটন চাপা হয়েছে। লাইভ জিপিএস লোকেশন সক্রিয়।",
+        category: "Emergency",
+        lat,
+        lng,
+        locationAccuracy: accuracy,
+        wardNumber: detectedWard || "Ward 18 (East Bakalia)",
+        deviceInfo,
+        deviceType,
+        browser: browserName,
+        os: osName,
+        language: systemLanguage,
+        timezone,
+        batteryLevel,
+        networkType,
+        address,
+        nearbyPolice,
+        nearbyHospital,
+        nearbyFire,
+        status: "pending",
+        userId: user?.uid || "anonymous",
+        userName: user?.displayName || (userData as any)?.displayName || "Citizen User",
+        userPhone: (userData as any)?.phone || user?.phoneNumber || "Not Provided",
+        userRole: role || "citizen",
+        votes: 0,
+        upvotedBy: [],
+        createdAt: new Date().toISOString()
+      });
+      console.log("SOS report logged in Firestore successfully.");
+    } catch (err) {
+      console.warn("Failed to log SOS report to Firestore:", err);
+    }
+  };
 
   // Start hold
   const startHold = useCallback(() => {
@@ -50,54 +202,10 @@ export default function SosOverlay() {
         setSosSuccess(true);
         setSosActive(true);
 
-        // Log the SOS trigger to Firestore
-        if (db) {
-          const lat = gpsCoords?.lat || 22.3562;
-          const lng = gpsCoords?.lng || 91.8398;
-
-          let deviceInfo = "Unknown Device";
-          if (typeof window !== "undefined" && window.navigator) {
-            const ua = window.navigator.userAgent;
-            if (ua.match(/Android/i)) {
-              const match = ua.match(/Android\s+([0-9\.]+);\s+([^;]+)\s+Build/);
-              deviceInfo = match ? `Android (${match[2].trim()})` : "Android Device";
-            } else if (ua.match(/iPhone/i)) {
-              deviceInfo = "Apple iPhone";
-            } else if (ua.match(/iPad/i)) {
-              deviceInfo = "Apple iPad";
-            } else if (ua.match(/Windows/i)) {
-              deviceInfo = "Windows PC";
-            } else if (ua.match(/Macintosh/i)) {
-              deviceInfo = "Apple Mac";
-            } else {
-              deviceInfo = "Mobile/Browser";
-            }
-          }
-
-          addDoc(collection(db, "civic_reports"), {
-            title: language === "en" ? "Emergency SOS Distress Alert" : "জরুরি এসওএস বিপদ সংকেত",
-            description: language === "en" 
-              ? "Emergency distress panic trigger initiated. GPS location is live." 
-              : "জরুরি বিপদ সংকেত বাটন চাপা হয়েছে। লাইভ জিপিএস লোকেশন সক্রিয়।",
-            category: "Emergency",
-            lat,
-            lng,
-            deviceInfo,
-            status: "pending",
-            userId: user?.uid || "anonymous",
-            userName: user?.displayName || user?.email || "Citizen User",
-            votes: 0,
-            upvotedBy: [],
-            createdAt: new Date().toISOString()
-          }).then((docRef) => {
-            console.log("SOS report logged in Firestore:", docRef.id);
-          }).catch(err => {
-            console.warn("Failed to log SOS report to Firestore:", err);
-          });
-        }
+        triggerDistressAlert();
       }
     }, 30);
-  }, [setSosActive, gpsCoords, user, language]);
+  }, [setSosActive, gpsCoords, user, userData, role, detectedWard, language]);
 
   // Stop hold
   const stopHold = useCallback(() => {
