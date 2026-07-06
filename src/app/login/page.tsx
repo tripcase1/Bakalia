@@ -7,7 +7,7 @@ import {
 import { useAppContext } from "@/context/AppContext";
 import { auth, db } from "@/lib/firebase";
 import { 
-  signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, 
+  signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult,
   RecaptchaVerifier, signInWithPhoneNumber, signOut, ConfirmationResult
 } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
@@ -45,6 +45,20 @@ export default function LoginPage() {
     } catch (err) {
       console.warn("Recaptcha verifier failed to load:", err);
     }
+  }, []);
+
+  // Handle Google redirect result on mobile
+  useEffect(() => {
+    getRedirectResult(auth).then(async (result) => {
+      if (!result) return;
+      const firebaseUser = result.user;
+      const userDoc = await getDoc(doc(db, "users", firebaseUser.uid));
+      const userRole = userDoc.exists() ? ((userDoc.data() as { role?: string }).role || "citizen") : "citizen";
+      if (checkAdminAndRedirect(firebaseUser.email, userRole)) return;
+      showToast(language === "en" ? "Signed in successfully!" : "সফলভাবে লগইন করা হয়েছে!", "success");
+      router.push(getRoleDashboard(userRole));
+    }).catch((err) => console.error("Redirect result error:", err));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -196,6 +210,11 @@ export default function LoginPage() {
 
     try {
       const provider = new GoogleAuthProvider();
+      const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+      if (isMobile) {
+        await signInWithRedirect(auth, provider);
+        return; // page redirects, result handled in useEffect above
+      }
       const userCredential = await signInWithPopup(auth, provider);
       const firebaseUser = userCredential.user;
 

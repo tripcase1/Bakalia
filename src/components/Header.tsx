@@ -9,6 +9,7 @@ import {
 import { useAppContext } from "@/context/AppContext";
 import { collection, onSnapshot, query, limit } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { useRouter } from "next/navigation";
 
 // Custom Mosque SVG Icon
 const MosqueIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -40,6 +41,7 @@ export default function Header() {
     triggerSOS, sosActive, sosCountdown
   } = useAppContext();
 
+  const router = useRouter();
   const [currentTime, setCurrentTime] = useState(new Date());
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [notifications, setNotifications] = useState<any[]>([]);
@@ -452,10 +454,12 @@ export default function Header() {
           const handleClick = (e: React.MouseEvent) => {
             if (tab.action === "profile") {
               e.preventDefault();
-              if (user) {
-                window.location.href = getDashboardPath(role);
+              if (user && role) {
+                router.push(getDashboardPath(role));
+              } else if (user && !role) {
+                router.push("/dashboard"); // fallback while role loads
               } else {
-                window.location.href = "/login";
+                router.push("/login");
               }
             }
           };
@@ -563,7 +567,10 @@ export default function Header() {
                   <div className="flex gap-2">
                     <a
                       href={getDashboardPath(role)}
-                      onClick={() => setIsMobileMenuOpen(false)}
+                      onClick={() => {
+                        setIsMobileMenuOpen(false);
+                        router.push(role ? getDashboardPath(role) : "/dashboard");
+                      }}
                       className="flex-1 py-2 text-center text-xs font-bold rounded-lg border border-slate-205 dark:border-slate-800 text-slate-705 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900 transition-all"
                     >
                       {language === "en" ? "Dashboard" : "ড্যাশবোর্ড"}

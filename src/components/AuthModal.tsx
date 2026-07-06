@@ -7,7 +7,9 @@ import {
   signInWithEmailAndPassword, 
   createUserWithEmailAndPassword, 
   sendPasswordResetEmail,
-  signInWithPopup, 
+  signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   GoogleAuthProvider,
   RecaptchaVerifier,
   signInWithPhoneNumber,
@@ -44,6 +46,27 @@ export default function AuthModal() {
     setSuccessMsg("");
     setConfirmationResult(null);
   }, [authMode, authMethod, showAuthModal]);
+
+  // Handle Google redirect result on mobile
+  useEffect(() => {
+    getRedirectResult(auth).then(async (result) => {
+      if (!result) return;
+      const userDocRef = doc(db, "users", result.user.uid);
+      const userDoc = await getDoc(userDocRef);
+      if (!userDoc.exists()) {
+        await setDoc(userDocRef, {
+          uid: result.user.uid,
+          name: result.user.displayName || "Google User",
+          phone: result.user.phoneNumber || "",
+          email: result.user.email || "",
+          role: "citizen",
+          createdAt: new Date().toISOString()
+        });
+      }
+      setShowAuthModal(false);
+    }).catch((err) => console.error("Redirect result error:", err));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Clean recaptcha on unmount
   useEffect(() => {
@@ -96,6 +119,11 @@ export default function AuthModal() {
     setErrorMsg("");
     try {
       const provider = new GoogleAuthProvider();
+      const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+      if (isMobile) {
+        await signInWithRedirect(auth, provider);
+        return; // page will redirect, result handled in useEffect
+      }
       const userCredential = await signInWithPopup(auth, provider);
       const userDocRef = doc(db, "users", userCredential.user.uid);
       const userDoc = await getDoc(userDocRef);
