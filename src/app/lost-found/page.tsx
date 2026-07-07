@@ -325,7 +325,7 @@ export default function LostFoundPage() {
                     <p className="text-[10px] text-slate-500 dark:text-[#859798] mt-1.5 leading-snug line-clamp-2">{item.description}</p>
                     
                     {item.imageUrl && (
-                      <img src={item.imageUrl} alt={item.title} className="w-full h-32 object-cover rounded-lg border mt-3 bg-slate-50" />
+                      <img src={item.imageUrl} alt={item.title} className="w-full h-32 object-cover rounded-lg border mt-3 bg-slate-50" loading="lazy" />
                     )}
                   </div>
 

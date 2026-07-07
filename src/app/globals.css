@@ -37,10 +37,6 @@ body {
   font-family: var(--font-geist-sans), var(--font-bangla), system-ui, sans-serif;
 }
 
-/* Ensure text is always visible — fix invisible text from non-existent Tailwind shades */
-p, span, h1, h2, h3, h4, h5, h6, label, li, td, th, a, button {
-  color: inherit;
-}
 
 /* When language is Bangla, prioritize the Bangla font stack globally */
 html[lang="bn"],

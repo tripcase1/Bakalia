@@ -476,6 +476,7 @@ export default function ComplaintsPage() {
                           src={rep.imageUrl} 
                           alt={rep.title} 
                           className="w-16 h-16 object-cover rounded-lg border shrink-0 bg-slate-50"
+                          loading="lazy"
                         />
                       )}
                       <div className="min-w-0 flex-1">
@@ -553,6 +554,7 @@ export default function ComplaintsPage() {
                   src={selectedReport.imageUrl} 
                   alt="Attachment" 
                   className="w-full h-40 object-cover rounded-lg border bg-slate-100" 
+                  loading="lazy"
                 />
               )}
             </div>

@@ -379,7 +379,7 @@ export default function HouseRentPage() {
                 <div key={prop.id} className="bg-white dark:bg-[#01205B] border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm overflow-hidden flex flex-col justify-between hover:shadow-md transition-all">
                   
                   {prop.imageUrl ? (
-                    <img src={prop.imageUrl} alt={prop.title} className="w-full h-40 object-cover bg-slate-55" />
+                    <img src={prop.imageUrl} alt={prop.title} className="w-full h-40 object-cover bg-slate-55" loading="lazy" />
                   ) : (
                     <div className="w-full h-40 bg-slate-100 dark:bg-slate-800/40 flex items-center justify-center text-slate-400 dark:text-slate-650">
                       <HomeIcon className="w-8 h-8" />
