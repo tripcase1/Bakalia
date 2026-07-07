@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { 
   ChevronRight, AlertTriangle, Phone, Shield, Flame, Hospital, 
-  User, MapPin, Compass, Locate, CheckCircle, Navigation, Radio, Info
+  User, MapPin, Compass, Locate, Radio, Info, Heart
 } from "lucide-react";
 import { useAppContext } from "@/context/AppContext";
 
@@ -64,17 +64,13 @@ export default function EmergencyPage() {
   const selectedWardKey = getWardKey(activeWard);
   const currentWardData = wardData[selectedWardKey];
 
+  const priorityHotlines = [
+    { name: language === "en" ? "National Emergency Desk" : "জাতীয় জরুরি সেবা", phone: "999", desc: language === "en" ? "Police, Fire, Ambulance" : "পুলিশ, ফায়ার সার্ভিস, অ্যাম্বুলেন্স", color: "from-rose-600 to-red-500 shadow-red-500/25" },
+    { name: language === "en" ? "Government Helpline" : "সরকারি তথ্য ও সেবা", phone: "333", desc: language === "en" ? "Info, Social Services, Relief" : "নাগরিক সেবা ও তথ্য হেল্পলাইন", color: "from-blue-600 to-indigo-500 shadow-blue-500/25" },
+    { name: language === "en" ? "Legal Aid Helpline" : "সরকারি আইনি সহায়তা", phone: "16430", desc: language === "en" ? "Legal Aid & Rights Services" : "বিনামূল্যে আইনি পরামর্শ ও সহায়তা", color: "from-amber-600 to-yellow-500 shadow-amber-500/25" }
+  ];
+
   const emergencyContacts = [
-    {
-      category: language === "en" ? "National Help Desk" : "জাতীয় জরুরি সেবা",
-      icon: AlertTriangle,
-      color: "text-rose-500 bg-rose-50 dark:bg-rose-500/10 dark:text-rose-400 border border-rose-100 dark:border-rose-900/20",
-      list: [
-        { name: language === "en" ? "National Emergency Service" : "জাতীয় হেল্প ডেস্ক", phone: "999" },
-        { name: language === "en" ? "Government Information Helpline" : "তথ্য ও সেবা", phone: "333" },
-        { name: language === "en" ? "Citizen Rights & Legal Aid" : "আইনি সহায়তা", phone: "16430" }
-      ]
-    },
     {
       category: language === "en" ? "Bakalia Thana Police" : "থানা পুলিশ কন্ট্যাক্ট",
       icon: Shield,
@@ -115,11 +111,11 @@ export default function EmergencyPage() {
         <span className="text-slate-800 dark:text-white font-extrabold">{t("emergency")}</span>
       </div>
 
-      <div className="max-w-4xl mx-auto space-y-6">
+      <div className="max-w-4xl mx-auto space-y-7">
         
         {/* Gorgeous Header Banner */}
-        <div className="relative rounded-3xl overflow-hidden bg-gradient-to-br from-red-700 to-rose-900 p-6 sm:p-8 text-white shadow-xl">
-          <div className="absolute top-0 right-0 p-6 opacity-10 shrink-0">
+        <div className="relative rounded-3xl overflow-hidden bg-gradient-to-br from-red-700 to-rose-950 p-6 sm:p-8 text-white shadow-xl">
+          <div className="absolute top-0 right-0 p-6 opacity-10 shrink-0 select-none pointer-events-none">
             <Radio className="w-40 h-40 animate-pulse text-white" />
           </div>
           <div className="relative z-10 max-w-lg space-y-3.5">
@@ -135,6 +131,44 @@ export default function EmergencyPage() {
                 ? "Locate your nearest ward authority, report civic incidents, or dial regional response outposts with a single tap."
                 : "জিপিএস লোকেশনের মাধ্যমে আপনার ওয়ার্ডের কাউন্সিলর, পুলিশ ও ফায়ার স্টেশনের সাথে সরাসরি ওয়ান-ট্যাপে যোগাযোগ করুন।"}
             </p>
+          </div>
+        </div>
+
+        {/* ==================== 24/7 PRIORITY HOTLINE WIDGETS ==================== */}
+        <div className="space-y-3">
+          <div className="flex items-center gap-2 px-1">
+            <Radio className="w-4 h-4 text-rose-500 animate-pulse" />
+            <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-tight">
+              {language === "en" ? "24/7 Priority Hotlines" : "২৪/৭ জরুরি হটলাইনসমূহ"}
+            </h3>
+          </div>
+
+          <div className="grid sm:grid-cols-3 gap-4">
+            {priorityHotlines.map((hotline, idx) => (
+              <div 
+                key={idx} 
+                className={`relative overflow-hidden rounded-2xl p-5 bg-gradient-to-tr ${hotline.color} text-white shadow-lg flex flex-col justify-between space-y-4`}
+              >
+                <div className="space-y-1.5">
+                  <span className="block text-[8px] uppercase tracking-wider font-extrabold text-white/70">{hotline.name}</span>
+                  <span className="block text-[9.5px] font-bold text-white/90 leading-tight">{hotline.desc}</span>
+                </div>
+
+                {/* Call Button Directly Beside Phone Number */}
+                <div className="flex items-center justify-between bg-white/10 backdrop-blur-md rounded-xl p-2.5 border border-white/10">
+                  <span className="text-2xl font-black tracking-widest font-mono text-white leading-none">
+                    {hotline.phone}
+                  </span>
+                  <a 
+                    href={`tel:${hotline.phone}`}
+                    className="w-10 h-10 rounded-full bg-white hover:bg-slate-50 text-red-650 flex items-center justify-center shadow-lg active:scale-90 transition-all shrink-0"
+                    title={`Call ${hotline.phone}`}
+                  >
+                    <Phone className="w-4.5 h-4.5 text-rose-600 animate-pulse" />
+                  </a>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
 
@@ -202,7 +236,7 @@ export default function EmergencyPage() {
         {/* Dynamic Area Response Unit (Auto-selected based on Ward) */}
         <div className="space-y-3">
           <div className="flex items-center gap-2 px-1">
-            <Radio className="w-4 h-4 text-red-500 animate-pulse" />
+            <Radio className="w-4 h-4 text-emerald-500 animate-pulse" />
             <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-tight">
               {language === "en" 
                 ? `Local Responders (Ward ${selectedWardKey} Optimized)` 
@@ -213,11 +247,11 @@ export default function EmergencyPage() {
           <div className="grid sm:grid-cols-3 gap-4">
             
             {/* Councilor Card */}
-            <div className="p-4 bg-gradient-to-br from-white to-slate-50 dark:from-[#01205B] dark:to-[#04142F] border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm flex flex-col justify-between space-y-4 hover:border-slate-300 dark:hover:border-slate-700 transition-all group">
+            <div className="p-5 bg-gradient-to-br from-white to-slate-50 dark:from-[#01205B] dark:to-[#04142F] border border-slate-200 dark:border-slate-850 rounded-3xl shadow-sm flex flex-col justify-between space-y-4 hover:border-blue-400/30 dark:hover:border-blue-800/40 transition-all duration-300 group">
               <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-500/10 text-blue-500 flex items-center justify-center shrink-0">
-                    <User className="w-4.5 h-4.5" />
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-500/10 text-blue-500 flex items-center justify-center shrink-0">
+                    <User className="w-5 h-5" />
                   </div>
                   <div>
                     <span className="block text-[8px] uppercase tracking-wider font-extrabold text-blue-500">{language === "en" ? "Ward Councilor" : "ওয়ার্ড কাউন্সিলর"}</span>
@@ -225,25 +259,37 @@ export default function EmergencyPage() {
                   </div>
                 </div>
                 <div className="space-y-1">
-                  <span className="block text-[9px] text-slate-400 dark:text-slate-500 font-bold leading-tight">{currentWardData.address}</span>
-                  <span className="block text-[10px] font-mono font-bold text-slate-650 dark:text-slate-350">{currentWardData.councilorPhone}</span>
+                  <span className="block text-[9px] text-slate-400 dark:text-slate-500 font-bold leading-tight flex items-center gap-1">
+                    <MapPin className="w-3.5 h-3.5 text-slate-450 shrink-0" />
+                    {currentWardData.address}
+                  </span>
                 </div>
               </div>
-              <a 
-                href={`tel:${currentWardData.councilorPhone}`}
-                className="w-full py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 active:scale-[0.97] transition-all text-white text-xs font-black rounded-xl shadow-md shadow-blue-500/10 flex items-center justify-center gap-1.5"
-              >
-                <Phone className="w-3.5 h-3.5 text-blue-100" />
-                <span>{language === "en" ? "Call Councilor" : "কাউন্সিলরকে কল করুন"}</span>
-              </a>
+
+              {/* Call Button Directly Beside Phone Number */}
+              <div className="flex items-center justify-between p-2.5 bg-blue-50/50 dark:bg-blue-950/20 border border-blue-100/50 dark:border-blue-900/10 rounded-2xl">
+                <div className="min-w-0">
+                  <span className="block text-[8px] uppercase font-extrabold tracking-wider text-slate-400 dark:text-slate-500 leading-none mb-0.5">{language === "en" ? "Contact Number" : "যোগাযোগ নম্বর"}</span>
+                  <span className="block text-xs font-mono font-black text-slate-800 dark:text-slate-200 truncate pr-1">
+                    {currentWardData.councilorPhone}
+                  </span>
+                </div>
+                <a 
+                  href={`tel:${currentWardData.councilorPhone}`}
+                  className="w-9 h-9 rounded-full bg-blue-600 hover:bg-blue-500 text-white flex items-center justify-center active:scale-90 transition-all shrink-0 shadow-md shadow-blue-500/15"
+                  title="Call Councilor"
+                >
+                  <Phone className="w-4 h-4 text-blue-100" />
+                </a>
+              </div>
             </div>
 
             {/* Local Precinct Outpost */}
-            <div className="p-4 bg-gradient-to-br from-white to-slate-50 dark:from-[#01205B] dark:to-[#04142F] border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm flex flex-col justify-between space-y-4 hover:border-slate-300 dark:hover:border-slate-700 transition-all group">
+            <div className="p-5 bg-gradient-to-br from-white to-slate-50 dark:from-[#01205B] dark:to-[#04142F] border border-slate-200 dark:border-slate-850 rounded-3xl shadow-sm flex flex-col justify-between space-y-4 hover:border-purple-400/30 dark:hover:border-purple-800/40 transition-all duration-300 group">
               <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-xl bg-purple-50 dark:bg-purple-500/10 text-purple-500 flex items-center justify-center shrink-0">
-                    <Shield className="w-4.5 h-4.5" />
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-xl bg-purple-50 dark:bg-purple-500/10 text-purple-500 flex items-center justify-center shrink-0">
+                    <Shield className="w-5 h-5" />
                   </div>
                   <div>
                     <span className="block text-[8px] uppercase tracking-wider font-extrabold text-purple-500">{language === "en" ? "Local Precinct" : "পুলিশ আউটপোস্ট"}</span>
@@ -251,43 +297,67 @@ export default function EmergencyPage() {
                   </div>
                 </div>
                 <div className="space-y-1">
-                  <span className="block text-[9px] text-slate-400 dark:text-slate-500 font-bold leading-tight">{language === "en" ? "Nearest Police Outpost Box" : "নিকটবর্তী পুলিশ তদন্ত কেন্দ্র"}</span>
-                  <span className="block text-[10px] font-mono font-bold text-slate-650 dark:text-slate-350">{currentWardData.precinctPhone}</span>
+                  <span className="block text-[9px] text-slate-400 dark:text-slate-500 font-bold leading-tight flex items-center gap-1">
+                    <MapPin className="w-3.5 h-3.5 text-slate-450 shrink-0" />
+                    {language === "en" ? "Nearest Outpost Box" : "নিকটবর্তী তদন্ত ফাঁড়ি"}
+                  </span>
                 </div>
               </div>
-              <a 
-                href={`tel:${currentWardData.precinctPhone}`}
-                className="w-full py-2.5 bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-500 hover:to-violet-500 active:scale-[0.97] transition-all text-white text-xs font-black rounded-xl shadow-md shadow-purple-500/10 flex items-center justify-center gap-1.5"
-              >
-                <Phone className="w-3.5 h-3.5 text-purple-100" />
-                <span>{language === "en" ? "Call Outpost" : "ফাঁড়িতে কল করুন"}</span>
-              </a>
+
+              {/* Call Button Directly Beside Phone Number */}
+              <div className="flex items-center justify-between p-2.5 bg-purple-50/50 dark:bg-purple-950/20 border border-purple-100/50 dark:border-purple-900/10 rounded-2xl">
+                <div className="min-w-0">
+                  <span className="block text-[8px] uppercase font-extrabold tracking-wider text-slate-400 dark:text-slate-500 leading-none mb-0.5">{language === "en" ? "Duty Desk" : "ডিউটি ডেস্ক"}</span>
+                  <span className="block text-xs font-mono font-black text-slate-800 dark:text-slate-200 truncate pr-1">
+                    {currentWardData.precinctPhone}
+                  </span>
+                </div>
+                <a 
+                  href={`tel:${currentWardData.precinctPhone}`}
+                  className="w-9 h-9 rounded-full bg-purple-600 hover:bg-purple-500 text-white flex items-center justify-center active:scale-90 transition-all shrink-0 shadow-md shadow-purple-500/15"
+                  title="Call Precinct"
+                >
+                  <Phone className="w-4 h-4 text-purple-100" />
+                </a>
+              </div>
             </div>
 
             {/* Local Ward Clinic */}
-            <div className="p-4 bg-gradient-to-br from-white to-slate-50 dark:from-[#01205B] dark:to-[#04142F] border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm flex flex-col justify-between space-y-4 hover:border-slate-300 dark:hover:border-slate-700 transition-all group">
+            <div className="p-5 bg-gradient-to-br from-white to-slate-50 dark:from-[#01205B] dark:to-[#04142F] border border-slate-200 dark:border-slate-850 rounded-3xl shadow-sm flex flex-col justify-between space-y-4 hover:border-emerald-400/30 dark:hover:border-emerald-800/40 transition-all duration-300 group">
               <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 text-emerald-500 flex items-center justify-center shrink-0">
-                    <Hospital className="w-4.5 h-4.5" />
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 text-emerald-500 flex items-center justify-center shrink-0">
+                    <Hospital className="w-5 h-5" />
                   </div>
                   <div>
-                    <span className="block text-[8px] uppercase tracking-wider font-extrabold text-emerald-500">{language === "en" ? "Medical Desk" : "নিকটস্থ ক্লিনিক ও জরুরি ডেস্ক"}</span>
+                    <span className="block text-[8px] uppercase tracking-wider font-extrabold text-emerald-500">{language === "en" ? "Medical Desk" : "স্বাস্থ্য ও চিকিৎসা ডেস্ক"}</span>
                     <span className="block text-xs font-black text-slate-850 dark:text-white group-hover:text-emerald-500 dark:group-hover:text-[#0CA671] transition-colors">{currentWardData.clinic}</span>
                   </div>
                 </div>
                 <div className="space-y-1">
-                  <span className="block text-[9px] text-slate-400 dark:text-slate-500 font-bold leading-tight">{language === "en" ? "Primary healthcare medical outpost" : "প্রাথমিক চিকিৎসা সেবা ডেস্ক ও কন্ট্যাক্ট"}</span>
-                  <span className="block text-[10px] font-mono font-bold text-slate-650 dark:text-slate-350">{currentWardData.clinicPhone}</span>
+                  <span className="block text-[9px] text-slate-400 dark:text-slate-500 font-bold leading-tight flex items-center gap-1">
+                    <Heart className="w-3.5 h-3.5 text-slate-455 shrink-0" />
+                    {language === "en" ? "Primary Health Unit Office" : "ওয়ার্ড স্বাস্থ্যসেবা কার্যালয়"}
+                  </span>
                 </div>
               </div>
-              <a 
-                href={`tel:${currentWardData.clinicPhone}`}
-                className="w-full py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 active:scale-[0.97] transition-all text-white text-xs font-black rounded-xl shadow-md shadow-emerald-500/10 flex items-center justify-center gap-1.5"
-              >
-                <Phone className="w-3.5 h-3.5 text-emerald-100" />
-                <span>{language === "en" ? "Call Clinic Desk" : "ক্লিনিকে কল করুন"}</span>
-              </a>
+
+              {/* Call Button Directly Beside Phone Number */}
+              <div className="flex items-center justify-between p-2.5 bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-100/50 dark:border-emerald-900/10 rounded-2xl">
+                <div className="min-w-0">
+                  <span className="block text-[8px] uppercase font-extrabold tracking-wider text-slate-400 dark:text-slate-500 leading-none mb-0.5">{language === "en" ? "Ambulance/Desk" : "অ্যাম্বুলেন্স/ডেস্ক"}</span>
+                  <span className="block text-xs font-mono font-black text-slate-800 dark:text-slate-200 truncate pr-1">
+                    {currentWardData.clinicPhone}
+                  </span>
+                </div>
+                <a 
+                  href={`tel:${currentWardData.clinicPhone}`}
+                  className="w-9 h-9 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white flex items-center justify-center active:scale-90 transition-all shrink-0 shadow-md shadow-emerald-500/15"
+                  title="Call Clinic Desk"
+                >
+                  <Phone className="w-4 h-4 text-emerald-100" />
+                </a>
+              </div>
             </div>
 
           </div>
@@ -318,20 +388,26 @@ export default function EmergencyPage() {
                     {cat.list.map((contact, cIdx) => (
                       <div 
                         key={cIdx} 
-                        className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50/70 dark:bg-[#04142F]/50 border border-slate-100/50 dark:border-slate-800/20 group hover:border-slate-350/20 hover:bg-slate-50 dark:hover:bg-[#04142F]/80 transition-all duration-200"
+                        className="flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-2xl bg-slate-50/70 dark:bg-[#04142F]/50 border border-slate-100/50 dark:border-slate-800/20 group hover:border-slate-300/30 hover:bg-slate-50 dark:hover:bg-[#04142F]/80 transition-all duration-200 gap-3"
                       >
-                        <div className="min-w-0 pr-2">
-                          <span className="block text-[10.5px] font-black text-slate-800 dark:text-slate-300 leading-tight group-hover:text-blue-600 dark:group-hover:text-[#4A89DA] transition-colors">{contact.name}</span>
-                          <span className="block text-[9.5px] text-slate-400 dark:text-slate-500 font-mono mt-1 leading-none font-bold">{contact.phone}</span>
+                        <div className="min-w-0">
+                          <span className="block text-[10.5px] font-black text-slate-850 dark:text-slate-300 leading-tight group-hover:text-blue-600 dark:group-hover:text-[#4A89DA] transition-colors">{contact.name}</span>
+                          <span className="block text-[8px] uppercase tracking-wider font-extrabold text-slate-400 dark:text-slate-500 mt-1 leading-none">24/7 Hotline Support</span>
                         </div>
                         
-                        <a 
-                          href={`tel:${contact.phone}`}
-                          className="px-4 py-2 bg-white dark:bg-[#01205B] hover:bg-red-50 dark:hover:bg-red-550/15 border border-slate-200 dark:border-slate-800 rounded-2xl text-[10.5px] font-black text-slate-700 dark:text-slate-200 hover:text-red-650 hover:border-red-200 dark:hover:text-red-400 dark:hover:border-red-950/40 transition-all flex items-center gap-1 active:scale-95 shadow-sm"
-                        >
-                          <Phone className="w-3.5 h-3.5 text-red-500" />
-                          <span>{language === "en" ? "Call" : "কল করুন"}</span>
-                        </a>
+                        {/* Call Button Directly Beside Phone Number */}
+                        <div className="flex items-center justify-between bg-white dark:bg-[#01205B] border border-slate-200 dark:border-slate-800 px-3 py-1.5 rounded-xl gap-3 sm:w-auto w-full">
+                          <span className="text-[11px] font-mono font-black text-slate-800 dark:text-slate-250 leading-none">
+                            {contact.phone}
+                          </span>
+                          <a 
+                            href={`tel:${contact.phone}`}
+                            className="w-8.5 h-8.5 rounded-full bg-red-600 hover:bg-red-500 text-white flex items-center justify-center shadow-md active:scale-90 transition-all shrink-0"
+                            title={`Call ${contact.name}`}
+                          >
+                            <Phone className="w-3.5 h-3.5 text-white" />
+                          </a>
+                        </div>
                       </div>
                     ))}
                   </div>

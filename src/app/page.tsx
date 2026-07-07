@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { useAppContext } from "@/context/AppContext";
 import { getPrayerTimes, getNextPrayer, PrayerTimes } from "@/lib/prayerTimes";
+import { useRouter } from "next/navigation";
 
 // Custom Mosque SVG Icon matching the design aesthetics
 const MosqueIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -76,6 +77,7 @@ const TrophyVector = () => (
 );
 
 export default function HomePage() {
+  const router = useRouter();
   const { theme, language, toggleTheme, setLanguage, t } = useAppContext();
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -480,13 +482,8 @@ export default function HomePage() {
                 <div 
                   key={idx} 
                   onClick={() => {
-                    if (item.key === "emergencyServices") {
-                      alert(language === "en" 
-                        ? "Emergency Helplines:\n- National Help Desk: 999\n- Fire Service: +880-31-713356\n- Ambulance: +880-31-2521526" 
-                        : "জরুরি হেল্পলাইন নম্বরসমূহ:\n- জাতীয় জরুরি সেবা: ৯৯৯\n- ফায়ার সার্ভিস: +৮৮০-৩১-৭১৩৩৫৬\n- অ্যাম্বুলেন্স: +৮৮০-৩১-২৫২১৫২৬"
-                      );
-                    } else if (item.key === "policeHelp") {
-                      alert(language === "en" ? "Connecting to Thana Police Help desk..." : "থানা পুলিশ হেল্প ডেস্কে সংযোগ করা হচ্ছে...");
+                    if (item.key === "emergencyServices" || item.key === "policeHelp") {
+                      router.push("/emergency");
                     } else {
                       setAuthMode("login");
                       setShowAuthModal(true);
