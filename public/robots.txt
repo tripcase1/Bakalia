@@ -1,0 +1,34 @@
+User-agent: *
+Allow: /
+
+# Block system/private paths
+Disallow: /admin/
+Disallow: /dashboard/
+Disallow: /moderator/
+Disallow: /editor/
+Disallow: /complete-profile/
+Disallow: /api/
+Disallow: /_next/
+Disallow: /login
+Disallow: /register
+
+# Allow important public paths explicitly
+Allow: /about
+Allow: /services
+Allow: /emergency
+Allow: /mosque
+Allow: /police
+Allow: /blood
+Allow: /volunteer
+Allow: /house-rent
+Allow: /lost-found
+Allow: /business
+Allow: /jobs
+Allow: /events
+Allow: /complaints
+Allow: /council
+Allow: /map
+Allow: /news/
+
+Sitemap: https://bakalia.xyz/sitemap.xml
+Sitemap: https://bakalia.xyz/news-sitemap.xml

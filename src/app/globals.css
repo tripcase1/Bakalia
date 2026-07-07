@@ -126,3 +126,75 @@ html[lang="bn"] a {
   letter-spacing: 0.01em;
 }
 
+/* ===== CLS PREVENTION ===== */
+/* Reserve space for images to prevent layout shift */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Prevent invisible text during font load */
+@font-face {
+  font-display: swap;
+}
+
+/* ===== FAST LOADING SKELETON ANIMATION ===== */
+@keyframes skeleton-shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(148, 163, 184, 0.12) 25%,
+    rgba(148, 163, 184, 0.24) 50%,
+    rgba(148, 163, 184, 0.12) 75%
+  );
+  background-size: 800px 100%;
+  animation: skeleton-shimmer 1.4s infinite linear;
+  border-radius: 0.5rem;
+}
+
+/* ===== PAGE TRANSITION ===== */
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.35s ease forwards;
+}
+
+/* ===== MOBILE TOUCH OPTIMIZATION ===== */
+/* Prevent 300ms tap delay on mobile */
+a, button, [role="button"] {
+  touch-action: manipulation;
+}
+
+/* Improve tap target sizes on mobile */
+@media (max-width: 640px) {
+  button, a {
+    min-height: 44px;
+  }
+}
+
+/* ===== CONTENT VISIBILITY OPTIMIZATION ===== */
+/* Defer rendering of off-screen sections */
+.cv-auto {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 400px;
+}
+
+/* ===== PRINT STYLES ===== */
+@media print {
+  .no-print { display: none !important; }
+  body { background: white; color: black; }
+}
+

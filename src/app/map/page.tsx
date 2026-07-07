@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import "leaflet/dist/leaflet.css";
 import { 
   ChevronRight, Map as MapIcon, ShieldAlert, Home as HomeIcon, Layers, Filter, Eye, RefreshCw
 } from "lucide-react";
