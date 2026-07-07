@@ -39,7 +39,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
     // Check 2FA for super admin
     if (adminEmail && user.email === adminEmail) {
-      const verified = localStorage.getItem("admin_2fa_verified");
+      const verified = sessionStorage.getItem("admin_2fa_verified");
       if (verified !== "true") {
         router.push("/login");
       }
@@ -69,7 +69,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#090D16] text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors duration-200">
+    <div className="min-h-screen bg-slate-50 dark:bg-[#090D16] text-slate-900 dark:text-slate-100 flex flex-col transition-colors duration-200">
       <div className="flex flex-1 relative md:overflow-hidden">
         <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
         

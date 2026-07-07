@@ -1,260 +1,279 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useAppContext } from "@/context/AppContext";
 import { db } from "@/lib/firebase";
-import { collection, onSnapshot } from "firebase/firestore";
-import { 
-  Users, Eye, Landmark, Activity, AlertTriangle, ShieldAlert, FileText, FileWarning, Droplet, ShoppingBag, Briefcase, Home, Calendar, HelpCircle, DollarSign,
-  TrendingUp, ArrowUpRight, Clock, CheckCircle
+import { collection, onSnapshot, query, orderBy, limit } from "firebase/firestore";
+import {
+  Users, Eye, Activity, AlertTriangle, ShieldAlert, FileText, FileWarning,
+  Droplet, Briefcase, Home, Calendar, TrendingUp, ArrowUpRight,
+  CheckCircle, Clock, Plus, RefreshCw, Flame, Search, ShoppingBag
 } from "lucide-react";
 
 export default function DashboardHome() {
-  const { language } = useAppContext();
+  const { language, user, userData } = useAppContext();
+  const router = useRouter();
+  const en = language === "en";
 
-  // Realtime counts states
   const [citizensCount, setCitizensCount] = useState(0);
-  const [onlineCount, setOnlineCount] = useState(7); // Live mock online
-  const [visitorsCount, setVisitorsCount] = useState(148); // Traffic mock
-  const [todayUsers, setTodayUsers] = useState(2); // Mock registrations today
-  
   const [openComplaints, setOpenComplaints] = useState(0);
   const [resolvedComplaints, setResolvedComplaints] = useState(0);
   const [sosAlerts, setSosAlerts] = useState(0);
   const [newsCount, setNewsCount] = useState(0);
   const [noticesCount, setNoticesCount] = useState(0);
-  const [bloodRequests, setBloodRequests] = useState(0);
-  const [listingsCount, setListingsCount] = useState(0);
-  const [jobsCount, setJobsCount] = useState(0);
+  const [bloodCount, setBloodCount] = useState(0);
   const [rentalsCount, setRentalsCount] = useState(0);
+  const [jobsCount, setJobsCount] = useState(0);
   const [eventsCount, setEventsCount] = useState(0);
+  const [lostFoundCount, setLostFoundCount] = useState(0);
+  const [marketplaceCount, setMarketplaceCount] = useState(0);
+  const [recentComplaints, setRecentComplaints] = useState<any[]>([]);
+  const [recentUsers, setRecentUsers] = useState<any[]>([]);
+  const [currentTime, setCurrentTime] = useState(new Date());
 
-  // Sync counts in realtime
   useEffect(() => {
-    // 1. Citizens count
-    const unsubUsers = onSnapshot(collection(db, "users"), (snap) => {
-      let citizens = 0;
-      snap.forEach(docSnap => {
-        if (docSnap.data()?.role === "citizen") citizens++;
-      });
-      setCitizensCount(citizens);
-      // Today users mock update based on snapshot size
-      setTodayUsers(Math.max(1, Math.floor(snap.size / 6)));
-    });
+    const t = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(t);
+  }, []);
 
-    // 2. Complaints (civic_reports)
-    const unsubComplaints = onSnapshot(collection(db, "civic_reports"), (snap) => {
-      let open = 0;
-      let resolved = 0;
-      let sosCount = 0;
-      snap.forEach(docSnap => {
-        const data = docSnap.data();
-        if (data?.category === "Emergency") {
-          sosCount++;
-        }
-        if (data?.status === "resolved") {
-          resolved++;
-        } else {
-          open++;
-        }
+  useEffect(() => {
+    const unsubs: (() => void)[] = [];
+
+    unsubs.push(onSnapshot(collection(db, "users"), (snap) => {
+      let c = 0;
+      snap.forEach(d => { if (d.data().role === "citizen") c++; });
+      setCitizensCount(c);
+    }));
+
+    unsubs.push(onSnapshot(collection(db, "civic_reports"), (snap) => {
+      let open = 0, resolved = 0, sos = 0;
+      snap.forEach(d => {
+        const data = d.data();
+        if (data.category?.toLowerCase() === "emergency") sos++;
+        if (data.status === "resolved") resolved++; else open++;
       });
       setOpenComplaints(open);
       setResolvedComplaints(resolved);
-      setSosAlerts(sosCount);
-    });
+      setSosAlerts(sos);
+    }));
 
-    // 3. Notices & news
-    const unsubNotices = onSnapshot(collection(db, "notices"), (snap) => setNoticesCount(snap.size));
-    const unsubNews = onSnapshot(collection(db, "news"), (snap) => setNewsCount(snap.size));
-    
-    // 4. Blood & Marketplace & Jobs & Rentals & Events
-    const unsubBlood = onSnapshot(collection(db, "blood_donors"), (snap) => setBloodRequests(snap.size));
-    const unsubMarket = onSnapshot(collection(db, "marketplace_items"), (snap) => setListingsCount(snap.size));
-    const unsubJobs = onSnapshot(collection(db, "jobs"), (snap) => setJobsCount(snap.size));
-    const unsubRentals = onSnapshot(collection(db, "listings"), (snap) => setRentalsCount(snap.size));
-    const unsubEvents = onSnapshot(collection(db, "events"), (snap) => setEventsCount(snap.size));
+    unsubs.push(onSnapshot(collection(db, "notices"), (snap) => setNoticesCount(snap.size)));
+    unsubs.push(onSnapshot(collection(db, "news"), (snap) => setNewsCount(snap.size)));
+    unsubs.push(onSnapshot(collection(db, "blood_donors"), (snap) => setBloodCount(snap.size)));
+    unsubs.push(onSnapshot(collection(db, "listings"), (snap) => setRentalsCount(snap.size)));
+    unsubs.push(onSnapshot(collection(db, "jobs"), (snap) => setJobsCount(snap.size)));
+    unsubs.push(onSnapshot(collection(db, "events"), (snap) => setEventsCount(snap.size)));
+    unsubs.push(onSnapshot(collection(db, "lost_found"), (snap) => setLostFoundCount(snap.size)));
+    unsubs.push(onSnapshot(collection(db, "marketplace_items"), (snap) => setMarketplaceCount(snap.size)));
 
-    return () => {
-      unsubUsers();
-      unsubComplaints();
-      unsubNotices();
-      unsubNews();
-      unsubBlood();
-      unsubMarket();
-      unsubJobs();
-      unsubRentals();
-      unsubEvents();
-    };
+    // Recent complaints (live feed)
+    const qComplaints = query(collection(db, "civic_reports"), orderBy("createdAt", "desc"), limit(5));
+    unsubs.push(onSnapshot(qComplaints, (snap) => {
+      setRecentComplaints(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    }));
+
+    // Recent users
+    const qUsers = query(collection(db, "users"), orderBy("createdAt", "desc"), limit(5));
+    unsubs.push(onSnapshot(qUsers, (snap) => {
+      setRecentUsers(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    }));
+
+    return () => unsubs.forEach(u => u());
   }, []);
 
   const kpis = [
-    { label: language === "en" ? "Today's Users" : "আজকের ব্যবহারকারী", value: todayUsers, icon: Users, change: "+12.5%", color: "text-blue-500 bg-blue-50 dark:bg-blue-950/20" },
-    { label: language === "en" ? "Today's Visitors" : "আজকের ভিজিটর", value: visitorsCount, icon: Eye, change: "+4.8%", color: "text-purple-500 bg-purple-50 dark:bg-purple-950/20" },
-    { label: language === "en" ? "Active Citizens" : "সক্রিয় নাগরিকবৃন্দ", value: citizensCount, icon: Landmark, change: "+2.1%", color: "text-emerald-500 bg-emerald-50 dark:bg-emerald-950/20" },
-    { label: language === "en" ? "Online Sessions" : "অনলাইন সেশন", value: onlineCount, icon: Activity, change: "Live", color: "text-rose-500 bg-rose-50 dark:bg-rose-950/20" }
+    { label: en ? "Registered Citizens" : "নিবন্ধিত নাগরিক", value: citizensCount, icon: Users, color: "text-blue-600 bg-blue-50 dark:text-blue-400 dark:bg-blue-950/20", change: "+2.1%", tab: "users_citizens" },
+    { label: en ? "Open Complaints" : "চলতি অভিযোগ", value: openComplaints, icon: AlertTriangle, color: "text-amber-600 bg-amber-50 dark:text-amber-400 dark:bg-amber-950/20", change: "Pending", tab: "complaints" },
+    { label: en ? "Resolved" : "নিষ্পত্তিকৃত", value: resolvedComplaints, icon: CheckCircle, color: "text-emerald-600 bg-emerald-50 dark:text-emerald-400 dark:bg-emerald-950/20", change: "+18%", tab: "complaints" },
+    { label: en ? "SOS Alerts" : "জরুরি সংকেত", value: sosAlerts, icon: Flame, color: "text-red-600 bg-red-50 dark:text-red-400 dark:bg-red-950/20", change: "Live", tab: "sos" },
   ];
 
-  const sections = [
-    {
-      title: language === "en" ? "Civic Operations & Safety" : "নাগরিক সেবা ও নিরাপত্তা",
-      cards: [
-        { label: language === "en" ? "Open Complaints" : "চলতি অভিযোগ", value: openComplaints, icon: AlertTriangle, desc: "Pending resolution", color: "text-amber-500 border-amber-100 dark:border-amber-950/20 bg-amber-50/10" },
-        { label: language === "en" ? "Resolved Complaints" : "নিষ্পত্তিকৃত অভিযোগ", value: resolvedComplaints, icon: CheckCircle, desc: "Successfully resolved", color: "text-emerald-500 border-emerald-100 dark:border-emerald-950/20 bg-emerald-50/10" },
-        { label: language === "en" ? "Emergency Alerts (SOS)" : "জরুরি সংকেত (এসওএস)", value: sosAlerts, icon: ShieldAlert, desc: "Active SOS alarms", color: "text-red-500 border-red-100 dark:border-red-950/20 bg-red-50/10" }
-      ]
-    },
-    {
-      title: language === "en" ? "Content & Communication" : "যোগাযোগ ও তথ্য প্রকাশ",
-      cards: [
-        { label: language === "en" ? "News Published" : "প্রকাশিত সংবাদ", value: newsCount, icon: FileText, desc: "CMS portal news articles", color: "text-sky-500 border-sky-100 dark:border-sky-950/20 bg-sky-50/10" },
-        { label: language === "en" ? "Police Notices" : "পুলিশ নোটিশ", value: noticesCount, icon: FileWarning, desc: "Thana alerts & bulletins", color: "text-indigo-500 border-indigo-100 dark:border-indigo-950/20 bg-indigo-50/10" },
-        { label: language === "en" ? "Blood Requests" : "রক্তদান অনুরোধ", value: bloodRequests, icon: Droplet, desc: "Active donors requests", color: "text-rose-500 border-rose-100 dark:border-rose-950/20 bg-rose-50/10" },
-        { label: language === "en" ? "Events Scheduled" : "পরিকল্পিত ইভেন্ট", value: eventsCount, icon: Calendar, desc: "Active community events", color: "text-teal-500 border-teal-100 dark:border-teal-950/20 bg-teal-50/10" }
-      ]
-    },
-    {
-      title: language === "en" ? "Marketplace & Listings" : "মার্কেটপ্লেস ও শ্রেণীবদ্ধ বিজ্ঞাপন",
-      cards: [
-        { label: language === "en" ? "Marketplace Items" : "মার্কেটপ্লেস পণ্য", value: listingsCount, icon: ShoppingBag, desc: "Citizen product listings", color: "text-blue-500 border-blue-100 dark:border-blue-950/20 bg-blue-50/10" },
-        { label: language === "en" ? "Rental Listings" : "বাসা ভাড়া বিজ্ঞাপন", value: rentalsCount, icon: Home, desc: "Properties advertisements", color: "text-violet-500 border-violet-100 dark:border-violet-950/20 bg-violet-50/10" },
-        { label: language === "en" ? "Jobs Available" : "কর্মসংস্থান সুযোগ", value: jobsCount, icon: Briefcase, desc: "Local jobs openings", color: "text-pink-500 border-pink-100 dark:border-pink-950/20 bg-pink-50/10" }
-      ]
-    }
+  const modules = [
+    { label: en ? "News" : "সংবাদ", value: newsCount, icon: FileText, color: "text-sky-600 bg-sky-50 dark:text-sky-400 dark:bg-sky-950/20", tab: "news" },
+    { label: en ? "Notices" : "নোটিশ", value: noticesCount, icon: FileWarning, color: "text-indigo-600 bg-indigo-50 dark:text-indigo-400 dark:bg-indigo-950/20", tab: "notices" },
+    { label: en ? "Blood Donors" : "রক্তদাতা", value: bloodCount, icon: Droplet, color: "text-rose-600 bg-rose-50 dark:text-rose-400 dark:bg-rose-950/20", tab: "donors" },
+    { label: en ? "Rentals" : "বাসা ভাড়া", value: rentalsCount, icon: Home, color: "text-violet-600 bg-violet-50 dark:text-violet-400 dark:bg-violet-950/20", tab: "rentals" },
+    { label: en ? "Jobs" : "চাকরি", value: jobsCount, icon: Briefcase, color: "text-pink-600 bg-pink-50 dark:text-pink-400 dark:bg-pink-950/20", tab: "jobs" },
+    { label: en ? "Events" : "ইভেন্ট", value: eventsCount, icon: Calendar, color: "text-teal-600 bg-teal-50 dark:text-teal-400 dark:bg-teal-950/20", tab: "events" },
+    { label: en ? "Lost & Found" : "হারানো", value: lostFoundCount, icon: Search, color: "text-orange-600 bg-orange-50 dark:text-orange-400 dark:bg-orange-950/20", tab: "lostfound" },
+    { label: en ? "Marketplace" : "মার্কেটপ্লেস", value: marketplaceCount, icon: ShoppingBag, color: "text-cyan-600 bg-cyan-50 dark:text-cyan-400 dark:bg-cyan-950/20", tab: "marketplace" },
   ];
+
+  const quickActions = [
+    { label: en ? "Publish News" : "সংবাদ প্রকাশ", tab: "news", icon: FileText, color: "bg-sky-600 hover:bg-sky-700" },
+    { label: en ? "Post Notice" : "নোটিশ প্রকাশ", tab: "notices", icon: FileWarning, color: "bg-indigo-600 hover:bg-indigo-700" },
+    { label: en ? "Manage Users" : "ব্যবহারকারী", tab: "users_citizens", icon: Users, color: "bg-blue-600 hover:bg-blue-700" },
+    { label: en ? "View SOS" : "SOS দেখুন", tab: "sos", icon: Flame, color: "bg-red-600 hover:bg-red-700" },
+  ];
+
+  const getStatusBadge = (status: string) => {
+    if (status === "resolved") return <span className="px-1.5 py-0.5 rounded text-[8px] font-black bg-emerald-50 text-emerald-600 dark:bg-emerald-950/20 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/20">Resolved</span>;
+    if (status === "in_progress") return <span className="px-1.5 py-0.5 rounded text-[8px] font-black bg-blue-50 text-blue-600 dark:bg-blue-950/20 dark:text-blue-400 border border-blue-100 dark:border-blue-900/20">In Progress</span>;
+    return <span className="px-1.5 py-0.5 rounded text-[8px] font-black bg-amber-50 text-amber-600 dark:bg-amber-950/20 dark:text-amber-400 border border-amber-100 dark:border-amber-900/20">Pending</span>;
+  };
+
+  const adminName = (userData as any)?.displayName || user?.displayName || user?.email?.split("@")[0] || "Admin";
+  const hour = currentTime.getHours();
+  const greeting = hour < 12 ? (en ? "Good Morning" : "শুভ সকাল") : hour < 17 ? (en ? "Good Afternoon" : "শুভ বিকাল") : (en ? "Good Evening" : "শুভ সন্ধ্যা");
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-300">
-      {/* Title */}
-      <div className="leading-tight">
-        <h2 className="text-xl font-black tracking-tight text-slate-900 dark:text-white">
-          {language === "en" ? "Dashboard Overview" : "ড্যাশবোর্ড ওভারভিউ"}
-        </h2>
-        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-          {language === "en" ? "Realtime operating statistics across all municipal operations." : "পৌরসভার সকল কার্যক্রমের রিয়েলটাইম পরিসংখ্যান।"}
-        </p>
+    <div className="space-y-6 animate-in fade-in duration-300">
+
+      {/* Welcome Banner */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-5 bg-gradient-to-r from-blue-600 to-blue-700 dark:from-[#0CA671] dark:to-emerald-700 rounded-2xl text-white shadow-lg">
+        <div>
+          <p className="text-xs font-bold opacity-80">{greeting},</p>
+          <h2 className="text-lg font-black tracking-tight mt-0.5">{adminName}</h2>
+          <p className="text-[10px] opacity-70 mt-1 font-mono">
+            {currentTime.toLocaleDateString(en ? "en-US" : "bn-BD", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
+            {" · "}
+            {currentTime.toLocaleTimeString(en ? "en-US" : "bn-BD", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+          </p>
+        </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          {quickActions.map((qa, i) => {
+            const Icon = qa.icon;
+            return (
+              <button
+                key={i}
+                onClick={() => router.push(`/admin?tab=${qa.tab}`)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10.5px] font-bold text-white transition-all active:scale-95 shadow-sm bg-white/20 hover:bg-white/30`}
+              >
+                <Icon className="w-3.5 h-3.5" />
+                <span>{qa.label}</span>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
-      {/* KPI Row */}
+      {/* KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {kpis.map((kpi, idx) => {
+        {kpis.map((kpi, i) => {
           const Icon = kpi.icon;
           return (
-            <div 
-              key={idx} 
-              className="p-4 bg-white dark:bg-[#0F1420] border border-slate-200/80 dark:border-slate-800/80 rounded-xl shadow-sm hover:shadow-md transition-all flex items-center justify-between"
+            <button
+              key={i}
+              onClick={() => router.push(`/admin?tab=${kpi.tab}`)}
+              className="p-4 bg-white dark:bg-[#0F1420] border border-slate-200/80 dark:border-slate-800/80 rounded-xl shadow-sm hover:shadow-md hover:border-slate-300 dark:hover:border-slate-700 transition-all text-left group"
             >
-              <div className="space-y-1.5 min-w-0">
-                <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">{kpi.label}</span>
-                <span className="text-xl font-black text-slate-800 dark:text-white block">{kpi.value}</span>
-                <span className={`text-[8.5px] font-extrabold px-1.5 py-0.5 rounded-full inline-block ${
-                  kpi.change.startsWith("+") 
-                    ? "text-emerald-600 bg-emerald-50 dark:bg-emerald-950/10" 
-                    : "text-blue-600 bg-blue-50 dark:bg-blue-950/10"
-                }`}>
-                  {kpi.change}
-                </span>
+              <div className="flex items-start justify-between">
+                <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${kpi.color}`}>
+                  <Icon className="w-4.5 h-4.5" />
+                </div>
+                <ArrowUpRight className="w-3.5 h-3.5 text-slate-300 dark:text-slate-700 group-hover:text-slate-500 dark:group-hover:text-slate-400 transition-colors" />
               </div>
-              <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${kpi.color}`}>
-                <Icon className="w-5 h-5" />
+              <div className="mt-3">
+                <span className="text-2xl font-black text-slate-900 dark:text-white block">{kpi.value.toLocaleString()}</span>
+                <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block mt-0.5">{kpi.label}</span>
               </div>
-            </div>
+              <span className={`text-[8.5px] font-extrabold px-1.5 py-0.5 rounded-full inline-block mt-2 ${
+                kpi.change.startsWith("+") ? "text-emerald-600 bg-emerald-50 dark:bg-emerald-950/20" :
+                kpi.change === "Live" ? "text-red-600 bg-red-50 dark:bg-red-950/20 animate-pulse" :
+                "text-blue-600 bg-blue-50 dark:bg-blue-950/20"
+              }`}>
+                {kpi.change}
+              </span>
+            </button>
           );
         })}
       </div>
 
-      {/* Grid of Sections */}
-      <div className="space-y-6">
-        {sections.map((section, idx) => (
-          <div key={idx} className="space-y-3.5">
-            <h3 className="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider px-1">
-              {section.title}
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {section.cards.map((card, cIdx) => {
-                const Icon = card.icon;
-                return (
-                  <div 
-                    key={cIdx} 
-                    className={`p-4 bg-white dark:bg-[#0F1420] border rounded-xl hover:border-slate-350 dark:hover:border-slate-700 shadow-sm transition-all flex items-start justify-between ${card.color}`}
-                  >
-                    <div className="space-y-1.5 min-w-0">
-                      <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">{card.label}</span>
-                      <span className="text-2xl font-black text-slate-855 dark:text-white block">{card.value}</span>
-                      <span className="text-[9.5px] text-slate-455 dark:text-slate-400 block">{card.desc}</span>
-                    </div>
-                    <Icon className="w-4.5 h-4.5 text-slate-400 dark:text-slate-500 shrink-0" />
-                  </div>
-                );
-              })}
-              {/* Future Revenue Placeholder in first section */}
-              {idx === 0 && (
-                <div className="p-4 bg-slate-100/30 dark:bg-slate-900/10 border border-dashed border-slate-200 dark:border-slate-800 rounded-xl flex flex-col justify-between">
-                  <div className="space-y-1">
-                    <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">Financial Revenue</span>
-                    <span className="text-xl font-black text-slate-400 dark:text-slate-600 block">$0.00</span>
-                    <span className="text-[9px] text-slate-400 dark:text-slate-650 block">Future accounting modules</span>
-                  </div>
-                  <DollarSign className="w-4.5 h-4.5 text-slate-350 dark:text-slate-700 self-end" />
+      {/* Module Grid */}
+      <div>
+        <h3 className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3">
+          {en ? "All Modules" : "সকল মডিউল"}
+        </h3>
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
+          {modules.map((mod, i) => {
+            const Icon = mod.icon;
+            return (
+              <button
+                key={i}
+                onClick={() => router.push(`/admin?tab=${mod.tab}`)}
+                className="flex flex-col items-center p-3 bg-white dark:bg-[#0F1420] border border-slate-200/80 dark:border-slate-800/80 rounded-xl shadow-sm hover:shadow-md hover:border-slate-300 dark:hover:border-slate-700 transition-all active:scale-95 group"
+              >
+                <div className={`w-9 h-9 rounded-xl flex items-center justify-center mb-2 ${mod.color}`}>
+                  <Icon className="w-4.5 h-4.5" />
                 </div>
-              )}
-            </div>
-          </div>
-        ))}
+                <span className="text-lg font-black text-slate-900 dark:text-white">{mod.value}</span>
+                <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 mt-0.5 text-center leading-tight">{mod.label}</span>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
-      {/* Bottom Row: Recent Activity Log */}
-      <div className="grid lg:grid-cols-12 gap-6">
-        <div className="lg:col-span-8 p-5 bg-white dark:bg-[#0F1420] border border-slate-200/80 dark:border-slate-800/80 rounded-xl shadow-sm space-y-4">
-          <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800/40 pb-3">
-            <h4 className="text-xs font-black uppercase text-slate-400 dark:text-slate-500 tracking-wider">
-              {language === "en" ? "Recent Administrative Events" : "সাম্প্রতিক প্রশাসনিক কার্যক্রম"}
+      {/* Bottom: Recent Activity + Recent Users */}
+      <div className="grid lg:grid-cols-2 gap-6">
+
+        {/* Recent Complaints */}
+        <div className="bg-white dark:bg-[#0F1420] border border-slate-200/80 dark:border-slate-800/80 rounded-xl shadow-sm overflow-hidden">
+          <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-100 dark:border-slate-800/40">
+            <h4 className="text-[10px] font-black uppercase text-slate-400 dark:text-slate-500 tracking-wider flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+              {en ? "Recent Complaints" : "সাম্প্রতিক অভিযোগ"}
             </h4>
-            <span className="text-[9.5px] font-bold text-blue-500 flex items-center gap-1 cursor-pointer hover:underline">
-              {language === "en" ? "View all logs" : "সব দেখুন"}
-              <ArrowUpRight className="w-3.5 h-3.5" />
-            </span>
+            <button
+              onClick={() => router.push("/admin?tab=complaints")}
+              className="text-[9.5px] font-bold text-blue-500 hover:underline flex items-center gap-0.5"
+            >
+              {en ? "View all" : "সব দেখুন"} <ArrowUpRight className="w-3 h-3" />
+            </button>
           </div>
-          
-          <div className="space-y-4">
-            {[
-              { time: "Just now", event: "Super Admin promoted target user (uid: ...83f5) to volunteer", icon: TrendingUp, type: "promote" },
-              { time: "10 mins ago", event: "Police Admin published new block layout notice: 'Bakalia traffic routes updated'", icon: Clock, type: "publish" },
-              { time: "40 mins ago", event: "Mosque Admin West Bakalia updated Jumuah prayers timing to 1:30 PM", icon: Clock, type: "update" },
-              { time: "2 hours ago", event: "Citizen submitted civic report on Ward 17 drainage clog", icon: AlertTriangle, type: "report" }
-            ].map((activity, aIdx) => (
-              <div key={aIdx} className="flex gap-3 text-xs leading-relaxed">
-                <div className="w-6 h-6 rounded bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-center shrink-0">
-                  <activity.icon className="w-3 h-3 text-slate-500" />
+          <div className="divide-y divide-slate-100 dark:divide-slate-800/40">
+            {recentComplaints.length === 0 ? (
+              <p className="text-center text-xs text-slate-400 py-8">{en ? "No complaints yet." : "কোনো অভিযোগ নেই।"}</p>
+            ) : recentComplaints.map((c) => (
+              <div key={c.id} className="flex items-start justify-between px-5 py-3 hover:bg-slate-50/50 dark:hover:bg-slate-900/20 transition-colors">
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-bold text-slate-800 dark:text-white truncate">{c.title || "Untitled"}</p>
+                  <p className="text-[9.5px] text-slate-400 mt-0.5 font-mono">
+                    {c.createdAt ? new Date(c.createdAt).toLocaleString() : "—"}
+                    {c.userName ? ` · ${c.userName}` : ""}
+                  </p>
                 </div>
-                <div className="space-y-0.5">
-                  <span className="font-semibold text-slate-800 dark:text-slate-200 block">{activity.event}</span>
-                  <span className="text-[9.5px] text-slate-400 block">{activity.time}</span>
-                </div>
+                <div className="ml-3 shrink-0">{getStatusBadge(c.status || "pending")}</div>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="lg:col-span-4 p-5 bg-white dark:bg-[#0F1420] border border-slate-200/80 dark:border-slate-800/80 rounded-xl shadow-sm flex flex-col justify-between">
-          <div className="space-y-4">
-            <h4 className="text-xs font-black uppercase text-slate-400 dark:text-slate-500 tracking-wider border-b border-slate-100 dark:border-slate-800/40 pb-3">
-              {language === "en" ? "Administrative Quick Actions" : "প্রশাসনিক কুইক একশন"}
+        {/* Recent Registrations */}
+        <div className="bg-white dark:bg-[#0F1420] border border-slate-200/80 dark:border-slate-800/80 rounded-xl shadow-sm overflow-hidden">
+          <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-100 dark:border-slate-800/40">
+            <h4 className="text-[10px] font-black uppercase text-slate-400 dark:text-slate-500 tracking-wider flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              {en ? "Recent Registrations" : "সাম্প্রতিক নিবন্ধন"}
             </h4>
-            <div className="space-y-2">
-              <button className="w-full py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-850 text-slate-700 dark:text-slate-300 transition-colors">
-                {language === "en" ? "Export Users Registry (CSV)" : "ব্যবহারকারী তালিকা ডাউনলোড"}
-              </button>
-              <button className="w-full py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-850 text-slate-700 dark:text-slate-300 transition-colors">
-                {language === "en" ? "Run Portal Audit Sweep" : "সিস্টেম অডিট চালান"}
-              </button>
-            </div>
+            <button
+              onClick={() => router.push("/admin?tab=users_citizens")}
+              className="text-[9.5px] font-bold text-blue-500 hover:underline flex items-center gap-0.5"
+            >
+              {en ? "View all" : "সব দেখুন"} <ArrowUpRight className="w-3 h-3" />
+            </button>
           </div>
-          
-          <div className="pt-6 text-[10px] text-slate-400 flex items-center gap-1">
-            <HelpCircle className="w-3.5 h-3.5 shrink-0" />
-            <span>Need portal developer support? Contact IT.</span>
+          <div className="divide-y divide-slate-100 dark:divide-slate-800/40">
+            {recentUsers.length === 0 ? (
+              <p className="text-center text-xs text-slate-400 py-8">{en ? "No users yet." : "কোনো ব্যবহারকারী নেই।"}</p>
+            ) : recentUsers.map((u) => (
+              <div key={u.id} className="flex items-center gap-3 px-5 py-3 hover:bg-slate-50/50 dark:hover:bg-slate-900/20 transition-colors">
+                <div className="w-7 h-7 rounded-full bg-blue-600 dark:bg-[#0CA671] text-white flex items-center justify-center text-[10px] font-black uppercase shrink-0">
+                  {(u.displayName || u.email || "?").charAt(0)}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-bold text-slate-800 dark:text-white truncate">{u.displayName || u.email?.split("@")[0] || "Unknown"}</p>
+                  <p className="text-[9.5px] text-slate-400 font-mono">{u.email || "—"}</p>
+                </div>
+                <span className="text-[8px] font-black uppercase px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-900 text-slate-500 border dark:border-slate-800 shrink-0">
+                  {u.role || "citizen"}
+                </span>
+              </div>
+            ))}
           </div>
         </div>
+
       </div>
     </div>
   );

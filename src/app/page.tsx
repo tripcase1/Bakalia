@@ -380,7 +380,7 @@ export default function HomePage() {
 
 
         {/* Date Month Year Bar on Mobile */}
-        <div className="px-4 py-1.5 bg-slate-100 dark:bg-[#04142F]/40 border-b border-slate-200/40 dark:border-slate-800/40 flex items-center justify-between text-[10px] text-slate-550 dark:text-slate-400 font-semibold transition-colors">
+        <div className="px-4 py-1.5 bg-slate-100 dark:bg-[#04142F]/40 border-b border-slate-200/40 dark:border-slate-800/40 flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400 font-semibold transition-colors">
           <div className="flex items-center gap-1.5">
             <Calendar className="w-3.5 h-3.5 text-[#0CA671]" />
             <span>{formatDate()}</span>
@@ -574,7 +574,7 @@ export default function HomePage() {
                       <StatIcon className="w-5 h-5 text-slate-800 dark:text-[#4A89DA]" />
                     </div>
                     <span className="block text-base font-black tracking-tight leading-none text-slate-900 dark:text-white">{stat.value}</span>
-                    <span className="block text-[8px] text-slate-550 dark:text-[#859798] font-bold mt-1.5 leading-snug">{stat.title}</span>
+                    <span className="block text-[8px] text-slate-500 dark:text-[#859798] font-bold mt-1.5 leading-snug">{stat.title}</span>
                   </div>
                   <span className="block text-[7.5px] font-black text-emerald-600 dark:text-[#0CA671] mt-2.5 leading-none">↑ {stat.percent}</span>
                 </div>
@@ -775,7 +775,7 @@ export default function HomePage() {
                 return (
                   <div key={idx} className="glass-card bg-white dark:bg-[#01205B] border-slate-200 dark:border-slate-800/80 rounded-xl p-4 flex items-center justify-between shadow-sm">
                     <div>
-                      <span className="block text-[9px] uppercase font-bold tracking-wider text-slate-400 dark:text-slate-350">{stat.label}</span>
+                      <span className="block text-[9px] uppercase font-bold tracking-wider text-slate-400 dark:text-slate-300">{stat.label}</span>
                       <span className="block text-xl font-black text-slate-800 dark:text-slate-100 mt-1">{stat.value}</span>
                       <span className="text-[9px] font-bold text-emerald-600 dark:text-[#0CA671] mt-0.5 block">{stat.growth}</span>
                     </div>
@@ -831,7 +831,7 @@ export default function HomePage() {
               <h2 className="text-xl sm:text-2xl font-black text-slate-800 dark:text-white tracking-tight">
                 {t("quickAccessTitle")}
               </h2>
-              <p className="mt-1 text-xs text-slate-505 dark:text-slate-400 max-w-xl">
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400 max-w-xl">
                 {t("quickAccessDesc")}
               </p>
             </div>
@@ -839,7 +839,7 @@ export default function HomePage() {
             {/* View All Services Button */}
             <button 
               onClick={() => alert("All services list is under development.")}
-              className="px-4 py-2 text-xs font-bold rounded-lg border border-slate-202 dark:border-slate-800 text-slate-600 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-900 bg-white dark:bg-[#01205B] transition-all flex items-center gap-1 shadow-sm select-none"
+              className="px-4 py-2 text-xs font-bold rounded-lg border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900 bg-white dark:bg-[#01205B] transition-all flex items-center gap-1 shadow-sm select-none"
             >
               <span>{t("viewAllServices")}</span>
               <ChevronRight className="w-3.5 h-3.5 text-slate-450" />
@@ -862,10 +862,10 @@ export default function HomePage() {
                   
                   {/* Text Content */}
                   <div className="flex flex-col items-center sm:items-start justify-center min-w-0 mt-1.5 sm:mt-0 sm:ml-3">
-                    <h3 className="text-[10px] sm:text-xs font-bold text-slate-850 dark:text-slate-200 group-hover:text-blue-600 dark:group-hover:text-[#0CA671] transition-colors leading-tight text-center sm:text-left truncate max-w-[76px] sm:max-w-none">
+                    <h3 className="text-[10px] sm:text-xs font-bold text-slate-800 dark:text-slate-200 group-hover:text-blue-600 dark:group-hover:text-[#0CA671] transition-colors leading-tight text-center sm:text-left truncate max-w-[76px] sm:max-w-none">
                       {service.title}
                     </h3>
-                    <p className="hidden sm:block mt-1 text-[10.5px] text-slate-450 dark:text-[#859798] leading-snug group-hover:text-slate-600 dark:group-hover:text-slate-305 transition-colors">
+                    <p className="hidden sm:block mt-1 text-[10.5px] text-slate-500 dark:text-[#859798] leading-snug group-hover:text-slate-600 dark:group-hover:text-slate-300 transition-colors">
                       {service.desc}
                     </p>
                   </div>
@@ -920,7 +920,7 @@ export default function HomePage() {
             {/* Column 1: Latest News */}
             <div className={`flex flex-col space-y-4 ${activeMobileTab === "news" ? "flex" : "hidden md:flex"}`}>
               <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-850">
-                <h3 className="text-sm font-extrabold text-slate-805 dark:text-slate-100 flex items-center gap-1.5 uppercase tracking-wider text-[11px]">
+                <h3 className="text-sm font-extrabold text-slate-800 dark:text-slate-100 flex items-center gap-1.5 uppercase tracking-wider text-[11px]">
                   {t("latestNews")}
                 </h3>
                 <a href="#" className="text-[11px] font-bold text-blue-600 dark:text-blue-450 hover:underline">
@@ -947,7 +947,7 @@ export default function HomePage() {
                           {news.title}
                         </h4>
                       </div>
-                      <div className="mt-1 flex items-center gap-2 text-[9px] text-slate-550 dark:text-[#859798]">
+                      <div className="mt-1 flex items-center gap-2 text-[9px] text-slate-500 dark:text-[#859798]">
                         <span>{news.time}</span>
                         <span>•</span>
                         <span>{news.views}</span>
@@ -962,7 +962,7 @@ export default function HomePage() {
             {/* Column 2: Nearby Services Directory */}
             <div className={`flex flex-col space-y-4 ${activeMobileTab === "nearby" ? "flex" : "hidden md:flex"}`}>
               <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-850">
-                <h3 className="text-sm font-extrabold text-slate-805 dark:text-slate-100 flex items-center gap-1.5 uppercase tracking-wider text-[11px]">
+                <h3 className="text-sm font-extrabold text-slate-800 dark:text-slate-100 flex items-center gap-1.5 uppercase tracking-wider text-[11px]">
                   {t("nearbyServices")}
                 </h3>
                 <a href="#" className="text-[11px] font-bold text-blue-600 dark:text-blue-455 hover:underline">
@@ -987,7 +987,7 @@ export default function HomePage() {
                         <span className="text-xs font-bold text-slate-700 dark:text-slate-200">{item.name}</span>
                       </div>
                       <div className="flex items-center gap-1.5">
-                        <span className="text-[10px] text-slate-450 dark:text-[#859798] font-semibold">{item.count}</span>
+                        <span className="text-[10px] text-slate-500 dark:text-[#859798] font-semibold">{item.count}</span>
                         <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
                       </div>
                     </div>
@@ -999,7 +999,7 @@ export default function HomePage() {
             {/* Column 3: Community Highlights */}
             <div className={`flex flex-col space-y-4 ${activeMobileTab === "highlights" ? "flex" : "hidden md:flex"}`}>
               <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-850">
-                <h3 className="text-sm font-extrabold text-slate-850 dark:text-slate-100 flex items-center gap-1.5 uppercase tracking-wider text-[11px]">
+                <h3 className="text-sm font-extrabold text-slate-800 dark:text-slate-100 flex items-center gap-1.5 uppercase tracking-wider text-[11px]">
                   {t("communityHighlights")}
                 </h3>
                 <a href="#" className="text-[11px] font-bold text-blue-600 dark:text-blue-450 hover:underline">
@@ -1026,7 +1026,7 @@ export default function HomePage() {
                         </div>
                         <div className="min-w-0">
                           <span className="block text-xs font-bold text-slate-850 dark:text-slate-200 truncate leading-none">{user.name}</span>
-                          <span className="block text-[9px] text-slate-450 dark:text-[#859798] font-bold mt-0.5 leading-none">{user.role}</span>
+                          <span className="block text-[9px] text-slate-500 dark:text-[#859798] font-bold mt-0.5 leading-none">{user.role}</span>
                         </div>
                       </div>
                     ))}
@@ -1039,7 +1039,7 @@ export default function HomePage() {
 
                 <button 
                   onClick={() => alert("Leaderboard view is currently under development.")}
-                  className="w-full py-2.5 rounded-lg border border-slate-202 dark:border-slate-800 text-[10.5px] font-bold text-slate-600 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all text-center mt-4 bg-white dark:bg-[#04142F]"
+                  className="w-full py-2.5 rounded-lg border border-slate-200 dark:border-slate-800 text-[10.5px] font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all text-center mt-4 bg-white dark:bg-[#04142F]"
                 >
                   {t("viewLeaderboard")}
                 </button>
@@ -1067,8 +1067,8 @@ export default function HomePage() {
                     <IconComp className="w-4 h-4" />
                   </div>
                   <div>
-                    <h4 className="text-xs font-bold text-slate-805 dark:text-slate-200">{item.title}</h4>
-                    <p className="text-[9.5px] text-slate-450 dark:text-[#859798] mt-0.5 leading-normal">{item.desc}</p>
+                    <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200">{item.title}</h4>
+                    <p className="text-[9.5px] text-slate-500 dark:text-[#859798] mt-0.5 leading-normal">{item.desc}</p>
                   </div>
                 </div>
               );
@@ -1078,18 +1078,18 @@ export default function HomePage() {
       </section>
 
       {/* 7. FOOTER */}
-      <footer className="bg-slate-900 dark:bg-slate-950 text-slate-405 dark:text-slate-500 border-t border-slate-200 dark:border-slate-900 mt-auto">
+      <footer className="bg-slate-800 dark:bg-slate-950 text-slate-400 dark:text-slate-500 border-t border-slate-700 dark:border-slate-900 mt-auto">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             
             {/* Copyright */}
             <div className="text-center md:text-left">
-              <span className="block text-xs font-bold text-slate-250 dark:text-slate-350">Bakalia Community</span>
+              <span className="block text-xs font-bold text-slate-200 dark:text-slate-300">Bakalia Community</span>
               <span className="block text-[10px] mt-0.5 text-slate-400 dark:text-slate-500">{t("copyright")}</span>
             </div>
 
             {/* Quick links */}
-            <div className="flex flex-wrap justify-center gap-x-5 gap-y-1.5 text-[10.5px] font-bold text-slate-350 dark:text-slate-450">
+            <div className="flex flex-wrap justify-center gap-x-5 gap-y-1.5 text-[10.5px] font-bold text-slate-400 dark:text-slate-500">
               <a href="#" className="hover:text-slate-200 transition-colors">{t("privacy")}</a>
               <a href="#" className="hover:text-slate-200 transition-colors">{t("terms")}</a>
               <a href="#" className="hover:text-slate-200 transition-colors">{t("help")}</a>

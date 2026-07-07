@@ -47,6 +47,9 @@ export default function DataManagement({ tab }: DataManagementProps) {
   const [formCategoryBn, setFormCategoryBn] = useState("সরকারি নোটিশ");
   const [formDate, setFormDate] = useState("");
   const [formLocation, setFormLocation] = useState("");
+  const [formImageUrl, setFormImageUrl] = useState("");
+  const [formPriority, setFormPriority] = useState("normal");
+  const [formWard, setFormWard] = useState("all");
   const [formLoading, setFormLoading] = useState(false);
 
   // Form states (Settings)
@@ -293,12 +296,14 @@ export default function DataManagement({ tab }: DataManagementProps) {
 
   // Promote / Update role functions
   const handlePromoteRole = async (targetUserId: string, newRole: string) => {
+    const confirmed = window.confirm(`${language === "en" ? "Change role to" : "রোল পরিবর্তন করবেন"} "${newRole}"?`);
+    if (!confirmed) return;
     try {
       await updateDoc(doc(db, "users", targetUserId), { role: newRole });
-      showToast("Role promoted successfully!", "success");
-      setDrawerRecord(null);
+      showToast("Role updated successfully!", "success");
+      setDrawerRecord((prev: any) => prev ? { ...prev, role: newRole } : null);
     } catch (err) {
-      showToast("Failed to promote role.", "error");
+      showToast("Failed to update role.", "error");
     }
   };
 
@@ -317,7 +322,8 @@ export default function DataManagement({ tab }: DataManagementProps) {
 
   // Delete/dismiss record
   const handleDeleteRecord = async (id: string) => {
-    if (!confirm(language === "en" ? "Are you sure you want to delete this record?" : "আপনি কি এই রেকর্ডটি মুছে ফেলতে চান?")) return;
+    const confirmed = window.confirm(language === "en" ? "Delete this record permanently?" : "এই রেকর্ডটি স্থায়ীভাবে মুছে ফেলবেন?");
+    if (!confirmed) return;
     try {
       await deleteDoc(doc(db, collectionName, id));
       showToast("Record deleted successfully!", "success");
@@ -351,38 +357,64 @@ export default function DataManagement({ tab }: DataManagementProps) {
 
     setFormLoading(true);
     try {
-      let targetCollection = collectionName;
+      const now = new Date().toISOString();
+      const authorName = (user as any)?.displayName || user?.email?.split("@")[0] || "Admin";
+
       let newDoc: any = {
-        title: formTitle,
-        titleBn: formTitleBn || formTitle,
-        createdAt: new Date().toISOString()
+        title: formTitle.trim(),
+        titleBn: formTitleBn.trim() || formTitle.trim(),
+        description: formDesc.trim(),
+        descriptionBn: formDescBn.trim() || formDesc.trim(),
+        createdAt: now,
+        updatedAt: now,
+        publishedBy: authorName,
+        publishedByUid: user?.uid || "",
+        status: "published",
+        ward: formWard,
       };
 
       if (tab === "news") {
+        const categoryColors: Record<string, string> = {
+          "Official Update": "bg-blue-50 text-blue-600 dark:bg-[#04142F] dark:text-[#4A89DA] border border-blue-100 dark:border-[#4A89DA]/20",
+          "Community Notice": "bg-emerald-50 text-emerald-600 dark:bg-[#22444B] dark:text-[#0CA671] border border-emerald-100 dark:border-[#0CA671]/20",
+          "Police Notice": "bg-indigo-50 text-indigo-600 dark:bg-[#04142F] dark:text-indigo-400 border border-indigo-100 dark:border-indigo-400/20",
+          "Health Alert": "bg-red-50 text-red-600 dark:bg-[#481C21] dark:text-red-400 border border-red-100 dark:border-red-400/20",
+          "Civic Activity": "bg-amber-50 text-amber-600 dark:bg-[#01205B] dark:text-amber-400 border border-amber-100 dark:border-amber-400/20",
+        };
         newDoc.category = formCategory;
-        newDoc.categoryBn = formCategoryBn;
-        newDoc.categoryColor = "bg-blue-50 text-blue-600 dark:bg-[#04142F] dark:text-[#4A89DA] border border-blue-100 dark:border-[#4A89DA]/20";
+        newDoc.categoryBn = formCategoryBn || formCategory;
+        newDoc.categoryColor = categoryColors[formCategory] || categoryColors["Official Update"];
+        newDoc.imageUrl = formImageUrl.trim() || "";
+        newDoc.priority = formPriority;
+        newDoc.views = 0;
         newDoc.time = language === "en" ? "Just now" : "এইমাত্র";
-        newDoc.views = language === "en" ? "0 views" : "০ ভিউ";
       } else if (tab === "notices") {
-        newDoc.description = formDesc;
-        newDoc.descriptionBn = formDescBn || formDesc;
+        newDoc.category = formCategory;
+        newDoc.priority = formPriority;
       } else if (tab === "events") {
-        newDoc.description = formDesc;
-        newDoc.descriptionBn = formDescBn || formDesc;
-        newDoc.date = formDate || new Date().toISOString().substring(0,10);
-        newDoc.location = formLocation || "Bakalia CCC";
+        newDoc.date = formDate || now.substring(0, 10);
+        newDoc.location = formLocation.trim() || "Bakalia, Chattogram";
+        newDoc.category = formCategory;
       }
 
-      await addDoc(collection(db, targetCollection), newDoc);
-      showToast("Record published successfully!", "success");
+      await addDoc(collection(db, collectionName), newDoc);
+      showToast(
+        language === "en" ? "Published successfully!" : "সফলভাবে প্রকাশিত হয়েছে!",
+        "success"
+      );
+      // Reset form
       setShowAddForm(false);
-      setFormTitle("");
-      setFormTitleBn("");
-      setFormDesc("");
-      setFormDescBn("");
-    } catch (err) {
-      showToast("Failed to publish record.", "error");
+      setFormTitle(""); setFormTitleBn("");
+      setFormDesc(""); setFormDescBn("");
+      setFormCategory("Official Update"); setFormCategoryBn("");
+      setFormDate(""); setFormLocation("");
+      setFormImageUrl(""); setFormPriority("normal"); setFormWard("all");
+    } catch (err: any) {
+      console.error("Publish error:", err);
+      showToast(
+        language === "en" ? `Publish failed: ${err?.message || "Check Firestore rules."}` : "প্রকাশনা ব্যর্থ হয়েছে।",
+        "error"
+      );
     } finally {
       setFormLoading(false);
     }
@@ -460,7 +492,7 @@ export default function DataManagement({ tab }: DataManagementProps) {
             </div>
             <div>
               <label className="block font-bold text-slate-600 dark:text-slate-400 mb-1">Portal Display Name</label>
-              <input type="text" defaultValue={user?.displayName || "Administrator"} className="w-full px-3 py-2.5 rounded-lg border bg-slate-50 dark:bg-slate-900 outline-none text-slate-850 dark:text-white" />
+              <input type="text" defaultValue={user?.displayName || "Administrator"} className="w-full px-3 py-2.5 rounded-lg border bg-slate-50 dark:bg-slate-900 outline-none text-slate-800 dark:text-white" />
             </div>
           </div>
           <button onClick={() => showToast("Profile settings saved!", "success")} className="px-4 py-2 bg-blue-600 dark:bg-[#0CA671] hover:bg-blue-500 dark:hover:bg-emerald-500 text-xs font-bold text-white rounded-lg shadow-sm">
@@ -614,7 +646,7 @@ export default function DataManagement({ tab }: DataManagementProps) {
               </div>
               <div>
                 <div className="flex justify-between font-bold mb-1">
-                  <span className="text-slate-655 dark:text-slate-400">Storage Capacity</span>
+                  <span className="text-slate-600 dark:text-slate-400">Storage Capacity</span>
                   <span className="text-slate-850 dark:text-white text-[10px] font-mono">4.2 GB / 20 GB</span>
                 </div>
                 <div className="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden">
@@ -647,21 +679,46 @@ export default function DataManagement({ tab }: DataManagementProps) {
         <div className="flex-grow flex flex-col min-h-0 bg-white dark:bg-[#0F1420] border border-slate-200/80 dark:border-slate-800/80 rounded-xl shadow-sm overflow-hidden">
           {/* Table Toolbar */}
           <div className="p-4 border-b border-slate-200/80 dark:border-slate-800/80 flex flex-wrap items-center justify-between gap-3 shrink-0">
-            {/* Search filter input */}
-            <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 px-3 py-1.5 rounded-lg w-full sm:w-64 max-w-xs focus-within:ring-1 focus-within:ring-blue-500/30 transition-all">
-              <Search className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 shrink-0" />
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder={language === "en" ? "Filter records..." : "সার্চ ফিল্টার..."}
-                className="bg-transparent text-xs w-full outline-none text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500"
-              />
+            <div className="flex items-center gap-2 flex-wrap flex-1">
+              {/* Search filter input */}
+              <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 px-3 py-1.5 rounded-lg w-full sm:w-56 focus-within:ring-1 focus-within:ring-blue-500/30 transition-all">
+                <Search className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 shrink-0" />
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+                  placeholder={language === "en" ? "Filter records..." : "সার্চ ফিল্টার..."}
+                  className="bg-transparent text-xs w-full outline-none text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500"
+                />
+                {searchTerm && (
+                  <button onClick={() => setSearchTerm("")} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                    <X className="w-3 h-3" />
+                  </button>
+                )}
+              </div>
+
+              {/* Status filter pills for complaints */}
+              {(tab === "complaints" || tab === "sos") && (
+                <div className="flex items-center gap-1.5">
+                  {["all", "pending", "in_progress", "resolved"].map(s => (
+                    <button
+                      key={s}
+                      onClick={() => { setStatusFilter(s); setCurrentPage(1); }}
+                      className={`px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider transition-all ${
+                        statusFilter === s
+                          ? "bg-blue-600 dark:bg-[#0CA671] text-white shadow-sm"
+                          : "bg-slate-100 dark:bg-slate-900 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-800"
+                      }`}
+                    >
+                      {s === "all" ? (language === "en" ? "All" : "সব") : s.replace("_", " ")}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Actions group */}
             <div className="flex items-center gap-2">
-              {/* Bulk actions */}
               {selectedIds.length > 0 && (
                 <button
                   onClick={handleBulkDelete}
@@ -671,8 +728,6 @@ export default function DataManagement({ tab }: DataManagementProps) {
                   <span>{language === "en" ? `Delete (${selectedIds.length})` : `মুছে ফেলুন (${selectedIds.length})`}</span>
                 </button>
               )}
-
-              {/* Export CSV */}
               <button
                 onClick={handleExportCSV}
                 className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900/40 transition-colors active:scale-95 bg-white dark:bg-[#0F1420]"
@@ -866,101 +921,108 @@ export default function DataManagement({ tab }: DataManagementProps) {
       {/* Creation Modal (Add Form) */}
       {showAddForm && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-[#0F1420] border border-slate-200/80 dark:border-slate-800/80 rounded-2xl shadow-2xl p-6 max-w-md w-full animate-in zoom-in-95 duration-200 space-y-4">
-            <div className="flex items-center justify-between border-b pb-3">
-              <h3 className="text-sm font-black uppercase text-slate-800 dark:text-white">
-                {language === "en" ? `Create Portal ${tab.charAt(0).toUpperCase() + tab.slice(1)}` : "নতুন প্রকাশনা"}
-              </h3>
-              <button onClick={() => setShowAddForm(false)} className="p-1 rounded hover:bg-slate-50 dark:hover:bg-slate-900 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+          <div className="bg-white dark:bg-[#0F1420] border border-slate-200/80 dark:border-slate-800/80 rounded-2xl shadow-2xl p-6 max-w-lg w-full animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b pb-3 mb-4">
+              <div>
+                <h3 className="text-sm font-black text-slate-800 dark:text-white">
+                  {tab === "news" ? "Publish News Article" : tab === "notices" ? "Post Police Notice" : "Schedule Community Event"}
+                </h3>
+                <p className="text-[10px] text-slate-400 mt-0.5">
+                  {tab === "news" ? "Appears on public news feed instantly" : tab === "notices" ? "Visible to all citizens in the portal" : "Shown in community events calendar"}
+                </p>
+              </div>
+              <button onClick={() => setShowAddForm(false)} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
                 <X className="w-4 h-4" />
               </button>
             </div>
-
             <form onSubmit={handleAddSubmit} className="space-y-4 text-xs">
-              <div>
-                <label className="block font-bold text-slate-600 dark:text-slate-400 mb-1">Title (English)</label>
-                <input 
-                  type="text" 
-                  required
-                  value={formTitle}
-                  onChange={e => setFormTitle(e.target.value)}
-                  placeholder="e.g. Cleansing Drive or Safety Notice"
-                  className="w-full px-3 py-2.5 rounded-lg border bg-slate-50 dark:bg-slate-900 outline-none text-slate-850 dark:text-white"
-                />
-              </div>
-              
-              <div>
-                <label className="block font-bold text-slate-600 dark:text-slate-400 mb-1">Title (Bengali)</label>
-                <input 
-                  type="text" 
-                  value={formTitleBn}
-                  onChange={e => setFormTitleBn(e.target.value)}
-                  placeholder="যেমনঃ ওয়ার্ড পরিচ্ছন্নতা কর্মসূচি"
-                  className="w-full px-3 py-2.5 rounded-lg border bg-slate-50 dark:bg-slate-900 outline-none text-slate-850 dark:text-white"
-                />
-              </div>
-
-              {tab === "news" && (
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-bold text-slate-600 dark:text-slate-400 mb-1">News Category</label>
-                  <select
-                    value={formCategory}
-                    onChange={e => {
-                      setFormCategory(e.target.value);
-                      setFormCategoryBn(e.target.value === "Official Update" ? "সরকারি নোটিশ" : "সরাসরি সংবাদ");
-                    }}
-                    className="w-full px-3 py-2.5 rounded-lg border bg-slate-50 dark:bg-slate-900 outline-none text-slate-850 dark:text-white"
-                  >
-                    <option value="Official Update">Official Update</option>
-                    <option value="Community Notice">Community Notice</option>
+                  <label className="block font-bold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider text-[9.5px]">Title (English) *</label>
+                  <input type="text" required value={formTitle} onChange={e => setFormTitle(e.target.value)} placeholder="e.g. Ward Cleansing Drive" className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 outline-none text-slate-800 dark:text-white focus:border-blue-500/50 transition-colors" />
+                </div>
+                <div>
+                  <label className="block font-bold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider text-[9.5px]">Title (Bengali)</label>
+                  <input type="text" value={formTitleBn} onChange={e => setFormTitleBn(e.target.value)} placeholder="e.g. à¦“à¦¯à¦¼à¦¾à¦°à§à¦¡ à¦ªà¦°à¦¿à¦šà§à¦›à¦¨à§à¦¨à¦¤à¦¾" className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 outline-none text-slate-800 dark:text-white focus:border-blue-500/50 transition-colors" />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider text-[9.5px]">Description (English) *</label>
+                  <textarea required value={formDesc} onChange={e => setFormDesc(e.target.value)} rows={3} placeholder="Full details in English..." className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 outline-none text-slate-800 dark:text-white resize-none focus:border-blue-500/50 transition-colors" />
+                </div>
+                <div>
+                  <label className="block font-bold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider text-[9.5px]">Description (Bengali)</label>
+                  <textarea value={formDescBn} onChange={e => setFormDescBn(e.target.value)} rows={3} placeholder="à¦¬à¦¾à¦‚à¦²à¦¾à¦¯à¦¼ à¦¬à¦¿à¦¸à§à¦¤à¦¾à¦°à¦¿à¦¤..." className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 outline-none text-slate-800 dark:text-white resize-none focus:border-blue-500/50 transition-colors" />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider text-[9.5px]">Category</label>
+                  <select value={formCategory} onChange={e => setFormCategory(e.target.value)} className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 outline-none text-slate-800 dark:text-white">
+                    {tab === "news" && (<><option value="Official Update">Official Update</option><option value="Community Notice">Community Notice</option><option value="Police Notice">Police Notice</option><option value="Health Alert">Health Alert</option><option value="Civic Activity">Civic Activity</option></>)}
+                    {tab === "notices" && (<><option value="General Notice">General Notice</option><option value="Traffic Warning">Traffic Warning</option><option value="Crime Alert">Crime Alert</option><option value="Curfew">Curfew</option><option value="Safety Guideline">Safety Guideline</option></>)}
+                    {tab === "events" && (<><option value="Cleanliness Drive">Cleanliness Drive</option><option value="Vaccination Camp">Vaccination Camp</option><option value="Town Hall">Town Hall</option><option value="Blood Drive">Blood Drive</option><option value="Cultural Program">Cultural Program</option></>)}
                   </select>
                 </div>
-              )}
-
-              {(tab === "notices" || tab === "events") && (
-                <>
+                <div>
+                  <label className="block font-bold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider text-[9.5px]">Priority</label>
+                  <select value={formPriority} onChange={e => setFormPriority(e.target.value)} className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 outline-none text-slate-800 dark:text-white">
+                    <option value="normal">Normal</option>
+                    <option value="high">High Priority</option>
+                    <option value="urgent">Urgent / Breaking</option>
+                  </select>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider text-[9.5px]">Target Ward</label>
+                  <select value={formWard} onChange={e => setFormWard(e.target.value)} className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 outline-none text-slate-800 dark:text-white">
+                    <option value="all">All Wards</option>
+                    <option value="Ward 17">Ward 17</option>
+                    <option value="Ward 18">Ward 18</option>
+                    <option value="Ward 19">Ward 19</option>
+                  </select>
+                </div>
+                {tab === "news" && (
                   <div>
-                    <label className="block font-bold text-slate-600 dark:text-slate-400 mb-1">Description (English)</label>
-                    <textarea 
-                      required
-                      value={formDesc}
-                      onChange={e => setFormDesc(e.target.value)}
-                      rows={3}
-                      className="w-full px-3 py-2.5 rounded-lg border bg-slate-50 dark:bg-slate-900 outline-none text-slate-850 dark:text-white resize-none"
-                    />
+                    <label className="block font-bold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider text-[9.5px]">Image URL (optional)</label>
+                    <input type="url" value={formImageUrl} onChange={e => setFormImageUrl(e.target.value)} placeholder="https://..." className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 outline-none text-slate-800 dark:text-white focus:border-blue-500/50 transition-colors" />
                   </div>
+                )}
+                {tab === "events" && (
                   <div>
-                    <label className="block font-bold text-slate-600 dark:text-slate-400 mb-1">Description (Bengali)</label>
-                    <textarea 
-                      value={formDescBn}
-                      onChange={e => setFormDescBn(e.target.value)}
-                      rows={3}
-                      className="w-full px-3 py-2.5 rounded-lg border bg-slate-50 dark:bg-slate-900 outline-none text-slate-850 dark:text-white resize-none"
-                    />
+                    <label className="block font-bold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider text-[9.5px]">Location</label>
+                    <input type="text" value={formLocation} onChange={e => setFormLocation(e.target.value)} placeholder="e.g. Bakalia CCC Ground" className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 outline-none text-slate-800 dark:text-white focus:border-blue-500/50 transition-colors" />
                   </div>
-                </>
-              )}
-
+                )}
+              </div>
               {tab === "events" && (
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block font-bold text-slate-600 dark:text-slate-400 mb-1">Date</label>
-                    <input type="date" value={formDate} onChange={e => setFormDate(e.target.value)} className="w-full px-3 py-2 rounded-lg border bg-slate-50 dark:bg-slate-900 text-slate-850 dark:text-white" />
-                  </div>
-                  <div>
-                    <label className="block font-bold text-slate-600 dark:text-slate-400 mb-1">Location</label>
-                    <input type="text" value={formLocation} onChange={e => setFormLocation(e.target.value)} className="w-full px-3 py-2 rounded-lg border bg-slate-50 dark:bg-slate-900 text-slate-850 dark:text-white" />
+                <div>
+                  <label className="block font-bold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider text-[9.5px]">Event Date *</label>
+                  <input type="date" required value={formDate} onChange={e => setFormDate(e.target.value)} className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 outline-none text-slate-800 dark:text-white" />
+                </div>
+              )}
+              {formTitle && (
+                <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-1">
+                  <span className="text-[9px] font-black uppercase text-slate-400 tracking-wider">Preview</span>
+                  <p className="text-xs font-bold text-slate-800 dark:text-white">{formTitle}</p>
+                  {formDesc && <p className="text-[10px] text-slate-500 line-clamp-2">{formDesc}</p>}
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="text-[8px] font-black uppercase px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-950/20 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-900/20">{formCategory}</span>
+                    {formPriority !== "normal" && <span className="text-[8px] font-black uppercase px-1.5 py-0.5 rounded bg-red-50 dark:bg-red-950/20 text-red-600 dark:text-red-400">{formPriority}</span>}
+                    <span className="text-[8px] text-slate-400 font-mono ml-auto">by {(user as any)?.displayName || user?.email?.split("@")[0]}</span>
                   </div>
                 </div>
               )}
-
-              <button
-                type="submit"
-                disabled={formLoading}
-                className="w-full py-2.5 bg-blue-600 dark:bg-[#0CA671] hover:bg-blue-500 dark:hover:bg-emerald-500 text-white rounded-lg text-xs font-bold shadow-sm transition-all"
-              >
-                {formLoading ? "Publishing..." : "Publish to Portal"}
-              </button>
+              <div className="flex gap-2 pt-1">
+                <button type="button" onClick={() => setShowAddForm(false)} className="flex-1 py-2.5 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-bold hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors">
+                  Cancel
+                </button>
+                <button type="submit" disabled={formLoading || !formTitle.trim() || !formDesc.trim()} className="flex-1 py-2.5 bg-blue-600 dark:bg-[#0CA671] hover:bg-blue-500 dark:hover:bg-emerald-500 disabled:opacity-50 text-white rounded-lg font-bold shadow-sm transition-all flex items-center justify-center gap-1.5">
+                  {formLoading ? (<><Clock className="w-3.5 h-3.5 animate-spin" /> Publishing...</>) : (<><Globe className="w-3.5 h-3.5" /> Publish Now</>)}
+                </button>
+              </div>
             </form>
           </div>
         </div>

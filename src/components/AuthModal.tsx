@@ -53,6 +53,7 @@ export default function AuthModal() {
       if (!result) return;
       const userDocRef = doc(db, "users", result.user.uid);
       const userDoc = await getDoc(userDocRef);
+      const isNewUser = !userDoc.exists() || !userDoc.data().phoneNumber;
       if (!userDoc.exists()) {
         await setDoc(userDocRef, {
           uid: result.user.uid,
@@ -64,6 +65,9 @@ export default function AuthModal() {
         });
       }
       setShowAuthModal(false);
+      if (isNewUser && typeof window !== "undefined") {
+        window.location.href = "/complete-profile";
+      }
     }).catch((err) => console.error("Redirect result error:", err));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -122,11 +126,12 @@ export default function AuthModal() {
       const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
       if (isMobile) {
         await signInWithRedirect(auth, provider);
-        return; // page will redirect, result handled in useEffect
+        return;
       }
       const userCredential = await signInWithPopup(auth, provider);
       const userDocRef = doc(db, "users", userCredential.user.uid);
       const userDoc = await getDoc(userDocRef);
+      const isNewUser = !userDoc.exists() || !userDoc.data().phoneNumber;
       if (!userDoc.exists()) {
         await setDoc(userDocRef, {
           uid: userCredential.user.uid,
@@ -138,6 +143,7 @@ export default function AuthModal() {
         });
       }
       setShowAuthModal(false);
+      if (isNewUser) window.location.href = "/complete-profile";
     } catch (err: any) {
       console.error(err);
       setErrorMsg(err.message || "Google Authentication failed.");
@@ -293,7 +299,7 @@ export default function AuthModal() {
                 value={verificationCode}
                 onChange={(e) => setVerificationCode(e.target.value)}
                 placeholder="123456" 
-                className="w-full px-3 py-2.5 rounded-lg bg-slate-50 dark:bg-[#010818] border border-slate-200 dark:border-slate-800 text-slate-805 dark:text-white focus:border-blue-500/50 outline-none text-xs text-center tracking-widest font-mono"
+                className="w-full px-3 py-2.5 rounded-lg bg-slate-50 dark:bg-[#010818] border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-white focus:border-blue-500/50 outline-none text-xs text-center tracking-widest font-mono"
               />
             </div>
             <button 
@@ -408,7 +414,7 @@ export default function AuthModal() {
         {!confirmationResult && (
           <div className="mt-4">
             <div className="relative flex items-center justify-center my-4">
-              <span className="absolute w-full border-t border-slate-200 dark:border-slate-850" />
+              <span className="absolute w-full border-t border-slate-200 dark:border-slate-800" />
               <span className="relative z-10 px-3 text-[9px] font-black uppercase text-slate-400 dark:text-slate-500 bg-white dark:bg-[#0D1B2A]">
                 {language === "en" ? "Or Continue With" : "অথবা সাইন ইন করুন"}
               </span>
@@ -432,7 +438,7 @@ export default function AuthModal() {
         )}
 
         {/* Switch Mode Footer */}
-        <div className="mt-5 text-center text-[10px] text-slate-500 dark:text-slate-450 pt-3.5 border-t border-slate-150 dark:border-slate-850">
+        <div className="mt-5 text-center text-[10px] text-slate-500 dark:text-slate-400 pt-3.5 border-t border-slate-200 dark:border-slate-800">
           {authMode === "login" ? (
             <>
               <span>{t("newToBakalia")}</span>{" "}

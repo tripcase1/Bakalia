@@ -181,7 +181,7 @@ export default function CitizenDashboardPage() {
       
       {/* Breadcrumbs */}
       <div className="flex items-center gap-1.5 text-[10.5px] font-bold text-slate-400 dark:text-slate-500 mb-6 uppercase tracking-wider">
-        <a href="/" className="hover:text-slate-700 dark:hover:text-slate-350 transition-colors">{t("home")}</a>
+        <a href="/" className="hover:text-slate-700 dark:hover:text-slate-300 transition-colors">{t("home")}</a>
         <ChevronRight className="w-3.5 h-3.5" />
         <span className="text-slate-800 dark:text-white font-extrabold">Citizen Dashboard</span>
       </div>
@@ -196,7 +196,7 @@ export default function CitizenDashboardPage() {
                 <User className="w-5.5 h-5.5" />
               </div>
               <div className="leading-tight min-w-0">
-                <span className="block text-xs font-black text-slate-850 dark:text-white truncate">{user?.displayName || "Citizen User"}</span>
+                <span className="block text-xs font-black text-slate-800 dark:text-white truncate">{user?.displayName || "Citizen User"}</span>
                 <span className="text-[8px] font-black uppercase text-blue-500 dark:text-blue-400 tracking-wider">Citizen Account</span>
               </div>
             </div>
@@ -218,7 +218,7 @@ export default function CitizenDashboardPage() {
                   className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-bold transition-all ${
                     activeTab === tab.id
                       ? "bg-blue-600 dark:bg-[#0CA671] text-white shadow-sm"
-                      : "text-slate-600 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-900"
+                      : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900"
                   }`}
                 >
                   <div className="flex items-center gap-2">
@@ -267,7 +267,7 @@ export default function CitizenDashboardPage() {
                       required
                       value={displayName}
                       onChange={(e) => setDisplayName(e.target.value)}
-                      className="w-full px-3 py-2.5 rounded-lg bg-slate-50 dark:bg-[#010818] border text-xs text-slate-805 dark:text-white outline-none"
+                      className="w-full px-3 py-2.5 rounded-lg bg-slate-50 dark:bg-[#010818] border text-xs text-slate-800 dark:text-white outline-none"
                     />
                   </div>
 
@@ -278,7 +278,7 @@ export default function CitizenDashboardPage() {
                       value={phoneNumber}
                       onChange={(e) => setPhoneNumber(e.target.value)}
                       placeholder="e.g. 01712345678"
-                      className="w-full px-3 py-2.5 rounded-lg bg-slate-50 dark:bg-[#010818] border text-xs text-slate-805 dark:text-white outline-none"
+                      className="w-full px-3 py-2.5 rounded-lg bg-slate-50 dark:bg-[#010818] border text-xs text-slate-800 dark:text-white outline-none"
                     />
                   </div>
                 </div>
@@ -289,7 +289,7 @@ export default function CitizenDashboardPage() {
                     <select
                       value={ward}
                       onChange={(e) => setWard(e.target.value)}
-                      className="w-full px-3 py-2.5 rounded-lg bg-slate-50 dark:bg-[#010818] border text-xs text-slate-805 dark:text-white outline-none font-bold"
+                      className="w-full px-3 py-2.5 rounded-lg bg-slate-50 dark:bg-[#010818] border text-xs text-slate-800 dark:text-white outline-none font-bold"
                     >
                       <option value="Ward 17">Ward 17</option>
                       <option value="Ward 18">Ward 18</option>
@@ -315,7 +315,7 @@ export default function CitizenDashboardPage() {
                     value={address}
                     onChange={(e) => setAddress(e.target.value)}
                     placeholder="Block/Road details"
-                    className="w-full px-3 py-2.5 rounded-lg bg-slate-50 dark:bg-[#010818] border text-xs text-slate-850 dark:text-white outline-none"
+                    className="w-full px-3 py-2.5 rounded-lg bg-slate-50 dark:bg-[#010818] border text-xs text-slate-800 dark:text-white outline-none"
                   />
                 </div>
 
@@ -351,7 +351,7 @@ export default function CitizenDashboardPage() {
                         </span>
                         {getStatusBadge(rep.status)}
                       </div>
-                      <h4 className="text-xs font-black text-slate-850 dark:text-white leading-snug">{rep.title}</h4>
+                      <h4 className="text-xs font-black text-slate-800 dark:text-white leading-snug">{rep.title}</h4>
                       <p className="text-[10px] text-slate-500 leading-relaxed font-bold">{rep.description}</p>
                       <div className="text-[8.5px] text-slate-400 font-mono">
                         Date: {new Date(rep.createdAt).toLocaleString()}
@@ -412,7 +412,7 @@ export default function CitizenDashboardPage() {
                         <h4 className="text-xs font-black text-slate-800 dark:text-white mt-2 truncate">{prop.title}</h4>
                         <p className="text-[9px] text-slate-500 mt-0.5 truncate">{prop.address}</p>
                       </div>
-                      <div className="flex gap-4 mt-3 text-[10px] text-slate-450 font-bold">
+                      <div className="flex gap-4 mt-3 text-[10px] text-slate-400 font-bold">
                         <span className="flex items-center gap-1"><Bed className="w-3.5 h-3.5" /> {prop.beds} Beds</span>
                         <span className="flex items-center gap-1"><Bath className="w-3.5 h-3.5" /> {prop.baths} Baths</span>
                       </div>
@@ -435,7 +435,7 @@ export default function CitizenDashboardPage() {
                   {notifications.map(notif => (
                     <div key={notif.id} className="p-4 bg-white dark:bg-[#01205B] border rounded-xl shadow-sm">
                       <span className="block text-[8.5px] text-slate-400 font-mono">{new Date(notif.createdAt).toLocaleDateString()}</span>
-                      <h4 className="text-xs font-black text-slate-850 dark:text-white mt-1">{notif.title}</h4>
+                      <h4 className="text-xs font-black text-slate-800 dark:text-white mt-1">{notif.title}</h4>
                       <p className="text-[10px] text-slate-500 mt-1 leading-relaxed font-semibold">{notif.description}</p>
                     </div>
                   ))}
@@ -465,7 +465,7 @@ export default function CitizenDashboardPage() {
           {activeTab === "settings" && (
             <div className="glass-card bg-white dark:bg-[#01205B] border p-6 rounded-2xl shadow-sm space-y-4 animate-in fade-in duration-200">
               <h3 className="text-base font-black text-slate-900 dark:text-white">Portal Settings</h3>
-              <div className="space-y-4 text-xs text-slate-600 dark:text-slate-350">
+              <div className="space-y-4 text-xs text-slate-600 dark:text-slate-300">
                 <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-[#010818] rounded-xl border border-slate-100 dark:border-slate-800">
                   <div>
                     <span className="block font-black">Email Alerts Notifications</span>

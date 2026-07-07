@@ -227,7 +227,7 @@ export default function Header() {
               <div 
                 onClick={requestGps}
                 title={language === "en" ? "Click to refresh GPS location" : "জিপিএস অবস্থান রিফ্রেশ করতে ক্লিক করুন"}
-                className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-[#04142F] border border-slate-200/60 dark:border-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-350 cursor-pointer hover:bg-slate-200/60 dark:hover:bg-slate-800/80 transition-all select-none"
+                className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-[#04142F] border border-slate-200/60 dark:border-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-300 cursor-pointer hover:bg-slate-200/60 dark:hover:bg-slate-800/80 transition-all select-none"
               >
                 <MapPin className="w-3.5 h-3.5 text-blue-500" />
                 <span>{detectedWard || t("locationBakalia")}</span>
@@ -244,11 +244,11 @@ export default function Header() {
             {/* Center: Search Trigger */}
             <button
               onClick={() => setIsSearchOpen(true)}
-              className="hidden md:flex flex-1 max-w-sm mx-6 items-center bg-slate-100 dark:bg-[#04142F] border border-slate-200 dark:border-slate-800/80 rounded-lg px-3 py-1.5 text-xs text-slate-405 hover:bg-slate-200/40 dark:hover:bg-slate-800/50 outline-none transition-all cursor-pointer select-none text-left active:scale-[0.99]"
+              className="hidden md:flex flex-1 max-w-sm mx-6 items-center bg-slate-100 dark:bg-[#04142F] border border-slate-200 dark:border-slate-800/80 rounded-lg px-3 py-1.5 text-xs text-slate-500 hover:bg-slate-200/40 dark:hover:bg-slate-800/50 outline-none transition-all cursor-pointer select-none text-left active:scale-[0.99]"
             >
-              <Search className="h-4 w-4 text-slate-450 dark:text-slate-500 mr-2 shrink-0" />
+              <Search className="h-4 w-4 text-slate-400 dark:text-slate-500 mr-2 shrink-0" />
               <span className="flex-grow">{t("searchPlaceholder")}</span>
-              <kbd className="hidden sm:inline-block px-1.5 py-0.5 text-[9px] font-medium text-slate-455 dark:text-slate-500 bg-white dark:bg-[#01205B] border border-slate-202 dark:border-slate-700/65 rounded shadow-sm shrink-0">
+              <kbd className="hidden sm:inline-block px-1.5 py-0.5 text-[9px] font-medium text-slate-400 dark:text-slate-500 bg-white dark:bg-[#01205B] border border-slate-200 dark:border-slate-700/65 rounded shadow-sm shrink-0">
                 Ctrl K
               </kbd>
             </button>
@@ -258,7 +258,7 @@ export default function Header() {
               {/* Language Switch */}
               <button 
                 onClick={() => setLanguage(language === "en" ? "bn" : "en")}
-                className="px-2 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-705 dark:text-slate-300 flex items-center gap-1.5 text-xs font-semibold transition-all border border-transparent hover:border-slate-200 dark:hover:border-slate-800"
+                className="px-2 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 flex items-center gap-1.5 text-xs font-semibold transition-all border border-transparent hover:border-slate-200 dark:hover:border-slate-800"
               >
                 <Globe className="w-4 h-4 text-emerald-500" />
                 <span>{language === "en" ? "বাংলা" : "English"}</span>
@@ -267,7 +267,7 @@ export default function Header() {
               {/* Theme Switch */}
               <button 
                 onClick={toggleTheme}
-                className="p-1.5 rounded-lg hover:bg-slate-105 dark:hover:bg-slate-800 text-slate-505 dark:text-slate-350 border border-transparent hover:border-slate-200 dark:hover:border-slate-800 transition-all"
+                className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-300 border border-transparent hover:border-slate-200 dark:hover:border-slate-800 transition-all"
                 aria-label="Toggle theme"
               >
                 {isLight ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
@@ -278,7 +278,7 @@ export default function Header() {
                 <div className="relative">
                   <button 
                     onClick={() => setIsNotifOpen(!isNotifOpen)}
-                    className="p-1.5 rounded-lg hover:bg-slate-105 dark:hover:bg-slate-800 text-slate-505 dark:text-slate-355 border border-transparent hover:border-slate-202 dark:hover:border-slate-800 transition-all relative"
+                    className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-300 border border-transparent hover:border-slate-200 dark:hover:border-slate-800 transition-all relative"
                   >
                     <Bell className="w-4.5 h-4.5" />
                     {unreadCount > 0 && (
@@ -318,7 +318,7 @@ export default function Header() {
               )}
 
               {/* Session Buttons */}
-              <div className="flex items-center gap-2 border-l border-slate-202 dark:border-slate-800 pl-3 ml-1">
+              <div className="flex items-center gap-2 border-l border-slate-200 dark:border-slate-800 pl-3 ml-1">
                 {user ? (
                   <>
                     {/* User profile info */}
@@ -346,7 +346,7 @@ export default function Header() {
 
                     <a
                       href={getDashboardPath(role)}
-                      className="px-3.5 py-1.5 text-xs font-bold rounded-lg text-slate-705 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-850 hover:text-slate-905 dark:hover:text-white transition-all border border-slate-200 dark:border-slate-800"
+                      className="px-3.5 py-1.5 text-xs font-bold rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition-all border border-slate-200 dark:border-slate-800"
                     >
                       {language === "en" ? "Dashboard" : "ড্যাশবোর্ড"}
                     </a>
@@ -380,13 +380,13 @@ export default function Header() {
             <div className="flex lg:hidden items-center gap-2">
               <button 
                 onClick={toggleTheme}
-                className="p-2 rounded-lg hover:bg-slate-150 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-350 transition-all"
+                className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-300 transition-all"
               >
                 {isLight ? <Moon className="w-4.5 h-4.5" /> : <Sun className="w-4.5 h-4.5" />}
               </button>
               <button
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="p-2 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-150 dark:hover:bg-slate-855 transition-all"
+                className="p-2 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
               >
                 {isMobileMenuOpen ? <X className="w-5.5 h-5.5" /> : <Menu className="w-5.5 h-5.5" />}
               </button>
@@ -396,7 +396,7 @@ export default function Header() {
         </div>
 
         {/* Row 2: Secondary Menu Links (Home, News, etc.) */}
-        <div className="border-t border-slate-202 bg-white dark:bg-[#010818]">
+        <div className="border-t border-slate-200 bg-white dark:bg-[#010818]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <nav className="flex space-x-7 py-2.5 text-xs font-semibold justify-start lg:justify-start overflow-x-auto scrollbar-none">
               {[
@@ -424,7 +424,7 @@ export default function Header() {
                           : "text-[#0CA671] border-[#0CA671]" 
                         : isEmergency
                           ? "text-[#EF4444] border-transparent hover:text-red-500"
-                          : "text-slate-505 dark:text-slate-400 border-transparent hover:text-slate-800 dark:hover:text-slate-202 hover:border-slate-300 dark:hover:border-slate-800"
+                          : "text-slate-500 dark:text-slate-400 border-transparent hover:text-slate-800 dark:hover:text-slate-200 hover:border-slate-300 dark:hover:border-slate-800"
                     }`}
                   >
                     <Icon className={`w-3.5 h-3.5 ${isEmergency ? "text-[#EF4444]" : ""}`} />
@@ -490,8 +490,8 @@ export default function Header() {
               onClick={handleClick}
               className={`flex flex-col items-center gap-1 transition-all ${
                 isActive 
-                  ? "text-blue-650 dark:text-white" 
-                  : "text-slate-400 dark:text-slate-455 hover:text-slate-600 dark:hover:text-slate-200"
+                  ? "text-blue-600 dark:text-white" 
+                  : "text-slate-400 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
               }`}
             >
               <Icon className="w-5 h-5" />
@@ -509,7 +509,7 @@ export default function Header() {
             {/* Mobile Search Trigger */}
             <button
               onClick={() => { setIsMobileMenuOpen(false); setIsSearchOpen(true); }}
-              className="w-full flex items-center bg-slate-100 dark:bg-[#04142F] border border-slate-200 dark:border-slate-850 rounded-lg px-3 py-2 text-xs text-slate-400 text-left outline-none"
+              className="w-full flex items-center bg-slate-100 dark:bg-[#04142F] border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-400 text-left outline-none"
             >
               <Search className="h-4 w-4 text-slate-400 mr-2 shrink-0" />
               <span className="flex-grow">{t("searchPlaceholder")}</span>
@@ -531,7 +531,7 @@ export default function Header() {
                   key={idx}
                   href={item.href}
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="p-2.5 rounded-lg bg-slate-50 dark:bg-[#04142F]/50 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-355 hover:text-slate-900 dark:hover:text-white transition-all flex items-center gap-2"
+                  className="p-2.5 rounded-lg bg-slate-50 dark:bg-[#04142F]/50 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-all flex items-center gap-2"
                 >
                   <div className="w-1.5 h-1.5 rounded-full bg-slate-400" />
                   <span>{item.label}</span>
@@ -571,7 +571,7 @@ export default function Header() {
                         setIsMobileMenuOpen(false);
                         router.push(role ? getDashboardPath(role) : "/dashboard");
                       }}
-                      className="flex-1 py-2 text-center text-xs font-bold rounded-lg border border-slate-205 dark:border-slate-800 text-slate-705 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900 transition-all"
+                      className="flex-1 py-2 text-center text-xs font-bold rounded-lg border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900 transition-all"
                     >
                       {language === "en" ? "Dashboard" : "ড্যাশবোর্ড"}
                     </a>

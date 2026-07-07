@@ -53,24 +53,28 @@ export default function LoginPage() {
       if (!result) return;
       const firebaseUser = result.user;
       const userDoc = await getDoc(doc(db, "users", firebaseUser.uid));
+      const isNewUser = !userDoc.exists() || !userDoc.data().phoneNumber;
       const userRole = userDoc.exists() ? ((userDoc.data() as { role?: string }).role || "citizen") : "citizen";
       if (checkAdminAndRedirect(firebaseUser.email, userRole)) return;
       showToast(language === "en" ? "Signed in successfully!" : "সফলভাবে লগইন করা হয়েছে!", "success");
-      router.push(getRoleDashboard(userRole));
+      router.push(isNewUser ? "/complete-profile" : getRoleDashboard(userRole));
     }).catch((err) => console.error("Redirect result error:", err));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     if (!authLoading && user && role) {
-      if (ADMIN_EMAIL && user.email === ADMIN_EMAIL && localStorage.getItem("admin_2fa_verified") !== "true") {
+      // Skip auto-redirect if 2FA is already showing
+      if (show2fa) return;
+      if (ADMIN_EMAIL && user.email === ADMIN_EMAIL && sessionStorage.getItem("admin_2fa_verified") !== "true") {
         setShow2fa(true);
         setPendingRole(role);
         return;
       }
       router.replace(getRoleDashboard(role));
     }
-  }, [user, role, authLoading, router]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, role, authLoading]);
 
   const getRoleDashboard = (r: string): string => {
     switch (r) {
@@ -87,7 +91,13 @@ export default function LoginPage() {
     }
   };
 
-  const getErrorMessage = (errorCode: string): string => {
+  const getErrorMessage = (errorCode: string, providers?: string[]): string => {
+    // If user signed up with Google and tries password login
+    if ((errorCode === "auth/wrong-password" || errorCode === "auth/invalid-credential") && providers?.includes("google.com")) {
+      return language === "en"
+        ? "This email is linked to Google. Please use the Google Sign In button below."
+        : "এই ইমেলটি Google দিয়ে লিঙ্ক করা। নিচের Google বাটাম দিয়ে সাইন ইন করুন।";
+    }
     switch (errorCode) {
       case "auth/invalid-email": return language === "en" ? "Invalid email address format." : "ইমেল ঠিকানার বিন্যাস সঠিক নয়।";
       case "auth/user-disabled": return language === "en" ? "This user account has been disabled." : "এই ব্যবহারকারী অ্যাকাউন্টটি নিষ্ক্রিয় করা হয়েছে।";
@@ -123,8 +133,12 @@ export default function LoginPage() {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const firebaseUser = userCredential.user;
       
-      const isEmailProvider = firebaseUser.providerData.some(p => p.providerId === "password");
-      if (isEmailProvider && !firebaseUser.emailVerified && !(ADMIN_EMAIL && firebaseUser.email === ADMIN_EMAIL)) {
+      // Only block unverified email/password accounts — skip if user has Google provider linked
+      const isPasswordProvider = firebaseUser.providerData.some(p => p.providerId === "password");
+      const isGoogleProvider = firebaseUser.providerData.some(p => p.providerId === "google.com");
+      const isAdmin = ADMIN_EMAIL && firebaseUser.email === ADMIN_EMAIL;
+
+      if (isPasswordProvider && !isGoogleProvider && !isAdmin && !firebaseUser.emailVerified) {
         const msg = language === "en" ? "Please verify your email address before logging in." : "অনুগ্রহ করে লগইন করার আগে আপনার ইমেল ঠিকানা যাচাই করুন।";
         setErrorMsg(msg);
         showToast(msg, "error");
@@ -143,7 +157,13 @@ export default function LoginPage() {
       router.push(getRoleDashboard(userRole));
     } catch (err: unknown) {
       console.error(err);
-      const friendlyMsg = getErrorMessage((err as { code?: string }).code ?? "");
+      // Fetch sign-in methods to give smarter error for Google-linked accounts
+      let providers: string[] = [];
+      try {
+        const { fetchSignInMethodsForEmail } = await import("firebase/auth");
+        providers = await fetchSignInMethodsForEmail(auth, email);
+      } catch { /* ignore */ }
+      const friendlyMsg = getErrorMessage((err as { code?: string }).code ?? "", providers);
       setErrorMsg(friendlyMsg);
       showToast(friendlyMsg, "error");
       setLoading(false);
@@ -213,19 +233,20 @@ export default function LoginPage() {
       const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
       if (isMobile) {
         await signInWithRedirect(auth, provider);
-        return; // page redirects, result handled in useEffect above
+        return;
       }
       const userCredential = await signInWithPopup(auth, provider);
       const firebaseUser = userCredential.user;
 
       const userDoc = await getDoc(doc(db, "users", firebaseUser.uid));
+      const isNewUser = !userDoc.exists() || !userDoc.data().phoneNumber;
       const userRole = userDoc.exists() ? ((userDoc.data() as { role?: string }).role || "citizen") : "citizen";
-      
+
       if (checkAdminAndRedirect(firebaseUser.email, userRole)) return;
 
       showToast(language === "en" ? "Signed in successfully!" : "সফলভাবে লগইন করা হয়েছে!", "success");
       setLoading(false);
-      router.push(getRoleDashboard(userRole));
+      router.push(isNewUser ? "/complete-profile" : getRoleDashboard(userRole));
     } catch (err: unknown) {
       console.error(err);
       const friendlyMsg = getErrorMessage((err as { code?: string }).code ?? "");
@@ -238,7 +259,7 @@ export default function LoginPage() {
   const handle2faSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (ADMIN_2FA && admin2faCode.trim() === ADMIN_2FA) {
-      localStorage.setItem("admin_2fa_verified", "true");
+      sessionStorage.setItem("admin_2fa_verified", "true");
       showToast(language === "en" ? "Admin authorized successfully!" : "অ্যাডমিন সফলভাবে অনুমোদিত হয়েছে!", "success");
       router.push(getRoleDashboard(pendingRole || "super_admin"));
     } else {

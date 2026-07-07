@@ -68,7 +68,7 @@ export default function RegisterPage() {
           <div className="w-10 h-10 rounded-full bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-[#0CA671] flex items-center justify-center mx-auto mb-3">
             <User className="w-5.5 h-5.5" />
           </div>
-          <h2 className="text-lg font-black text-slate-905 dark:text-white">
+          <h2 className="text-lg font-black text-slate-900 dark:text-white">
             {language === "en" ? "Register Citizen Account" : "নাগরিক অ্যাকাউন্ট নিবন্ধন"}
           </h2>
           <p className="text-[10px] text-slate-400 dark:text-slate-500 uppercase font-black tracking-wider mt-1">
@@ -183,7 +183,7 @@ export default function RegisterPage() {
           </button>
         </form>
 
-        <p className="text-[11px] text-center text-slate-405 dark:text-slate-500 mt-6 font-bold">
+        <p className="text-[11px] text-center text-slate-400 dark:text-slate-500 mt-6 font-bold">
           {language === "en" ? "Already have an account?" : "ইতিমধ্যেই অ্যাকাউন্ট আছে?"}{" "}
           <a href="/login" className="text-blue-500 hover:underline font-extrabold">
             {language === "en" ? "Log in here" : "লগইন করুন"}

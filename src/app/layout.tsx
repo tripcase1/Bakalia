@@ -55,7 +55,7 @@ export default function RootLayout({
           crossOrigin="anonymous" 
         />
       </head>
-      <body className="min-h-full flex flex-col bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-50 transition-colors duration-300">
+      <body className="min-h-full flex flex-col transition-colors duration-300">
         <AppProvider>
           <ClientLayoutWrapper>{children}</ClientLayoutWrapper>
         </AppProvider>
