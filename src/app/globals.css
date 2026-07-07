@@ -98,3 +98,35 @@ html[lang="bn"] * {
 .animate-pulse-soft {
   animation: pulse-soft 2.5s infinite ease-in-out;
 }
+
+/* Scrollbar hiding utility */
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-none {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+/* Bottom Sheet entry/exit animations */
+@keyframes slide-up {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+.animate-slide-up {
+  animation: slide-up 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Bengali specific spacing overrides */
+html[lang="bn"] p,
+html[lang="bn"] span,
+html[lang="bn"] button,
+html[lang="bn"] a {
+  line-height: 1.5;
+  letter-spacing: 0.01em;
+}
+

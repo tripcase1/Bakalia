@@ -464,7 +464,7 @@ export default function HomePage() {
             </button>
           </div>
 
-          <div id="mobile-services-grid" className="grid grid-cols-4 gap-3">
+          <div id="mobile-services-grid" className="grid grid-cols-3 gap-3">
             {[
               { key: "policeHelp", title: t("policeHelp"), desc: t("policeHelpDesc"), icon: Shield, color: "text-blue-500 bg-blue-50 dark:text-[#4A89DA] dark:bg-[#04142F]" },
               { key: "emergencyServices", title: t("emergencyServices"), desc: t("emergencyServicesDesc"), icon: AlertTriangle, color: "text-red-500 bg-red-50 dark:text-rose-500 dark:bg-[#481C21]" },
@@ -560,7 +560,7 @@ export default function HomePage() {
           </div>
 
           {/* Stats/Metrics cards */}
-          <div className="grid grid-cols-3 gap-3">
+          <div className="flex overflow-x-auto snap-x snap-mandatory scrollbar-none gap-3 pb-3">
             {[
               { title: t("registeredCitizens"), value: "125,430", percent: `12.4% ${t("percentThisMonth")}`, color: "bg-emerald-50/60 dark:bg-[#01205B] border-emerald-100/50 dark:border-slate-800/40 text-emerald-800 dark:text-slate-200 icon-emerald-500", icon: Users },
               { title: t("resolvedComplaints"), value: "1,824", percent: `8.7% ${t("percentThisMonth")}`, color: "bg-blue-50/60 dark:bg-[#01205B] border-blue-100/50 dark:border-slate-800/40 text-blue-800 dark:text-slate-200 icon-blue-500", icon: ShieldCheck },
@@ -568,7 +568,7 @@ export default function HomePage() {
             ].map((stat, idx) => {
               const StatIcon = stat.icon;
               return (
-                <div key={idx} className={`p-3 rounded-2xl border ${stat.color} flex flex-col justify-between shadow-sm`}>
+                <div key={idx} className={`p-3 rounded-2xl border ${stat.color} flex flex-col justify-between shadow-sm min-w-[130px] flex-1 snap-start`}>
                   <div>
                     <div className="w-8 h-8 rounded-xl bg-white dark:bg-[#04142F] shadow-sm flex items-center justify-center mb-2.5">
                       <StatIcon className="w-5 h-5 text-slate-800 dark:text-[#4A89DA]" />

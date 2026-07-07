@@ -217,8 +217,8 @@ export default function AuthModal() {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-250">
-      <div className="w-full max-w-sm glass-card bg-white dark:bg-[#0D1B2A] border-slate-200 dark:border-slate-800/80 text-slate-800 dark:text-white rounded-2xl p-6 relative shadow-2xl animate-in zoom-in-95 duration-200">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center px-0 sm:px-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-250">
+      <div className="w-full sm:max-w-sm glass-card bg-white dark:bg-[#0D1B2A] border-t sm:border border-slate-200 dark:border-slate-800/80 text-slate-800 dark:text-white rounded-t-3xl sm:rounded-2xl p-6 pb-8 sm:pb-6 relative shadow-2xl animate-slide-up sm:animate-in sm:zoom-in-95 duration-200">
         
         {/* Invisible Recaptcha container */}
         <div id="recaptcha-container" />
@@ -226,9 +226,9 @@ export default function AuthModal() {
         {/* Close Button */}
         <button 
           onClick={() => setShowAuthModal(false)}
-          className="absolute top-3.5 right-3.5 p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-95"
+          className="absolute top-4 right-4 p-2 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-95 z-10"
         >
-          <X className="w-4.5 h-4.5" />
+          <X className="w-5 h-5" />
         </button>
 
         {/* Header */}

@@ -179,10 +179,10 @@ export default function SearchModal() {
 
   return (
     <div 
-      className="fixed inset-0 z-[150] bg-black/65 backdrop-blur-md flex items-start justify-center pt-10 sm:pt-20 px-4 animate-in fade-in duration-200 text-slate-800 dark:text-white"
+      className="fixed inset-0 z-[150] bg-black/65 backdrop-blur-md flex items-end sm:items-start justify-center pt-0 sm:pt-20 px-0 sm:px-4 animate-in fade-in duration-200 text-slate-800 dark:text-white"
       onClick={(e) => { if (e.target === e.currentTarget) setIsSearchOpen(false); }}
     >
-      <div className="w-full max-w-2xl bg-white dark:bg-[#01122C] border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-white rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh] animate-in zoom-in-95 duration-200">
+      <div className="w-full sm:max-w-2xl bg-white dark:bg-[#01122C] border-t sm:border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-white rounded-t-3xl sm:rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[88vh] sm:max-h-[85vh] animate-slide-up sm:animate-in sm:zoom-in-95 duration-200">
         
         {/* Header / Input Row */}
         <div className="p-4 border-b border-slate-200/80 dark:border-slate-800 flex items-center gap-3 bg-white dark:bg-[#01122C]">
