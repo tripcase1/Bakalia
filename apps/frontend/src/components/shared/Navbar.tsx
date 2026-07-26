@@ -19,16 +19,26 @@ export function Navbar() {
   const cartCount = getTotalItems();
   const wishlistCount = wishlistItems.length;
 
-  // Lock body scroll when mobile menu is open
+  // Lock body scroll when mobile menu is open (prevents iOS/Android touch scroll bleed)
   useEffect(() => {
     if (isMobileMenuOpen) {
+      const scrollY = window.scrollY;
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = '100%';
       document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
+
+      return () => {
+        const top = document.body.style.top;
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.width = '';
+        document.body.style.overflow = '';
+        if (top) {
+          window.scrollTo(0, parseInt(top || '0', 10) * -1);
+        }
+      };
     }
-    return () => {
-      document.body.style.overflow = '';
-    };
   }, [isMobileMenuOpen]);
 
   return (

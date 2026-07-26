@@ -25,16 +25,26 @@ export function CartDrawer() {
   const [couponMsg, setCouponMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const drawerRef = useRef<HTMLDivElement>(null);
 
-  // Lock background body scroll but allow drawer to scroll
+  // iOS Safari & Android Chrome robust position-fixed body scroll lock to prevent scroll bleed
   useEffect(() => {
     if (isOpen) {
+      const scrollY = window.scrollY;
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = '100%';
       document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
+
+      return () => {
+        const top = document.body.style.top;
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.width = '';
+        document.body.style.overflow = '';
+        if (top) {
+          window.scrollTo(0, parseInt(top || '0', 10) * -1);
+        }
+      };
     }
-    return () => {
-      document.body.style.overflow = '';
-    };
   }, [isOpen]);
 
   // Close on Escape key
@@ -64,29 +74,29 @@ export function CartDrawer() {
   const total = getTotal();
 
   return (
-    <div className="fixed inset-0 z-[100] flex">
-      {/* Backdrop */}
+    <div className="fixed inset-0 z-[100] flex touch-none">
+      {/* Backdrop — prevents scroll touch bleed */}
       <div
         onClick={toggleCart}
         className="flex-1 bg-slate-950/60 backdrop-blur-sm"
         aria-label="Close cart"
       />
 
-      {/* Drawer Panel — full height, right side, no left offset on mobile */}
+      {/* Drawer Panel — full height, right side, padded for mobile bottom nav bar */}
       <div
         ref={drawerRef}
-        className="w-full max-w-sm sm:max-w-md bg-white flex flex-col h-full shadow-2xl overflow-hidden"
+        className="w-full max-w-sm sm:max-w-md bg-white flex flex-col h-full shadow-2xl overflow-hidden touch-auto"
         style={{ WebkitOverflowScrolling: 'touch' }}
       >
         {/* Header */}
-        <div className="px-4 py-3 bg-slate-900 text-white flex items-center justify-between shrink-0">
+        <div className="px-4 py-3.5 bg-slate-900 text-white flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2">
             <ShoppingBag className="w-5 h-5 text-brand-400" />
             <h2 className="font-bold text-base">
               {lang === 'bn' ? 'আপনার কার্ট' : 'Shopping Cart'}
             </h2>
             {items.length > 0 && (
-              <span className="ml-1 bg-brand-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center">
+              <span className="ml-1 bg-brand-500 text-white text-[10px] font-extrabold w-5 h-5 rounded-full flex items-center justify-center">
                 {items.reduce((acc, i) => acc + i.quantity, 0)}
               </span>
             )}
@@ -184,9 +194,9 @@ export function CartDrawer() {
           )}
         </div>
 
-        {/* Footer — always visible, never scroll away */}
+        {/* Footer — padded pb-20 on mobile so Proceed to Checkout button NEVER overlaps bottom nav bar */}
         {items.length > 0 && (
-          <div className="shrink-0 border-t border-slate-200 bg-white px-4 pt-3 pb-5 space-y-3">
+          <div className="shrink-0 border-t border-slate-200 bg-white px-4 pt-3 pb-20 sm:pb-6 space-y-3 shadow-lg">
             {/* Coupon */}
             {!couponCode ? (
               <form onSubmit={handleApplyCoupon} className="flex gap-2">
@@ -197,12 +207,12 @@ export function CartDrawer() {
                     value={inputCoupon}
                     onChange={(e) => { setInputCoupon(e.target.value.toUpperCase()); setCouponMsg(null); }}
                     placeholder={lang === 'bn' ? 'কুপন কোড' : 'Coupon code'}
-                    className="w-full pl-9 pr-3 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500"
+                    className="w-full pl-9 pr-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 font-semibold"
                   />
                 </div>
                 <button
                   type="submit"
-                  className="bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition active:scale-95 shrink-0"
+                  className="bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold px-3.5 py-2 rounded-xl transition active:scale-95 shrink-0"
                 >
                   {lang === 'bn' ? 'প্রয়োগ' : 'Apply'}
                 </button>
@@ -246,11 +256,11 @@ export function CartDrawer() {
               </div>
             </div>
 
-            {/* Checkout CTA — large, tappable */}
+            {/* Checkout CTA — Large, fully visible above bottom nav bar */}
             <Link
               href="/checkout"
               onClick={toggleCart}
-              className="block w-full bg-brand-600 hover:bg-brand-700 active:scale-95 text-white text-center py-4 rounded-2xl font-black text-sm flex items-center justify-center gap-2 shadow-lg shadow-brand-600/25 transition"
+              className="block w-full bg-brand-600 hover:bg-brand-700 active:scale-95 text-white text-center py-3.5 rounded-2xl font-black text-sm flex items-center justify-center gap-2 shadow-lg shadow-brand-600/30 transition"
             >
               <span>{lang === 'bn' ? 'অর্ডার করুন' : 'Proceed to Checkout'}</span>
               <ArrowRight className="w-4 h-4" />

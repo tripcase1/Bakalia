@@ -450,7 +450,7 @@ export default function CheckoutPage() {
         </form>
 
         {/* Floating Mobile Sticky Payment Bar — Never Hidden on Mobile */}
-        <div className="fixed bottom-12 sm:bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200/90 p-3 shadow-2xl lg:hidden flex items-center justify-between gap-3">
+        <div className="fixed bottom-[56px] sm:bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200/90 p-3 shadow-2xl lg:hidden flex items-center justify-between gap-3">
           <div>
             <span className="text-[10px] text-slate-500 block leading-tight font-medium">{lang === 'bn' ? 'সর্বমোট প্রদানযোগ্য' : 'Total Payable'}</span>
             <span className="text-base font-black text-brand-700">৳ {total}</span>
