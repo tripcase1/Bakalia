@@ -36,36 +36,38 @@ export function FAQSection() {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   return (
-    <section className="py-16 bg-white">
+    <section className="py-12 sm:py-16 bg-white">
       <div className="container mx-auto px-4 max-w-3xl">
         <div className="text-center mb-10">
-          <div className="inline-flex items-center gap-1.5 text-brand-600 text-xs font-bold uppercase tracking-wider mb-1">
-            <HelpCircle className="w-4 h-4" />
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-black uppercase tracking-wider mb-2 border border-emerald-200">
+            <HelpCircle className="w-3.5 h-3.5 text-emerald-600" />
             <span>{lang === 'bn' ? 'সাধারণ জিজ্ঞাসা' : 'Frequently Asked Questions'}</span>
           </div>
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900">
+          <h2 className="text-xl sm:text-3xl font-black text-slate-900 leading-tight">
             {lang === 'bn' ? 'সচরাচর জিজ্ঞাসিত প্রশ্নাবলী' : 'Have Any Questions?'}
           </h2>
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-3">
           {FAQS.map((faq, idx) => {
             const isOpen = openIndex === idx;
             const q = lang === 'bn' ? faq.questionBn : faq.questionEn;
             const a = lang === 'bn' ? faq.answerBn : faq.answerEn;
 
             return (
-              <div key={idx} className="border border-slate-200 rounded-2xl overflow-hidden transition">
+              <div key={idx} className="border border-slate-200/80 rounded-2xl overflow-hidden transition-all duration-200">
                 <button
                   onClick={() => setOpenIndex(isOpen ? null : idx)}
-                  className="w-full p-4 text-left font-bold text-sm text-slate-900 bg-slate-50 hover:bg-slate-100 flex items-center justify-between transition"
+                  className={`w-full p-4 text-left font-bold text-xs sm:text-sm flex items-center justify-between transition-colors ${
+                    isOpen ? 'bg-emerald-50/50 text-emerald-950 font-extrabold' : 'bg-slate-50 hover:bg-slate-100 text-slate-800'
+                  }`}
                 >
-                  <span>{q}</span>
-                  <ChevronDown className={`w-4 h-4 text-slate-500 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                  <span className="pr-4 leading-snug">{q}</span>
+                  <ChevronDown className={`w-4 h-4 shrink-0 transition-transform duration-300 ${isOpen ? 'rotate-180 text-emerald-600' : 'text-slate-400'}`} />
                 </button>
 
                 {isOpen && (
-                  <div className="p-4 text-xs sm:text-sm text-slate-600 leading-relaxed border-t border-slate-100 bg-white">
+                  <div className="p-4 text-xs sm:text-sm text-slate-600 leading-relaxed border-t border-slate-200/60 bg-white">
                     {a}
                   </div>
                 )}
