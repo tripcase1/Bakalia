@@ -448,6 +448,32 @@ export default function CheckoutPage() {
             </p>
           </div>
         </form>
+
+        {/* Floating Mobile Sticky Payment Bar — Never Hidden on Mobile */}
+        <div className="fixed bottom-12 sm:bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200/90 p-3 shadow-2xl lg:hidden flex items-center justify-between gap-3">
+          <div>
+            <span className="text-[10px] text-slate-500 block leading-tight font-medium">{lang === 'bn' ? 'সর্বমোট প্রদানযোগ্য' : 'Total Payable'}</span>
+            <span className="text-base font-black text-brand-700">৳ {total}</span>
+          </div>
+          <button
+            type="button"
+            onClick={(e) => {
+              const formEl = document.querySelector('form');
+              if (formEl) formEl.requestSubmit();
+            }}
+            disabled={isSubmitting}
+            className="flex-1 bg-brand-600 hover:bg-brand-700 active:scale-95 disabled:opacity-60 text-white py-3 px-4 rounded-xl font-black text-xs flex items-center justify-center gap-1.5 shadow-lg shadow-brand-600/30 transition max-w-[200px]"
+          >
+            {isSubmitting ? (
+              <span className="animate-spin border-2 border-white border-t-transparent rounded-full w-4 h-4" />
+            ) : (
+              <>
+                <span>{lang === 'bn' ? 'অর্ডার নিশ্চিত করুন' : 'Confirm Order'}</span>
+                <ArrowRight className="w-4 h-4" />
+              </>
+            )}
+          </button>
+        </div>
       </div>
     </div>
   );
