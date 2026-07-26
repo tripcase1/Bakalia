@@ -69,37 +69,45 @@ export function HeroBanner() {
           </div>
         </div>
 
-        {/* Right Column: Hero Visual Card */}
+        {/* Right Column: Hero Visual Card — fully clickable */}
         <div className="relative">
-          <div className="relative mx-auto max-w-md rounded-3xl overflow-hidden shadow-2xl border border-slate-700/50 bg-slate-800/60 p-2.5">
+          <Link
+            href="/products/padma-river-hilsa-ilish"
+            className="block relative mx-auto max-w-md rounded-3xl overflow-hidden shadow-2xl border border-slate-700/50 bg-slate-800/60 p-2.5 group cursor-pointer transition hover:border-brand-500/60 hover:shadow-brand-500/20"
+          >
             <img
               src="https://images.unsplash.com/photo-1534483509719-3feaee7c30da?q=75&w=700&auto=format&fit=crop"
               alt="Fresh Hilsa Fish"
               loading="eager"
               decoding="async"
-              className="w-full h-72 sm:h-80 object-cover rounded-2xl"
+              className="w-full h-64 sm:h-80 object-cover rounded-2xl group-hover:scale-[1.02] transition-transform duration-300"
             />
-            {/* Flash Banner Overlay */}
+            {/* Flash Badge */}
             <div className="absolute top-5 left-5 bg-rose-600 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg flex items-center gap-1">
               <Clock className="w-3.5 h-3.5" />
               {lang === 'bn' ? 'আজকের স্পেশাল অফার' : 'Today Special Deal'}
             </div>
-            
+            {/* Tap hint on mobile */}
+            <div className="absolute top-5 right-5 bg-white/10 backdrop-blur-sm border border-white/20 text-white text-[10px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1">
+              <ArrowRight className="w-3 h-3" />
+              {lang === 'bn' ? 'দেখুন' : 'View'}
+            </div>
+
             <div className="p-3.5 flex items-center justify-between text-left">
               <div>
-                <h3 className="font-bold text-white text-sm sm:text-base">
+                <h3 className="font-bold text-white text-sm sm:text-base group-hover:text-brand-300 transition">
                   {lang === 'bn' ? 'পদ্মার তাজা প্রিমিয়াম ইলিশ' : 'Padma Fresh Premium Hilsa'}
                 </h3>
-                <p className="text-[11px] text-slate-400">
-                  {lang === 'bn' ? '১.২ - ১.৫ কেজি সাইজ | ফরমালিন মুক্ত' : '1.2kg - 1.5kg | Formalin Free'}
+                <p className="text-[11px] text-slate-400 mt-0.5">
+                  {lang === 'bn' ? '১.২ - ১.৫ কেজি | ফরমালিন মুক্ত' : '1.2–1.5kg | Formalin Free'}
                 </p>
               </div>
               <div className="text-right">
-                <span className="text-[11px] line-through text-slate-400">৳ ১৮৫০</span>
-                <p className="text-base sm:text-lg font-black text-gold-400">৳ ১৬৯০</p>
+                <span className="text-[11px] line-through text-slate-400">৳ ২২০০</span>
+                <p className="text-base sm:text-lg font-black text-gold-400">৳ ১৯৫০</p>
               </div>
             </div>
-          </div>
+          </Link>
         </div>
       </div>
     </section>
