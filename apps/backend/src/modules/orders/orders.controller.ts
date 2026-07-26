@@ -1,44 +1,39 @@
-import { Controller, Post, Body, Get, Param } from '@nestjs/common';
-import { PaymentsService, MfsPaymentPayload } from '../payments/payments.service';
+import {
+  Controller, Get, Post, Put,
+  Param, Body, HttpCode, HttpStatus,
+} from '@nestjs/common';
+import { OrdersService } from './orders.service';
+import { OrderStatus } from '@prisma/client';
 
-@Controller('api/v1/orders')
+@Controller('api/orders')
 export class OrdersController {
-  constructor(private readonly paymentsService: PaymentsService) {}
+  constructor(private readonly ordersService: OrdersService) {}
 
-  @Post()
-  async createOrder(@Body() body: any) {
-    const orderNumber = 'AHF-' + Math.floor(100000 + Math.random() * 900000);
-    
-    const paymentResult = await this.paymentsService.initiatePayment({
-      orderId: orderNumber,
-      amount: body.totalAmount || 0,
-      paymentMethod: body.paymentMethod || 'COD',
-      customerPhone: body.phone,
-      trxId: body.trxId,
-    });
-
-    return {
-      success: true,
-      message: 'Order placed successfully',
-      data: {
-        orderNumber,
-        status: 'PROCESSING',
-        paymentStatus: paymentResult.paymentStatus,
-        totalAmount: body.totalAmount,
-      },
-    };
+  // GET /api/orders — Admin: list all orders
+  @Get()
+  findAll() {
+    return this.ordersService.findAll();
   }
 
-  @Get(':orderNumber')
-  async getOrderDetails(@Param('orderNumber') orderNumber: string) {
-    return {
-      success: true,
-      data: {
-        orderNumber,
-        status: 'PROCESSING',
-        paymentStatus: 'PAID',
-        createdAt: new Date().toISOString(),
-      },
-    };
+  // GET /api/orders/:id — Admin: order detail
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.ordersService.findById(id);
+  }
+
+  // POST /api/orders — Customer: place order
+  @Post()
+  @HttpCode(HttpStatus.CREATED)
+  placeOrder(@Body() body: any) {
+    return this.ordersService.placeOrder(body);
+  }
+
+  // PUT /api/orders/:id/status — Admin: update status
+  @Put(':id/status')
+  updateStatus(
+    @Param('id') id: string,
+    @Body('status') status: OrderStatus,
+  ) {
+    return this.ordersService.updateStatus(id, status);
   }
 }

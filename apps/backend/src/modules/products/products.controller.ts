@@ -1,53 +1,46 @@
-import { Controller, Get, Param, Query } from '@nestjs/common';
+import {
+  Controller, Get, Post, Put, Delete,
+  Param, Body, Query, HttpCode, HttpStatus,
+} from '@nestjs/common';
+import { ProductsService } from './products.service';
 
-@Controller('api/v1/products')
+@Controller('api/products')
 export class ProductsController {
+  constructor(private readonly productsService: ProductsService) {}
+
   @Get()
-  async getProducts(
-    @Query('category') category?: string,
-    @Query('search') search?: string,
-    @Query('page') page: number = 1
-  ) {
-    return {
-      success: true,
-      data: [
-        {
-          id: 'p1',
-          titleBn: 'পদ্মার তাজা প্রিমিয়াম রূপালী ইলিশ মাছ',
-          titleEn: 'Padma River Fresh Silver Hilsa Fish',
-          slug: 'padma-river-hilsa-ilish',
-          basePrice: 1850,
-          discountPrice: 1690,
-          unit: 'kg',
-          category: 'fresh-fish',
-          stock: 45,
-          ratingAvg: 4.9,
-        },
-      ],
-      pagination: {
-        page,
-        limit: 10,
-        total: 1,
-      },
-    };
+  getAll(@Query('category') category?: string) {
+    return this.productsService.findAll(category);
+  }
+
+  @Get('featured')
+  getFeatured() {
+    return this.productsService.findFeatured();
+  }
+
+  @Get('flash-sale')
+  getFlashSale() {
+    return this.productsService.findFlashSale();
   }
 
   @Get(':slug')
-  async getProductBySlug(@Param('slug') slug: string) {
-    return {
-      success: true,
-      data: {
-        id: 'p1',
-        titleBn: 'পদ্মার তাজা প্রিমিয়াম রূপালী ইলিশ মাছ',
-        titleEn: 'Padma River Fresh Silver Hilsa Fish',
-        slug,
-        basePrice: 1850,
-        discountPrice: 1690,
-        unit: 'kg',
-        category: 'fresh-fish',
-        stock: 45,
-        ratingAvg: 4.9,
-      },
-    };
+  getBySlug(@Param('slug') slug: string) {
+    return this.productsService.findBySlug(slug);
+  }
+
+  @Post()
+  create(@Body() body: any) {
+    return this.productsService.create(body);
+  }
+
+  @Put(':id')
+  update(@Param('id') id: string, @Body() body: any) {
+    return this.productsService.update(id, body);
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  delete(@Param('id') id: string) {
+    return this.productsService.delete(id);
   }
 }

@@ -1,0 +1,118 @@
+// This is your Prisma schema file for Al Hera Fresh
+// Using Neon PostgreSQL (serverless)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DATABASE_URL")
+}
+
+// ─── PRODUCT ──────────────────────────────────────────────────────────────────
+model Product {
+  id            String   @id @default(cuid())
+  titleBn       String
+  titleEn       String
+  slug          String   @unique
+  descriptionBn String   @default("")
+  descriptionEn String   @default("")
+  categoryId    String
+  basePrice     Float
+  discountPrice Float?
+  sku           String   @unique
+  stock         Int      @default(0)
+  unit          String   @default("kg")
+  isFeatured    Boolean  @default(false)
+  isFlashSale   Boolean  @default(false)
+  images        String[] @default([])
+  tags          String[] @default([])
+  ratingAvg     Float    @default(5.0)
+  ratingCount   Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  orderItems OrderItem[]
+}
+
+// ─── CATEGORY ─────────────────────────────────────────────────────────────────
+model Category {
+  id     String @id @default(cuid())
+  nameBn String
+  nameEn String
+  slug   String @unique
+}
+
+// ─── ORDER ────────────────────────────────────────────────────────────────────
+model Order {
+  id            String        @id @default(cuid())
+  orderNumber   String        @unique
+  subTotal      Float
+  deliveryFee   Float         @default(60)
+  discount      Float         @default(0)
+  totalAmount   Float
+  paymentMethod PaymentMethod
+  paymentStatus PaymentStatus @default(PENDING)
+  orderStatus   OrderStatus   @default(PENDING)
+  trxId         String?
+
+  // Shipping
+  recipientName  String
+  phone          String
+  division       String
+  district       String
+  upazila        String
+  streetAddress  String
+  note           String?
+
+  items     OrderItem[]
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+}
+
+// ─── ORDER ITEM ───────────────────────────────────────────────────────────────
+model OrderItem {
+  id        String  @id @default(cuid())
+  orderId   String
+  productId String
+  quantity  Int
+  unitPrice Float
+
+  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id])
+}
+
+// ─── COUPON ───────────────────────────────────────────────────────────────────
+model Coupon {
+  id          String  @id @default(cuid())
+  code        String  @unique
+  discountPct Float
+  minOrder    Float   @default(0)
+  isActive    Boolean @default(true)
+}
+
+// ─── ENUMS ────────────────────────────────────────────────────────────────────
+enum PaymentMethod {
+  BKASH
+  NAGAD
+  ROCKET
+  COD
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
