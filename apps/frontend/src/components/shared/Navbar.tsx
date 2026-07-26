@@ -1,11 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useCartStore } from '@/store/useCartStore';
 import { useLanguageStore } from '@/store/useLanguageStore';
 import { useWishlistStore } from '@/store/useWishlistStore';
-import { Search, ShoppingBag, Heart, User, Globe, Menu, X, PhoneCall, ShieldCheck } from 'lucide-react';
+import { Search, ShoppingBag, Heart, User, Globe, Menu, X, PhoneCall, ShieldCheck, Flame, ArrowRight } from 'lucide-react';
 import { CartDrawer } from './CartDrawer';
 
 export function Navbar() {
@@ -19,10 +19,25 @@ export function Navbar() {
   const cartCount = getTotalItems();
   const wishlistCount = wishlistItems.length;
 
+  // Lock body scroll when mobile menu is open
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+      document.body.style.touchAction = 'none';
+    } else {
+      document.body.style.overflow = '';
+      document.body.style.touchAction = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.touchAction = '';
+    };
+  }, [isMobileMenuOpen]);
+
   return (
     <header className="sticky top-0 z-40 w-full transition-all">
       {/* Top Banner Bar */}
-      <div className="bg-brand-700 text-white text-xs py-1.5 px-4 font-medium flex justify-between items-center">
+      <div className="bg-brand-700 text-white text-[11px] sm:text-xs py-1.5 px-4 font-medium flex justify-between items-center">
         <div className="flex items-center space-x-3 container mx-auto">
           <span className="flex items-center gap-1">
             <ShieldCheck className="w-3.5 h-3.5 text-gold-400" />
@@ -52,19 +67,21 @@ export function Navbar() {
           <div className="flex items-center gap-3">
             <button 
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} 
-              className="md:hidden text-slate-700 hover:text-brand-600 p-1"
+              className="md:hidden text-slate-700 hover:text-brand-600 p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl hover:bg-slate-100 transition"
+              aria-label="Toggle menu"
             >
               {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
+
             <Link href="/" className="flex items-center gap-2">
               <div className="bg-brand-600 text-white p-2 rounded-xl font-black text-xl tracking-wider shadow-md">
                 AHF
               </div>
               <div className="flex flex-col">
-                <span className="font-extrabold text-xl leading-none text-slate-900 tracking-tight">
+                <span className="font-extrabold text-lg sm:text-xl leading-none text-slate-900 tracking-tight">
                   Al Hera <span className="text-brand-600">Fresh</span>
                 </span>
-                <span className="text-[10px] text-slate-500 font-medium tracking-widest uppercase">
+                <span className="text-[9px] sm:text-[10px] text-slate-500 font-medium tracking-widest uppercase">
                   {lang === 'bn' ? 'প্রিমিয়াম ই-কমার্স' : 'Organic E-Commerce'}
                 </span>
               </div>
@@ -88,10 +105,10 @@ export function Navbar() {
 
           {/* Actions (Wishlist, Cart, User Account) */}
           <div className="flex items-center gap-2 md:gap-4">
-            <Link href="/wishlist" className="relative p-2 text-slate-700 hover:text-brand-600 transition">
+            <Link href="/wishlist" className="relative p-2.5 text-slate-700 hover:text-brand-600 transition rounded-full hover:bg-slate-100">
               <Heart className="w-5 h-5" />
               {wishlistCount > 0 && (
-                <span className="absolute top-0 right-0 bg-rose-500 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold">
+                <span className="absolute top-0.5 right-0.5 bg-rose-500 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold">
                   {wishlistCount}
                 </span>
               )}
@@ -99,7 +116,7 @@ export function Navbar() {
 
             <button
               onClick={toggleCart}
-              className="relative p-2 bg-brand-50 text-brand-700 hover:bg-brand-100 rounded-full transition flex items-center gap-2 font-semibold text-xs px-3 py-2 border border-brand-200/50"
+              className="relative bg-brand-50 text-brand-700 hover:bg-brand-100 rounded-full transition flex items-center gap-2 font-semibold text-xs px-3.5 py-2 border border-brand-200/50"
             >
               <ShoppingBag className="w-4 h-4 text-brand-600" />
               <span className="hidden sm:inline">{lang === 'bn' ? 'কার্ট' : 'Cart'}</span>
@@ -110,14 +127,14 @@ export function Navbar() {
               )}
             </button>
 
-            <Link href="/dashboard" className="p-2 text-slate-700 hover:text-brand-600 transition">
+            <Link href="/dashboard" className="p-2.5 text-slate-700 hover:text-brand-600 transition rounded-full hover:bg-slate-100">
               <User className="w-5 h-5" />
             </Link>
           </div>
         </div>
 
         {/* Category Navigation Ribbon */}
-        <nav className="bg-slate-900 text-slate-200 text-xs font-medium overflow-x-auto border-t border-slate-800">
+        <nav className="bg-slate-900 text-slate-200 text-xs font-medium overflow-x-auto border-t border-slate-800 touch-pan-x">
           <div className="container mx-auto px-4 flex items-center space-x-6 py-2.5 whitespace-nowrap">
             <Link href="/products" className="text-gold-400 hover:text-gold-300 font-bold flex items-center gap-1">
               🔥 {lang === 'bn' ? 'সব পণ্য' : 'All Products'}
@@ -143,6 +160,61 @@ export function Navbar() {
           </div>
         </nav>
       </div>
+
+      {/* Mobile Menu Full Drawer */}
+      {isMobileMenuOpen && (
+        <div className="fixed inset-0 z-50 md:hidden flex">
+          <div 
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="fixed inset-0 bg-slate-950/70 backdrop-blur-xs"
+          />
+
+          <div className="relative bg-slate-900 text-white w-4/5 max-w-xs h-full flex flex-col p-6 shadow-2xl z-10 space-y-6">
+            <div className="flex justify-between items-center border-b border-slate-800 pb-4">
+              <div className="flex items-center gap-2">
+                <div className="bg-brand-600 text-white p-1.5 rounded-lg font-black text-sm">AHF</div>
+                <span className="font-extrabold text-base">Al Hera Fresh</span>
+              </div>
+              <button 
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="p-2 text-slate-400 hover:text-white"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            {/* Mobile Category Links */}
+            <div className="flex-1 overflow-y-auto space-y-3 text-sm font-semibold">
+              <Link 
+                href="/products" 
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="flex justify-between items-center p-3 rounded-xl bg-brand-600/20 text-brand-300 font-bold"
+              >
+                <span>🔥 {lang === 'bn' ? 'সব পণ্য ব্রাউজ করুন' : 'Browse All Products'}</span>
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+              <Link href="/products?category=fresh-fish" onClick={() => setIsMobileMenuOpen(false)} className="block p-3 rounded-xl hover:bg-slate-800">
+                🐟 {lang === 'bn' ? 'মিঠা পানির তাজা মাছ' : 'Fresh Water Fish'}
+              </Link>
+              <Link href="/products?category=sea-fish" onClick={() => setIsMobileMenuOpen(false)} className="block p-3 rounded-xl hover:bg-slate-800">
+                🦐 {lang === 'bn' ? 'সামুদ্রিক মাছ ও রূপচাঁদা' : 'Deep Sea Fish'}
+              </Link>
+              <Link href="/products?category=dry-fish" onClick={() => setIsMobileMenuOpen(false)} className="block p-3 rounded-xl hover:bg-slate-800">
+                🐠 {lang === 'bn' ? 'কক্সবাজারের শুঁটকি' : 'Dry Fish (Shutki)'}
+              </Link>
+              <Link href="/products?category=mango" onClick={() => setIsMobileMenuOpen(false)} className="block p-3 rounded-xl hover:bg-slate-800">
+                🥭 {lang === 'bn' ? 'রাজশাহীর মিষ্টি আম' : 'Rajshahi Mangoes'}
+              </Link>
+              <Link href="/products?category=honey" onClick={() => setIsMobileMenuOpen(false)} className="block p-3 rounded-xl hover:bg-slate-800">
+                🍯 {lang === 'bn' ? 'সুন্দরবনের কাঁচা মধু' : 'Sundarbans Pure Honey'}
+              </Link>
+              <Link href="/products?category=vegetables" onClick={() => setIsMobileMenuOpen(false)} className="block p-3 rounded-xl hover:bg-slate-800">
+                🥦 {lang === 'bn' ? 'ফার্মের তাজা শাকসবজি' : 'Organic Vegetables'}
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Cart Drawer */}
       <CartDrawer />

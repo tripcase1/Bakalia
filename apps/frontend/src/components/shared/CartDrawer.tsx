@@ -4,7 +4,7 @@ import { useCartStore } from '@/store/useCartStore';
 import { useLanguageStore } from '@/store/useLanguageStore';
 import { X, Trash2, ShoppingBag, ArrowRight, Tag } from 'lucide-react';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export function CartDrawer() {
   const { lang } = useLanguageStore();
@@ -23,6 +23,21 @@ export function CartDrawer() {
 
   const [inputCoupon, setInputCoupon] = useState('');
   const [couponError, setCouponError] = useState(false);
+
+  // Lock background body scroll when cart drawer is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+      document.body.style.touchAction = 'none';
+    } else {
+      document.body.style.overflow = '';
+      document.body.style.touchAction = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.touchAction = '';
+    };
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -45,38 +60,39 @@ export function CartDrawer() {
       {/* Backdrop */}
       <div 
         onClick={toggleCart} 
-        className="absolute inset-0 bg-slate-950/60 backdrop-blur-xs transition-opacity" 
+        className="absolute inset-0 bg-slate-950/70 backdrop-blur-xs transition-opacity" 
       />
 
-      <div className="fixed inset-y-0 right-0 max-w-full flex pl-10">
-        <div className="w-screen max-w-md bg-white shadow-2xl flex flex-col">
+      <div className="fixed inset-y-0 right-0 max-w-full flex pl-6 sm:pl-10">
+        <div className="w-screen max-w-md bg-white shadow-2xl flex flex-col h-full">
           {/* Header */}
-          <div className="p-4 bg-slate-900 text-white flex items-center justify-between">
+          <div className="p-4 bg-slate-900 text-white flex items-center justify-between shrink-0">
             <div className="flex items-center gap-2">
               <ShoppingBag className="w-5 h-5 text-brand-400" />
-              <h2 className="font-bold text-lg">
+              <h2 className="font-bold text-base sm:text-lg">
                 {lang === 'bn' ? 'আপনার শপিং কার্ট' : 'Shopping Cart'}
               </h2>
             </div>
             <button 
               onClick={toggleCart} 
-              className="p-1 text-slate-400 hover:text-white rounded-lg transition"
+              className="p-2 text-slate-400 hover:text-white rounded-xl transition"
+              aria-label="Close cart"
             >
               <X className="w-6 h-6" />
             </button>
           </div>
 
-          {/* Cart Items List */}
-          <div className="flex-1 overflow-y-auto p-4 divide-y divide-slate-100">
+          {/* Cart Items List - Scrollable */}
+          <div className="flex-1 overflow-y-auto p-4 divide-y divide-slate-100 touch-pan-y">
             {items.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-full text-slate-400 space-y-3">
+              <div className="flex flex-col items-center justify-center h-full text-slate-400 space-y-3 py-10">
                 <ShoppingBag className="w-16 h-16 text-slate-200" />
-                <p className="font-medium text-slate-600">
+                <p className="font-medium text-slate-600 text-sm">
                   {lang === 'bn' ? 'আপনার কার্ট খালি রয়েছে' : 'Your cart is empty'}
                 </p>
                 <button 
                   onClick={toggleCart}
-                  className="bg-brand-600 hover:bg-brand-700 text-white px-5 py-2 rounded-full text-xs font-bold transition"
+                  className="bg-brand-600 hover:bg-brand-700 text-white px-6 py-2.5 rounded-full text-xs font-bold transition shadow-md"
                 >
                   {lang === 'bn' ? 'শপিং শুরু করুন' : 'Start Shopping'}
                 </button>
@@ -93,17 +109,17 @@ export function CartDrawer() {
                     <img 
                       src={item.product.images[0]} 
                       alt={title} 
-                      className="w-16 h-16 object-cover rounded-xl border border-slate-100"
+                      className="w-16 h-16 object-cover rounded-xl border border-slate-100 shrink-0"
                     />
                     <div className="flex-1 flex flex-col justify-between">
                       <div>
-                        <h4 className="font-semibold text-sm line-clamp-1 text-slate-800">{title}</h4>
+                        <h4 className="font-semibold text-xs sm:text-sm line-clamp-1 text-slate-800">{title}</h4>
                         {item.selectedVariant && (
-                          <span className="text-[11px] text-slate-500 bg-slate-100 px-2 py-0.5 rounded">
+                          <span className="text-[10px] text-slate-500 bg-slate-100 px-2 py-0.5 rounded">
                             {lang === 'bn' ? item.selectedVariant.nameBn : item.selectedVariant.nameEn}
                           </span>
                         )}
-                        <p className="text-brand-600 font-bold text-sm mt-0.5">৳ {price} </p>
+                        <p className="text-brand-600 font-extrabold text-xs sm:text-sm mt-0.5">৳ {price} </p>
                       </div>
 
                       {/* Quantity Selector */}
@@ -111,14 +127,14 @@ export function CartDrawer() {
                         <div className="flex items-center border border-slate-200 rounded-lg">
                           <button
                             onClick={() => updateQuantity(item.product.id, item.quantity - 1, item.selectedVariant?.id)}
-                            className="px-2 py-0.5 text-slate-600 hover:bg-slate-100 rounded-l-lg font-bold text-sm"
+                            className="px-3 py-1 text-slate-600 hover:bg-slate-100 rounded-l-lg font-bold text-sm min-h-[36px]"
                           >
                             -
                           </button>
                           <span className="px-3 text-xs font-bold">{item.quantity}</span>
                           <button
                             onClick={() => updateQuantity(item.product.id, item.quantity + 1, item.selectedVariant?.id)}
-                            className="px-2 py-0.5 text-slate-600 hover:bg-slate-100 rounded-r-lg font-bold text-sm"
+                            className="px-3 py-1 text-slate-600 hover:bg-slate-100 rounded-r-lg font-bold text-sm min-h-[36px]"
                           >
                             +
                           </button>
@@ -126,7 +142,8 @@ export function CartDrawer() {
 
                         <button 
                           onClick={() => removeItem(item.product.id, item.selectedVariant?.id)}
-                          className="text-slate-400 hover:text-rose-500 transition"
+                          className="p-2 text-slate-400 hover:text-rose-500 transition"
+                          aria-label="Remove item"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -140,7 +157,7 @@ export function CartDrawer() {
 
           {/* Footer Summary & Checkout */}
           {items.length > 0 && (
-            <div className="p-4 border-t border-slate-100 bg-slate-50 space-y-3">
+            <div className="p-4 border-t border-slate-100 bg-slate-50 space-y-3 shrink-0">
               {/* Coupon Form */}
               <form onSubmit={handleApplyCoupon} className="flex gap-2">
                 <div className="relative flex-1">
@@ -149,13 +166,13 @@ export function CartDrawer() {
                     type="text"
                     value={inputCoupon}
                     onChange={(e) => setInputCoupon(e.target.value)}
-                    placeholder={lang === 'bn' ? 'কুপন কোড (যেমন: ALHERAFRESH10)' : 'Coupon Code (ALHERAFRESH10)'}
-                    className="w-full pl-9 pr-3 py-1.5 text-xs bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-brand-500"
+                    placeholder={lang === 'bn' ? 'কুপন কোড (ALHERAFRESH10)' : 'Coupon (ALHERAFRESH10)'}
+                    className="w-full pl-9 pr-3 py-2 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-brand-500"
                   />
                 </div>
                 <button 
                   type="submit"
-                  className="bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition"
+                  className="bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold px-3 py-2 rounded-xl transition"
                 >
                   {lang === 'bn' ? 'প্রয়োগ' : 'Apply'}
                 </button>
@@ -163,7 +180,7 @@ export function CartDrawer() {
 
               {couponCode && (
                 <div className="bg-emerald-50 text-emerald-700 text-xs px-3 py-1.5 rounded-lg flex justify-between items-center font-medium">
-                  <span>কুপন কোড প্রয়োগ করা হয়েছে: {couponCode}</span>
+                  <span>কুপন প্রয়োগ করা হয়েছে: {couponCode}</span>
                   <span className="font-bold">-৳ {discountAmount}</span>
                 </div>
               )}
@@ -193,7 +210,7 @@ export function CartDrawer() {
               <Link
                 href="/checkout"
                 onClick={toggleCart}
-                className="w-full bg-brand-600 hover:bg-brand-700 text-white py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-brand-600/20 transition"
+                className="w-full bg-brand-600 hover:bg-brand-700 active:scale-95 text-white py-3.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-brand-600/20 transition"
               >
                 <span>{lang === 'bn' ? 'অর্ডার সম্পন্ন করুন' : 'Proceed to Checkout'}</span>
                 <ArrowRight className="w-4 h-4" />
