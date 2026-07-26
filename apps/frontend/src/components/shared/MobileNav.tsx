@@ -9,8 +9,8 @@ import { Home, ShoppingBag, ShoppingCart, ShieldCheck } from 'lucide-react';
 export function MobileNav() {
   const pathname = usePathname();
   const { lang } = useLanguageStore();
-  const { toggleCart, getCartCount } = useCartStore();
-  const cartCount = getCartCount();
+  const { toggleCart, getTotalItems } = useCartStore();
+  const cartCount = getTotalItems();
 
   // Hide on admin routes to prevent cluttering admin view
   if (pathname.startsWith('/admin')) return null;
