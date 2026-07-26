@@ -1,6 +1,28 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 
+export interface CreateProductDto {
+  titleBn: string;
+  titleEn: string;
+  slug: string;
+  descriptionBn?: string;
+  descriptionEn?: string;
+  categoryId: string;
+  basePrice: number;
+  discountPrice?: number;
+  sku: string;
+  stock?: number;
+  unit?: string;
+  isFeatured?: boolean;
+  isFlashSale?: boolean;
+  images?: string[];
+  tags?: string[];
+  ratingAvg?: number;
+  ratingCount?: number;
+}
+
+export type UpdateProductDto = Partial<CreateProductDto>;
+
 @Injectable()
 export class ProductsService {
   constructor(private prisma: PrismaService) {}
@@ -40,12 +62,12 @@ export class ProductsService {
     return product;
   }
 
-  async create(data: Parameters<PrismaService['product']['create']>[0]['data']) {
-    return this.prisma.product.create({ data });
+  async create(data: CreateProductDto) {
+    return this.prisma.product.create({ data: data as any });
   }
 
-  async update(id: string, data: Parameters<PrismaService['product']['update']>[0]['data']) {
-    return this.prisma.product.update({ where: { id }, data });
+  async update(id: string, data: UpdateProductDto) {
+    return this.prisma.product.update({ where: { id }, data: data as any });
   }
 
   async delete(id: string) {
