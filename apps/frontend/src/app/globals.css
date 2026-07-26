@@ -87,4 +87,12 @@
   .text-balance {
     text-wrap: balance;
   }
+
+  /* Safe Area Insets for iOS & PWA mode */
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .mb-safe {
+    margin-bottom: env(safe-area-inset-bottom, 0px);
+  }
 }

@@ -194,9 +194,9 @@ export function CartDrawer() {
           )}
         </div>
 
-        {/* Footer — padded pb-20 on mobile so Proceed to Checkout button NEVER overlaps bottom nav bar */}
+        {/* Footer — padded for mobile nav bar + safe area inset so Proceed to Checkout button NEVER overlaps bottom nav bar */}
         {items.length > 0 && (
-          <div className="shrink-0 border-t border-slate-200 bg-white px-4 pt-3 pb-20 sm:pb-6 space-y-3 shadow-lg">
+          <div className="shrink-0 border-t border-slate-200 bg-white px-4 pt-3 pb-[calc(5rem+env(safe-area-inset-bottom,0px))] sm:pb-6 space-y-3 shadow-lg">
             {/* Coupon */}
             {!couponCode ? (
               <form onSubmit={handleApplyCoupon} className="flex gap-2">

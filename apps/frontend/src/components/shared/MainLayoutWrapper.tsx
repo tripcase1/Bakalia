@@ -20,9 +20,9 @@ export function MainLayoutWrapper({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-slate-50 text-slate-900 antialiased pb-14 md:pb-0 font-sans">
+    <div className="flex flex-col min-h-screen bg-slate-50 text-slate-900 antialiased font-sans">
       <Navbar />
-      <main className="flex-1">{children}</main>
+      <main className="flex-1 pb-24 sm:pb-28 md:pb-0">{children}</main>
       <Footer />
       <MobileBottomNav />
       <ToastNotifier />
