@@ -9,8 +9,8 @@ export default function AdminLoginPage() {
   const router = useRouter();
   const login = useAdminAuthStore((state) => state.login);
 
-  const [username, setUsername] = useState('admin');
-  const [password, setPassword] = useState('Arif@424800');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState(false);
 

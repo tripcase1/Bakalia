@@ -8,7 +8,7 @@ export function HeroBanner() {
   const { lang } = useLanguageStore();
 
   return (
-    <section className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-900 to-brand-950 text-white py-10 lg:py-16">
+    <section className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-900 to-brand-950 text-white pt-6 pb-10 sm:py-12 lg:py-16">
       {/* Decorative Glow Elements */}
       <div className="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 bg-brand-500/20 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-0 left-1/3 -mb-20 w-80 h-80 bg-gold-500/10 rounded-full blur-3xl pointer-events-none" />
