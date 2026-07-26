@@ -59,13 +59,18 @@ export function ProductCard({ product }: ProductCardProps) {
       {/* Product Badges */}
       <div className="absolute top-3 left-3 z-10 flex flex-col gap-1 pointer-events-none">
         {hasDiscount && (
-          <span className="bg-rose-500 text-white text-[10px] font-extrabold px-2 py-0.5 rounded-md shadow-xs">
+          <span className="bg-rose-600 text-white text-[10px] font-extrabold px-2 py-0.5 rounded-md shadow-sm">
             -{discountPct}%
           </span>
         )}
         {product.isFlashSale && (
-          <span className="bg-gold-500 text-slate-950 text-[10px] font-extrabold px-2 py-0.5 rounded-md shadow-xs">
-            {lang === 'bn' ? 'ফ্ল্যাশ সেল' : 'FLASH SALE'}
+          <span className="bg-rose-500 text-white text-[10px] font-extrabold px-2 py-0.5 rounded-md shadow-sm flex items-center gap-0.5 animate-pulse">
+            ⚡ {lang === 'bn' ? 'ফ্ল্যাশ সেল' : 'FLASH SALE'}
+          </span>
+        )}
+        {product.isFeatured && (
+          <span className="bg-amber-400 text-slate-950 text-[10px] font-black px-2 py-0.5 rounded-md shadow-sm flex items-center gap-0.5">
+            ⭐ {lang === 'bn' ? 'স্পেশাল' : 'FEATURED'}
           </span>
         )}
       </div>

@@ -25,7 +25,13 @@ export function AdminProducts() {
     const matchSearch = !search || p.titleBn.toLowerCase().includes(search.toLowerCase()) ||
       p.titleEn.toLowerCase().includes(search.toLowerCase()) ||
       p.sku.toLowerCase().includes(search.toLowerCase());
-    const matchCat = !categoryFilter || p.categoryId === categoryFilter;
+    const matchCat = !categoryFilter
+      ? true
+      : categoryFilter === 'featured_only'
+      ? p.isFeatured
+      : categoryFilter === 'flash_only'
+      ? p.isFlashSale
+      : p.categoryId === categoryFilter;
     return matchSearch && matchCat;
   }), [products, search, categoryFilter]);
 
@@ -113,6 +119,8 @@ export function AdminProducts() {
           className="bg-slate-900 border border-slate-800/60 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-brand-500"
         >
           <option value="">All Categories</option>
+          <option value="featured_only">⭐ Featured Only</option>
+          <option value="flash_only">⚡ Flash Sale Only</option>
           {categories.map(c => <option key={c.id} value={c.id}>{c.nameEn}</option>)}
         </select>
       </div>
@@ -127,7 +135,7 @@ export function AdminProducts() {
                 <th className="p-3 text-left font-bold">Category</th>
                 <th className="p-3 text-left font-bold">Price</th>
                 <th className="p-3 text-left font-bold">Stock</th>
-                <th className="p-3 text-left font-bold">Badges</th>
+                <th className="p-3 text-left font-bold">Quick Toggles (1-Click)</th>
                 <th className="p-3 text-right font-bold">Actions</th>
               </tr>
             </thead>
@@ -168,9 +176,31 @@ export function AdminProducts() {
                     </span>
                   </td>
                   <td className="p-3">
-                    <div className="flex gap-1 flex-wrap">
-                      {prod.isFeatured && <span className="bg-yellow-500/20 text-yellow-400 text-[10px] px-1.5 py-0.5 rounded font-bold">Featured</span>}
-                      {prod.isFlashSale && <span className="bg-rose-500/20 text-rose-400 text-[10px] px-1.5 py-0.5 rounded font-bold">Flash Sale</span>}
+                    <div className="flex gap-1.5 flex-wrap items-center">
+                      <button
+                        onClick={() => updateProduct(prod.id, { isFeatured: !prod.isFeatured })}
+                        title="Click to toggle Featured status"
+                        className={`text-[11px] px-2.5 py-1 rounded-lg font-bold transition flex items-center gap-1 active:scale-95 ${
+                          prod.isFeatured
+                            ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm'
+                            : 'bg-slate-800/60 text-slate-500 hover:text-amber-300 hover:bg-slate-800'
+                        }`}
+                      >
+                        <Star className={`w-3.5 h-3.5 ${prod.isFeatured ? 'fill-amber-400 text-amber-400' : ''}`} />
+                        <span>{prod.isFeatured ? 'Featured' : '+ Featured'}</span>
+                      </button>
+
+                      <button
+                        onClick={() => updateProduct(prod.id, { isFlashSale: !prod.isFlashSale })}
+                        title="Click to toggle Flash Sale status"
+                        className={`text-[11px] px-2.5 py-1 rounded-lg font-bold transition flex items-center gap-1 active:scale-95 ${
+                          prod.isFlashSale
+                            ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40 shadow-sm animate-pulse'
+                            : 'bg-slate-800/60 text-slate-500 hover:text-rose-300 hover:bg-slate-800'
+                        }`}
+                      >
+                        ⚡ <span>{prod.isFlashSale ? 'Flash Sale' : '+ Flash Sale'}</span>
+                      </button>
                     </div>
                   </td>
                   <td className="p-3 text-right">
