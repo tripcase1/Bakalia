@@ -1,30 +1,16 @@
 {
-  "name": "bakalia-portal",
-  "version": "0.1.0",
+  "name": "al-hera-fresh-monorepo",
+  "version": "1.0.0",
   "private": true,
+  "workspaces": [
+    "apps/frontend",
+    "apps/backend"
+  ],
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "eslint"
-  },
-  "dependencies": {
-    "@types/leaflet": "^1.9.21",
-    "firebase": "^12.15.0",
-    "leaflet": "^1.9.4",
-    "lucide-react": "^1.23.0",
-    "next": "16.2.10",
-    "react": "19.2.4",
-    "react-dom": "19.2.4"
-  },
-  "devDependencies": {
-    "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "eslint": "^9",
-    "eslint-config-next": "16.2.10",
-    "tailwindcss": "^4",
-    "typescript": "^5"
+    "dev": "npm --prefix apps/frontend run dev",
+    "dev:frontend": "npm --prefix apps/frontend run dev",
+    "dev:backend": "npm --prefix apps/backend run start:dev",
+    "build": "npm --prefix apps/frontend run build && npm --prefix apps/backend run build",
+    "install:all": "npm --prefix apps/frontend install && npm --prefix apps/backend install"
   }
 }
