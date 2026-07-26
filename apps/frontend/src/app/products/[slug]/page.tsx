@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, use } from 'react';
 import { useLanguageStore } from '@/store/useLanguageStore';
 import { useCartStore } from '@/store/useCartStore';
 import { useWishlistStore } from '@/store/useWishlistStore';
+import { useAdminDataStore } from '@/store/useAdminDataStore';
 import { Product, ProductVariant } from '@/types';
 import { Star, ShieldCheck, Truck, RefreshCw, ShoppingBag, Heart, Video, CheckCircle2 } from 'lucide-react';
 
@@ -39,19 +40,23 @@ const SAMPLE_PRODUCT: Product = {
   ],
 };
 
-export default function ProductDetailPage() {
+export default function ProductDetailPage({ params }: { params: Promise<{ slug: string }> }) {
+  const resolvedParams = use(params);
+  const { products } = useAdminDataStore();
   const { lang } = useLanguageStore();
   const addItem = useCartStore((state) => state.addItem);
   const { toggleWishlist, isInWishlist } = useWishlistStore();
 
+  const foundProduct = products.find((p) => p.slug === resolvedParams.slug);
+  const product = foundProduct ?? SAMPLE_PRODUCT;
+
   const [activeImage, setActiveImage] = useState(0);
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant | undefined>(
-    SAMPLE_PRODUCT.variants?.[0]
+    product.variants?.[0]
   );
   const [quantity, setQuantity] = useState(1);
   const [isVideoOpen, setIsVideoOpen] = useState(false);
 
-  const product = SAMPLE_PRODUCT;
   const isWishlisted = isInWishlist(product.id);
   const title = lang === 'bn' ? product.titleBn : product.titleEn;
   const desc = lang === 'bn' ? product.descriptionBn : product.descriptionEn;
